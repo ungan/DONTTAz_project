@@ -30,18 +30,9 @@ pipeline {
 
                         // Jenkins Credential에서 환경 변수 가져와서 .env 파일 생성
                         withCredentials([
-                            string(credentialsId: 'SPRING_DATASOURCE_PASSWORD', variable: 'DB_PASS'),
-                            string(credentialsId: 'REDIS_PASSWORD', variable: 'REDIS_PASS'),
-                            string(credentialsId: 'JWT_SECRET_KEY', variable: 'JWT_SECRET'),
-                            string(credentialsId: 'PORTONE_API_KEY', variable: 'PORTONE_KEY'),
-                            string(credentialsId: 'OPENAI_API_KEY', variable: 'OPENAI_KEY')
+                            // 환경 변수 추가 예정
                         ]) {
                             sh """
-                                echo "SPRING_DATASOURCE_PASSWORD=${DB_PASS}" > .env
-                                echo "REDIS_PASSWORD=${REDIS_PASS}" >> .env
-                                echo "JWT_SECRET_KEY=${JWT_SECRET}" >> .env
-                                echo "PORTONE_API_KEY=${PORTONE_KEY}" >> .env
-                                echo "OPENAI_API_KEY=${OPENAI_KEY}" >> .env
                             """
                             echo "🔐 .env file created securely."
                         }
