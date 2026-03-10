@@ -12,6 +12,7 @@ import com.donttaz.donttazapi.account.dto.response.TransactionListResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionSummaryResponse;
 import com.donttaz.donttazapi.account.repository.AccountRepository;
 import com.donttaz.donttazapi.account.repository.TransactionRepository;
+import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountResult;
 import com.donttaz.donttazapi.common.exception.CustomException;
 import com.donttaz.donttazapi.common.exception.ErrorCode;
 import java.time.LocalDate;
@@ -31,22 +32,28 @@ public class AccountQueryService {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final DemandDepositService demandDepositService;
 
-    public AccountQueryService(AccountRepository accountRepository, TransactionRepository transactionRepository) {
+    public AccountQueryService(
+            AccountRepository accountRepository,
+            TransactionRepository transactionRepository,
+            DemandDepositService demandDepositService
+    ) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
+        this.demandDepositService = demandDepositService;
     }
 
     public AccountListResponse getAccounts() {
-        List<Account> accounts = accountRepository.findAllByUserIdAndStatus(resolveCurrentUserId(), AccountStatus.ACTIVE);
+        List<DemandDepositAccountResult> accounts = demandDepositService.getAccounts();
 
         List<AccountSummaryResponse> accountList = accounts.stream()
                 .map(this::toAccountSummaryResponse)
                 .toList();
 
-        int totalBalance = accounts.stream()
-                .map(Account::getBalance)
-                .reduce(0, Integer::sum);
+        long totalBalance = accounts.stream()
+                .mapToLong(this::toLongBalance)
+                .sum();
 
         return AccountListResponse.builder()
                 .totalBalance(totalBalance)
@@ -115,13 +122,22 @@ public class AccountQueryService {
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
     }
 
-    private AccountSummaryResponse toAccountSummaryResponse(Account account) {
+    private AccountSummaryResponse toAccountSummaryResponse(DemandDepositAccountResult account) {
         return AccountSummaryResponse.builder()
-                .accountId(account.getId())
-                .bankName(account.getBankName())
-                .accountNumber(maskAccountNumber(account.getAccountNumber()))
-                .accountAlias(account.getAccountAlias())
-                .balance(account.getBalance())
+                .bankCode(account.bankCode())
+                .bankName(account.bankName())
+                .userName(account.userName())
+                .accountNo(maskAccountNumber(account.accountNo()))
+                .accountName(account.accountName())
+                .accountTypeCode(account.accountTypeCode())
+                .accountTypeName(account.accountTypeName())
+                .accountCreatedDate(account.accountCreatedDate())
+                .accountExpiryDate(account.accountExpiryDate())
+                .dailyTransferLimit(account.dailyTransferLimit())
+                .oneTimeTransferLimit(account.oneTimeTransferLimit())
+                .accountBalance(account.accountBalance())
+                .lastTransactionDate(account.lastTransactionDate())
+                .currency(account.currency())
                 .build();
     }
 
@@ -163,6 +179,18 @@ public class AccountQueryService {
             return TransactionType.valueOf(type.toUpperCase());
         } catch (IllegalArgumentException exception) {
             throw new CustomException(ErrorCode.INVALID_TRANSACTION_TYPE);
+        }
+    }
+
+    private long toLongBalance(DemandDepositAccountResult account) {
+        if (account.accountBalance() == null || account.accountBalance().isBlank()) {
+            return 0L;
+        }
+
+        try {
+            return Long.parseLong(account.accountBalance());
+        } catch (NumberFormatException exception) {
+            return 0L;
         }
     }
 
