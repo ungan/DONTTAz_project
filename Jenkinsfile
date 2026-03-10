@@ -49,10 +49,10 @@ pipeline {
                 // 1) Spring Boot (메인 뱅킹/결제 로직)
                 stage('Deploy API (Spring Boot)') {
                     when {
-                        changeset "donttaz-be/api/**"
+                        changeset "donttaz-BE/api/**"
                     }
                     steps {
-                        dir('donttaz-be') {
+                        dir('donttaz-BE') {
                             echo "☕ Spring Boot API 변경 감지! 빌드 및 배포 시작..."
                             // Spring Boot 컨테이너 이름(api)만 지정하여 해당 부분만 재빌드
                             sh 'docker-compose up -d --build api'
@@ -63,10 +63,10 @@ pipeline {
                 // 2) FastAPI (AI 소비 내역 분석)
                 stage('Deploy AI (FastAPI)') {
                     when {
-                        changeset "donttaz-be/ai/**"
+                        changeset "donttaz-BE/ai/**"
                     }
                     steps {
-                        dir('donttaz-be') {
+                        dir('donttaz-BE') {
                             echo "🤖 FastAPI AI 변경 감지! 빌드 및 배포 시작..."
                             // FastAPI 컨테이너 이름(ai)만 지정하여 해당 부분만 재빌드
                             sh 'docker-compose up -d --build ai'
@@ -94,7 +94,7 @@ pipeline {
     // =========================================================
     post {
         always {
-            dir('donttaz-be') { 
+            dir('donttaz-BE') { 
                 script {
                     // 빌드가 끝나면 서버에 평문으로 남은 .env 파일과 json 키를 즉각 삭제 (보안 조치)
                     sh "rm -f .env"
