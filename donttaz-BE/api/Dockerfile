@@ -1,4 +1,5 @@
-FROM openjdk:17-jdk-slim AS build
+# linux/amd64 플랫폼에서 eclipse-temurin OpenJDK 17 JDK 이미지를 사용합니다.
+FROM --platform=linux/amd64 eclipse-temurin:17-jdk AS build
 WORKDIR /app
 
 # Gradle Wrapper 및 설정 파일 복사
@@ -15,7 +16,7 @@ RUN chmod +x ./gradlew
 RUN ./gradlew clean build -x test
 
 # 실행 스테이지
-FROM openjdk:17-jdk-slim
+FROM --platform=linux/amd64 eclipse-temurin:17-jdk
 WORKDIR /app
 
 # 빌드 스테이지에서 생성된 jar 파일 복사
