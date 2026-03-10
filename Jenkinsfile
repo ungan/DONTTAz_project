@@ -11,35 +11,35 @@ pipeline {
         // =========================================================
         // 1. 공통 환경 설정 (백엔드 폴더 전체 중 변경이 있을 때만 실행)
         // =========================================================
-        stage('Prepare Backend') {
-            when {
-                changeset "donttaz-be/**"
-            }
-            steps {
-                dir('donttaz-be') { 
-                    script {
-                        echo "🚀 [Donttaz] Backend 변경 감지! 보안 환경 설정 시작..."
+        // stage('Prepare Backend') {
+        //     when {
+        //         changeset "donttaz-be/**"
+        //     }
+        //     steps {
+        //         dir('donttaz-be') { 
+        //             script {
+        //                 echo "🚀 [Donttaz] Backend 변경 감지! 보안 환경 설정 시작..."
 
-                        // [선택] FCM 푸시 알림용 Firebase 키 파일 주입
-                        withCredentials([file(credentialsId: 'FIREBASE_KEY_FILE', variable: 'FIREBASE_KEY_PATH')]) {
-                            // Spring Boot의 resources 폴더로 복사 (경로는 실제에 맞게 수정 필요)
-                            sh "cp \$FIREBASE_KEY_PATH ./api/src/main/resources/firebase-service-account.json"
-                            sh "chmod 644 ./api/src/main/resources/firebase-service-account.json"
-                            echo "🔑 Firebase Key file injected successfully."
-                        }
+        //                 // [선택] FCM 푸시 알림용 Firebase 키 파일 주입
+        //                 withCredentials([file(credentialsId: 'FIREBASE_KEY_FILE', variable: 'FIREBASE_KEY_PATH')]) {
+        //                     // Spring Boot의 resources 폴더로 복사 (경로는 실제에 맞게 수정 필요)
+        //                     sh "cp \$FIREBASE_KEY_PATH ./api/src/main/resources/firebase-service-account.json"
+        //                     sh "chmod 644 ./api/src/main/resources/firebase-service-account.json"
+        //                     echo "🔑 Firebase Key file injected successfully."
+        //                 }
 
-                        // Jenkins Credential에서 환경 변수 가져와서 .env 파일 생성
-                        withCredentials([
-                            // 환경 변수 추가 예정
-                        ]) {
-                            sh """
-                            """
-                            echo "🔐 .env file created securely."
-                        }
-                    }
-                }
-            }
-        }
+        //                 // Jenkins Credential에서 환경 변수 가져와서 .env 파일 생성
+        //                 withCredentials([
+        //                     // 환경 변수 추가 예정
+        //                 ]) {
+        //                     sh """
+        //                     """
+        //                     echo "🔐 .env file created securely."
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
         // =========================================================
         // 2. 서비스별 조건부 배포 (변경된 서비스만 병렬 빌드)
