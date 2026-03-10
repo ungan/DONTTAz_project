@@ -12,11 +12,8 @@ pipeline {
         // 1. 공통 환경 설정 (백엔드 폴더 전체 중 변경이 있을 때만 실행)
         // =========================================================
         stage('Prepare Backend') {
-            when {
-                changeset "donttaz-be/**"
-            }
             steps {
-                dir('donttaz-be') { 
+                dir('donttaz-BE') { 
                     script {
                         echo "🚀 [Donttaz] Backend 변경 감지! 보안 환경 설정 시작..."
 
