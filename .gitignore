@@ -411,8 +411,6 @@ buck-out/
 .history
 .ionide
 
-
-
 # End of https://www.toptal.com/developers/gitignore/api/intellij,java,reactnative,visualstudiocode
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
@@ -591,3 +589,5 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
+/DOCS/
+/AGENTS.md
