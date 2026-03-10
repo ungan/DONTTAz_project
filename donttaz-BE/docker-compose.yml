@@ -27,4 +27,5 @@ services:
 
 networks:
   donttaz-net:
-    driver: bridge
+    external: true
+    name: donttaz-net

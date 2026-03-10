@@ -22,5 +22,5 @@ WORKDIR /app
 # 빌드 스테이지에서 생성된 jar 파일 복사
 COPY --from=build /app/build/libs/*.jar app.jar
 
-# Spring Boot 애플리케이션 실행
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Spring Boot 애플리케이션 실행 (prod 프로파일 적용)
+ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]
