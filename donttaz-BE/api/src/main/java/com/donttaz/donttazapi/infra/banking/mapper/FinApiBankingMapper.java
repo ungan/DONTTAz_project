@@ -2,6 +2,9 @@ package com.donttaz.donttazapi.infra.banking.mapper;
 
 import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
 import com.donttaz.donttazapi.account.service.dto.AccountSummaryResult;
+import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountCreateResult;
+import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountResult;
+import com.donttaz.donttazapi.account.service.dto.DemandDepositProductResult;
 import com.donttaz.donttazapi.account.service.dto.OneWonVerificationConfirmResult;
 import com.donttaz.donttazapi.account.service.dto.OneWonVerificationRequestResult;
 import com.donttaz.donttazapi.account.service.dto.TransactionDetailResult;
@@ -10,6 +13,9 @@ import com.donttaz.donttazapi.account.service.dto.TransactionSummaryResult;
 import com.donttaz.donttazapi.account.service.dto.TransferResult;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountDetailResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountItemResponse;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiCreateDemandDepositAccountRec;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiDemandDepositAccountRec;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiDemandDepositProductRec;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiOneWonConfirmResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiOneWonRequestResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiTransactionDetailResponse;
@@ -21,6 +27,59 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class FinApiBankingMapper {
+
+    public DemandDepositProductResult toDemandDepositProductResult(FinApiDemandDepositProductRec response) {
+        return new DemandDepositProductResult(
+                response.accountTypeUniqueNo(),
+                response.bankCode(),
+                response.bankName(),
+                response.accountTypeCode(),
+                response.accountTypeName(),
+                response.accountName(),
+                response.accountDescription(),
+                response.accountType()
+        );
+    }
+
+    public List<DemandDepositProductResult> toDemandDepositProductResults(List<FinApiDemandDepositProductRec> responses) {
+        return responses.stream()
+                .map(this::toDemandDepositProductResult)
+                .toList();
+    }
+
+    public DemandDepositAccountCreateResult toDemandDepositAccountCreateResult(FinApiCreateDemandDepositAccountRec response) {
+        return new DemandDepositAccountCreateResult(
+                response.bankCode(),
+                response.accountNo(),
+                response.currency().currency(),
+                response.currency().currencyName()
+        );
+    }
+
+    public DemandDepositAccountResult toDemandDepositAccountResult(FinApiDemandDepositAccountRec response) {
+        return new DemandDepositAccountResult(
+                response.bankCode(),
+                response.bankName(),
+                response.userName(),
+                response.accountNo(),
+                response.accountName(),
+                response.accountTypeCode(),
+                response.accountTypeName(),
+                response.accountCreatedDate(),
+                response.accountExpiryDate(),
+                response.dailyTransferLimit(),
+                response.oneTimeTransferLimit(),
+                response.accountBalance(),
+                response.lastTransactionDate(),
+                response.currency()
+        );
+    }
+
+    public List<DemandDepositAccountResult> toDemandDepositAccountResults(List<FinApiDemandDepositAccountRec> responses) {
+        return responses.stream()
+                .map(this::toDemandDepositAccountResult)
+                .toList();
+    }
 
     public List<AccountSummaryResult> toAccountSummaryResults(List<FinApiAccountItemResponse> responses) {
         return responses.stream()

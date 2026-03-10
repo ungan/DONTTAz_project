@@ -17,8 +17,17 @@ public class FinApiProperties {
     @NotBlank
     private String baseUrl;
 
+    @NotBlank
+    private String institutionCode;
+
+    @NotBlank
+    private String fintechAppNo;
+
     /**
      * App-wide finAPI key. This is expected to be injected from environment or secret storage.
      */
     private String apiKey;
+
+    @NotBlank
+    private String mockUserKey;
 }
