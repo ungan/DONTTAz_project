@@ -1,0 +1,21 @@
+server {
+    listen 80;
+    server_name _;
+
+    # Blue/Green 환경에 따라 동적으로 upstream 정보 변경됨
+    include /etc/nginx/conf.d/service-env.inc;
+
+    location /api/ {
+        proxy_pass http://donttaz-api;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /ai/ {
+        proxy_pass http://donttaz-ai;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
