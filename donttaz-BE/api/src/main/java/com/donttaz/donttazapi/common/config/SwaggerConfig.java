@@ -1,0 +1,54 @@
+package com.donttaz.donttazapi.common.config;
+
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Contact;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.servers.Server;
+import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.MediaType;
+import io.swagger.v3.oas.models.responses.ApiResponse;
+import io.swagger.v3.oas.models.responses.ApiResponses;
+import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@OpenAPIDefinition(info = @Info(title = "돈타즈 API", version = "v1", description = "SSAFY finAPI와 연동된 수시입출금 계좌 API 문서입니다.", contact = @Contact(name = "Donttaz Backend")), servers = {
+                @Server(url = "http://localhost:8080", description = "로컬 서버")
+})
+public class SwaggerConfig {
+
+        @Bean
+        public OpenApiCustomizer globalOpenApiCustomizer() {
+                return openApi -> openApi.getPaths().values()
+                                .forEach(pathItem -> pathItem.readOperations().forEach(operation -> {
+                                        ApiResponses apiResponses = operation.getResponses();
+
+                                        if (!apiResponses.containsKey("400")) {
+                                                apiResponses.addApiResponse("400",
+                                                                createApiResponse("잘못된 요청 (Bad Request)"));
+                                        }
+                                        if (!apiResponses.containsKey("401")) {
+                                                apiResponses.addApiResponse("401",
+                                                                createApiResponse("인증 실패 (Unauthorized)"));
+                                        }
+                                        if (!apiResponses.containsKey("403")) {
+                                                apiResponses.addApiResponse("403",
+                                                                createApiResponse("권한 없음 (Forbidden)"));
+                                        }
+                                        if (!apiResponses.containsKey("404")) {
+                                                apiResponses.addApiResponse("404",
+                                                                createApiResponse("리소스를 찾을 수 없음 (Not Found)"));
+                                        }
+                                        if (!apiResponses.containsKey("500")) {
+                                                apiResponses.addApiResponse("500",
+                                                                createApiResponse("서버 내부 오류 (Internal Server Error)"));
+                                        }
+                                }));
+        }
+
+        private ApiResponse createApiResponse(String description) {
+                return new ApiResponse().description(description)
+                                .content(new Content().addMediaType("application/json", new MediaType()));
+        }
+}
