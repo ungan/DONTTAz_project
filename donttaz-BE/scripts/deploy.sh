@@ -5,7 +5,11 @@
 # ==============================================================================
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)" # donttaz-BE 디렉토리
 NGINX_CONF_DIR="/etc/nginx/conf.d" # Nginx 호스트 설정 경로 (환경에 맞게 변경 필요)
+<<<<<<< HEAD
 ㅋMAX_RETRIES=20
+=======
+MAX_RETRIES=15
+>>>>>>> 4b30b2de0377eb666515aef2ab5650364b740823
 RETRY_INTERVAL=3
 API_HEALTH_URL="/actuator/health"
 AI_HEALTH_URL="/api/health" # FastAPI 헬스 체크 경로 (임시. 실제 경로로 수정 필요)
@@ -18,7 +22,11 @@ cd $PROJECT_DIR
 # Nginx의 대상(symbolic link 혹은 include된 파일 내용)을 보고 판단
 CURRENT_ENV=""
 
+<<<<<<< HEAD
 if grep -q "api-blue.conf" $NGINX_CONF_DIR/service-env.inc 2>/dev/null; then
+=======
+if grep -q "api-blue.inc" $NGINX_CONF_DIR/service-env.inc 2>/dev/null; then
+>>>>>>> 4b30b2de0377eb666515aef2ab5650364b740823
     CURRENT_ENV="blue"
     TARGET_ENV="green"
     API_PORT=8082
@@ -46,10 +54,17 @@ docker-compose -f docker-compose.${TARGET_ENV}.yml up -d --build
 # Health Check (API & AI)
 # ==============================================================================
 # Spring API Health Check
+<<<<<<< HEAD
 echo "⏳ [$TARGET_ENV] Spring Boot API 기동 대기 중..."
 API_IS_READY=false
 for i in $(seq 1 $MAX_RETRIES); do
     STATUS_CODE=$(docker exec donttaz-api-$TARGET_ENV curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080$API_HEALTH_URL)
+=======
+echo "⏳ [$TARGET_ENV] Spring Boot API 기동 대기 중... (단자: $API_PORT)"
+API_IS_READY=false
+for i in $(seq 1 $MAX_RETRIES); do
+    STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$API_PORT$API_HEALTH_URL)
+>>>>>>> 4b30b2de0377eb666515aef2ab5650364b740823
     if [ "$STATUS_CODE" -eq 200 ]; then
         echo "✅ [$TARGET_ENV] Spring Boot API 정상 기동 확인 (200 OK)"
         API_IS_READY=true
@@ -60,6 +75,21 @@ for i in $(seq 1 $MAX_RETRIES); do
 done
 
 # FastAPI AI Health Check (선택적)
+<<<<<<< HEAD
+=======
+# echo "⏳ [$TARGET_ENV] FastAPI AI 기동 대기 중... (단자: $AI_PORT)"
+# AI_IS_READY=false
+# for i in $(seq 1 $MAX_RETRIES); do
+#     STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$AI_PORT$AI_HEALTH_URL)
+#     if [ "$STATUS_CODE" -eq 200 ]; then
+#         echo "✅ [$TARGET_ENV] FastAPI AI 정상 기동 확인 (200 OK)"
+#         AI_IS_READY=true
+#         break
+#     fi
+#     echo "  - 아직 준비되지 않음 (상태 코드: $STATUS_CODE). $RETRY_INTERVAL초 후 재시도... ($i/$MAX_RETRIES)"
+#     sleep $RETRY_INTERVAL
+# done
+>>>>>>> 4b30b2de0377eb666515aef2ab5650364b740823
 AI_IS_READY=true # 일단 AI는 무조건 패스하는 것으로 임시 설정
 
 if [ "$API_IS_READY" = false ] || [ "$AI_IS_READY" = false ]; then
@@ -74,7 +104,11 @@ fi
 echo "🔀 Nginx 라우팅 경로를 [$TARGET_ENV] 로 변경합니다..."
 
 # 호스트 Nginx의 include 파일 내용을 덮어씁니다
+<<<<<<< HEAD
 echo "include $PROJECT_DIR/nginx/api-${TARGET_ENV}.conf;" | sudo tee $NGINX_CONF_DIR/service-env.inc > /dev/null
+=======
+echo "include $PROJECT_DIR/nginx/api-${TARGET_ENV}.inc;" | sudo tee $NGINX_CONF_DIR/service-env.inc > /dev/null
+>>>>>>> 4b30b2de0377eb666515aef2ab5650364b740823
 
 echo "🔄 Nginx 리로드..."
 sudo systemctl reload nginx
@@ -84,7 +118,11 @@ if [ $? -eq 0 ]; then
 else
     echo "💥 Nginx 리로드 실패! 호스트 설정을 롤백합니다."
     # 롤백: 이전 환경 설정으로 복구
+<<<<<<< HEAD
     echo "include $PROJECT_DIR/nginx/api-${CURRENT_ENV}.conf;" | sudo tee $NGINX_CONF_DIR/service-env.inc > /dev/null
+=======
+    echo "include $PROJECT_DIR/nginx/api-${CURRENT_ENV}.inc;" | sudo tee $NGINX_CONF_DIR/service-env.inc > /dev/null
+>>>>>>> 4b30b2de0377eb666515aef2ab5650364b740823
     sudo systemctl reload nginx
     docker-compose -f docker-compose.${TARGET_ENV}.yml down
     exit 1

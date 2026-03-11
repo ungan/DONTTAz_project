@@ -12,6 +12,11 @@ public enum ErrorCode {
     INVALID_TRANSACTION_TYPE(HttpStatus.BAD_REQUEST, "INVALID_TRANSACTION_TYPE", "유효하지 않은 거래 유형입니다."),
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", "잘못된 요청입니다."),
     FIN_API_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "FIN_API_REQUEST_FAILED", "finAPI 요청에 실패했습니다."),
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "DUPLICATE_EMAIL", "이미 사용 중인 이메일입니다."),
+    USER_KEY_ISSUANCE_FAILED(HttpStatus.BAD_REQUEST, "USER_KEY_ISSUANCE_FAILED", "사용자 키 발급에 실패했습니다."),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "사용자를 찾을 수 없습니다."),
+    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "INVALID_PASSWORD", "비밀번호가 일치하지 않습니다."),
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_REFRESH_TOKEN", "유효하지 않은 갱신 토큰입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.");
 
     private final HttpStatus httpStatus;

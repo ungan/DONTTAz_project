@@ -33,6 +33,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
@@ -50,4 +56,15 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+
+    def envFile = file("${project.rootDir}/.env")
+    if (envFile.exists()) {
+        envFile.eachLine { line ->
+            // 주석(#)이나 빈 줄 제외, 'KEY=VALUE' 형식만 파싱
+            if (line.trim() && !line.startsWith("#") && line.contains("=")) {
+                def (key, value) = line.tokenize("=")
+                environment key.trim(), value.trim()
+            }
+        }
+    }
 }

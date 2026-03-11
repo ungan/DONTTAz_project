@@ -29,18 +29,24 @@ import com.donttaz.donttazapi.infra.banking.dto.response.FinApiInquireDemandDepo
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiInquireDemandDepositListResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiResponseHeader;
 import com.donttaz.donttazapi.infra.banking.mapper.FinApiBankingMapper;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiMemberRequest;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiMemberResponse;
+import com.donttaz.donttazapi.common.exception.CustomException;
+import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.donttaz.donttazapi.infra.banking.userkey.UserKeyProvider;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import org.springframework.http.MediaType;
 import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
@@ -283,4 +289,26 @@ public class FinApiBankingClient implements BankingClient {
                 .replaceAll("(\"apiKey\"\\s*:\\s*\")([^\"]+)(\")", "$1***$3")
                 .replaceAll("(\"userKey\"\\s*:\\s*\")([^\"]+)(\")", "$1***$3");
     }
+    @Override
+    public String createUserKey(String email) {
+        try {
+            FinApiMemberRequest request = new FinApiMemberRequest(finApiProperties.getApiKey(), email);
+
+            FinApiMemberResponse response = restClient.post()
+                    .uri("/v1/member")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(request)
+                    .retrieve()
+                    .body(FinApiMemberResponse.class);
+
+            if (response == null || response.userKey() == null) {
+                throw new CustomException(ErrorCode.USER_KEY_ISSUANCE_FAILED);
+            }
+
+            return response.userKey();
+        } catch (RestClientException e) {
+            throw new CustomException(ErrorCode.USER_KEY_ISSUANCE_FAILED, e.getMessage());
+        }
+    }
+
 }

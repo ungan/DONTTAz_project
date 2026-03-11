@@ -54,36 +54,24 @@ pipeline {
         }
 
         // =========================================================
-        // 2. 서비스별 조건부 배포 (변경된 서비스만 병렬 빌드)
+        // 2. 서비스 무중단 배포 (Blue-Green Deploy)
         // =========================================================
-        stage('Deploy Services') {
-            parallel {
-                // 1) Spring Boot (메인 뱅킹/결제 로직)
-                stage('Deploy API (Spring Boot)') {
-                    when {
-                        changeset "donttaz-BE/api/**"
-                    }
-                    steps {
-                        dir('donttaz-BE') {
-                            echo "☕ Spring Boot API 변경 감지! 빌드 및 배포 시작..."
-                            // Spring Boot 컨테이너 이름(api)만 지정하여 해당 부분만 재빌드
-                            sh 'docker-compose up -d --build api'
-                        }
-                    }
+        stage('Zero-Downtime Deploy') {
+            when {
+                anyOf {
+                    changeset "donttaz-BE/api/**"
+                    changeset "donttaz-BE/ai/**"
                 }
-                
-                // 2) FastAPI (AI 소비 내역 분석)
-                stage('Deploy AI (FastAPI)') {
-                    when {
-                        changeset "donttaz-BE/ai/**"
-                    }
-                    steps {
-                        dir('donttaz-BE') {
-                            echo "🤖 FastAPI AI 변경 감지! 빌드 및 배포 시작..."
-                            // FastAPI 컨테이너 이름(ai)만 지정하여 해당 부분만 재빌드
-                            sh 'docker-compose up -d --build ai'
-                        }
-                    }
+            }
+            steps {
+                dir('donttaz-BE') {
+                    echo "🚀 백엔드 변경 감지! 무중단 배포 스크립트를 실행합니다..."
+                    
+                    // 실행 권한 부여
+                    sh 'chmod +x scripts/deploy.sh'
+                    
+                    // 스크립트 실행
+                    sh './scripts/deploy.sh'
                 }
             }
         }
