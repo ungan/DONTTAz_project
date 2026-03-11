@@ -51,4 +51,6 @@ public interface BankingClient {
     OneWonVerificationRequestResult requestOneWonVerification(Long userId, OneWonVerificationRequestCommand command);
 
     OneWonVerificationConfirmResult confirmOneWonVerification(Long userId, OneWonVerificationConfirmCommand command);
+
+    String createUserKey(String email);
 }
