@@ -1,6 +1,8 @@
 package com.donttaz.donttazapi.infra.banking.client;
 
+import com.donttaz.donttazapi.account.service.dto.AccountBalanceResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
+import com.donttaz.donttazapi.account.service.dto.AccountHolderNameResult;
 import com.donttaz.donttazapi.account.service.dto.AccountSummaryResult;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountCreateResult;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountResult;
@@ -18,11 +20,17 @@ import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.donttaz.donttazapi.infra.banking.config.FinApiProperties;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountBalanceRequest;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountRequest;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountHolderNameRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiCreateDemandDepositAccountRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiCreateDemandDepositRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountListRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositListRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiRequestHeader;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountBalanceResponse;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountDetailResponse;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountHolderNameResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiCreateDemandDepositAccountResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiCreateDemandDepositResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiInquireDemandDepositAccountListResponse;
@@ -59,6 +67,9 @@ public class FinApiBankingClient implements BankingClient {
     private static final String DEMAND_DEPOSIT_LIST_URI = "/demandDeposit/inquireDemandDepositList";
     private static final String DEMAND_DEPOSIT_ACCOUNT_CREATE_URI = "/demandDeposit/createDemandDepositAccount";
     private static final String DEMAND_DEPOSIT_ACCOUNT_LIST_URI = "/demandDeposit/inquireDemandDepositAccountList";
+    private static final String DEMAND_DEPOSIT_ACCOUNT_BALANCE_URI = "/demandDeposit/inquireDemandDepositAccountBalance";
+    private static final String DEMAND_DEPOSIT_ACCOUNT_DETAIL_URI = "/demandDeposit/inquireDemandDepositAccount";
+    private static final String DEMAND_DEPOSIT_ACCOUNT_HOLDER_NAME_URI = "/demandDeposit/inquireDemandDepositAccountHolderName";
     private static final String SUCCESS_CODE = "H0000";
     private static final ZoneId KOREA_ZONE_ID = ZoneId.of("Asia/Seoul");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -152,8 +163,48 @@ public class FinApiBankingClient implements BankingClient {
     }
 
     @Override
-    public AccountDetailResult getAccountDetail(Long userId, String externalAccountId) {
-        throw new UnsupportedOperationException("finAPI account detail integration is not implemented yet.");
+    public AccountBalanceResult getAccountBalance(Long userId, String accountNo) {
+        FinApiAccountBalanceResponse response = post(
+                resolveUri(DEMAND_DEPOSIT_ACCOUNT_BALANCE_URI),
+                new FinApiInquireDemandDepositAccountBalanceRequest(
+                        buildHeader("inquireDemandDepositAccountBalance", userId),
+                        accountNo
+                ),
+                FinApiAccountBalanceResponse.class
+        );
+
+        validateSuccess(response.header());
+        return finApiBankingMapper.toAccountBalanceResult(response);
+    }
+
+    @Override
+    public AccountDetailResult getAccountDetail(Long userId, String accountNo) {
+        FinApiAccountDetailResponse response = post(
+                resolveUri(DEMAND_DEPOSIT_ACCOUNT_DETAIL_URI),
+                new FinApiInquireDemandDepositAccountRequest(
+                        buildHeader("inquireDemandDepositAccount", userId),
+                        accountNo
+                ),
+                FinApiAccountDetailResponse.class
+        );
+
+        validateSuccess(response.header());
+        return finApiBankingMapper.toAccountDetailResult(response);
+    }
+
+    @Override
+    public AccountHolderNameResult getAccountHolderName(Long userId, String accountNo) {
+        FinApiAccountHolderNameResponse response = post(
+                resolveUri(DEMAND_DEPOSIT_ACCOUNT_HOLDER_NAME_URI),
+                new FinApiInquireDemandDepositAccountHolderNameRequest(
+                        buildHeader("inquireDemandDepositAccountHolderName", userId),
+                        accountNo
+                ),
+                FinApiAccountHolderNameResponse.class
+        );
+
+        validateSuccess(response.header());
+        return finApiBankingMapper.toAccountHolderNameResult(response);
     }
 
     @Override

@@ -1,0 +1,37 @@
+package com.donttaz.donttazapi.account.service;
+
+import com.donttaz.donttazapi.account.service.dto.AccountBalanceResult;
+import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
+import com.donttaz.donttazapi.account.service.dto.AccountHolderNameResult;
+import com.donttaz.donttazapi.infra.banking.client.BankingClient;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional(readOnly = true)
+public class BankingAccountQueryService {
+
+    private static final Long DEMO_USER_ID = 1L;
+
+    private final BankingClient bankingClient;
+
+    public BankingAccountQueryService(BankingClient bankingClient) {
+        this.bankingClient = bankingClient;
+    }
+
+    public AccountBalanceResult getAccountBalance(String accountNo) {
+        return bankingClient.getAccountBalance(resolveCurrentUserId(), accountNo);
+    }
+
+    public AccountDetailResult getAccountDetail(String accountNo) {
+        return bankingClient.getAccountDetail(resolveCurrentUserId(), accountNo);
+    }
+
+    public AccountHolderNameResult getAccountHolderName(String accountNo) {
+        return bankingClient.getAccountHolderName(resolveCurrentUserId(), accountNo);
+    }
+
+    private Long resolveCurrentUserId() {
+        return DEMO_USER_ID;
+    }
+}

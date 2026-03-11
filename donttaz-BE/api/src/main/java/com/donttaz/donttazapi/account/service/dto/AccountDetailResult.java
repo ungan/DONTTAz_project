@@ -1,14 +1,19 @@
 package com.donttaz.donttazapi.account.service.dto;
 
-import java.time.LocalDateTime;
-
 public record AccountDetailResult(
-        String externalAccountId,
         String bankCode,
         String bankName,
-        String accountNumber,
-        String accountAlias,
-        Integer balance,
-        LocalDateTime linkedAt
+        String userName,
+        String accountNo,
+        String accountName,
+        String accountTypeCode,
+        String accountTypeName,
+        String accountCreatedDate,
+        String accountExpiryDate,
+        String dailyTransferLimit,
+        String oneTimeTransferLimit,
+        String accountBalance,
+        String lastTransactionDate,
+        String currency
 ) {
 }

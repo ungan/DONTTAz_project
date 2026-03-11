@@ -1,16 +1,11 @@
 package com.donttaz.donttazapi.infra.banking.dto.response;
 
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record FinApiAccountDetailResponse(
-        String responseCode,
-        String responseMessage,
-        String accountId,
-        String bankCode,
-        String bankName,
-        String accountNumber,
-        String accountAlias,
-        Integer balance,
-        LocalDateTime linkedAt
+        @JsonProperty("Header")
+        FinApiResponseHeader header,
+        @JsonProperty("REC")
+        FinApiDemandDepositAccountRec rec
 ) {
 }
