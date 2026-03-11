@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.donttaz.donttazapi.account.dto.response.AccountListResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountSummaryResponse;
 import com.donttaz.donttazapi.account.dto.response.CreateAccountResponse;
-import com.donttaz.donttazapi.account.service.AccountCommandService;
+import com.donttaz.donttazapi.account.service.AccountCreationService;
 import com.donttaz.donttazapi.account.service.AccountQueryService;
 import com.donttaz.donttazapi.common.exception.GlobalExceptionHandler;
 import java.util.List;
@@ -30,14 +30,14 @@ class AccountControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private AccountCommandService accountCommandService;
+    private AccountCreationService accountCreationService;
 
     @MockBean
     private AccountQueryService accountQueryService;
 
     @Test
     void 계좌_생성은_finAPI_형식의_응답을_반환한다() throws Exception {
-        when(accountCommandService.createAccount(any(com.donttaz.donttazapi.account.dto.request.CreateAccountRequest.class)))
+        when(accountCreationService.createAccount(any(com.donttaz.donttazapi.account.dto.request.CreateAccountRequest.class)))
                 .thenReturn(CreateAccountResponse.builder()
                         .bankCode("001")
                         .accountNo("0011234567890123")

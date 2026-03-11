@@ -8,11 +8,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
-public class AccountCommandService {
+public class AccountCreationService {
 
     private final DemandDepositService demandDepositService;
 
-    public AccountCommandService(DemandDepositService demandDepositService) {
+    public AccountCreationService(DemandDepositService demandDepositService) {
         this.demandDepositService = demandDepositService;
     }
 
