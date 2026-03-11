@@ -29,6 +29,7 @@ pipeline {
                         withCredentials([
                             string(credentialsId: 'FIN_API_BASE_URL', variable: 'FIN_API_BASE_URL'),
                             string(credentialsId: 'FIN_API_API_KEY', variable: 'FIN_API_API_KEY'),
+                            string(credentialsId: 'FIN_API_MOCK_USER_KEY', variable: 'FIN_API_MOCK_USER_KEY'),
                             string(credentialsId: 'DB_URL', variable: 'DB_URL'),
                             string(credentialsId: 'DB_USERNAME', variable: 'DB_USERNAME'),
                             string(credentialsId: 'DB_PASSWORD', variable: 'DB_PASSWORD'),
@@ -38,6 +39,7 @@ pipeline {
                             sh """
                             echo "FIN_API_BASE_URL=${FIN_API_BASE_URL}" > .env
                             echo "FIN_API_API_KEY=${FIN_API_API_KEY}" >> .env
+                            echo "FIN_API_MOCK_USER_KEY=${FIN_API_MOCK_USER_KEY}" >> .env
                             echo "DB_URL=${DB_URL}" >> .env
                             echo "DB_USERNAME=${DB_USERNAME}" >> .env
                             echo "DB_PASSWORD=${DB_PASSWORD}" >> .env
