@@ -54,6 +54,33 @@ pipeline {
         }
 
         // =========================================================
+        // 1.5. 단위 테스트 (Continuous Testing)
+        // =========================================================
+        stage('Test Backend (CT)') {
+            when {
+                changeset "donttaz-BE/api/**"
+            }
+            steps {
+                dir('donttaz-BE/api') {
+                    echo "🧪 Spring Boot 단위 테스트 실행 중..."
+                    script {
+                        sh 'chmod +x gradlew'
+                        // 결과값을 파일로 빼고 상태 코드를 잡습니다. (Mattermost 알림용)
+                        def status = sh(script: './gradlew clean test > test_output.log 2>&1', returnStatus: true)
+                        if (status != 0) {
+                            env.FAIL_STAGE = "Test (Unit Test)"
+                            env.FAIL_LOG = sh(script: 'tail -n 25 test_output.log', returnStdout: true).trim()
+                            error("🚨 단위 테스트 실패!")
+                        } else {
+                            // 성공 시 콘솔에서 볼 수 있게 로그를 출력시켜줍니다.
+                            sh 'cat test_output.log'
+                        }
+                    }
+                }
+            }
+        }
+
+        // =========================================================
         // 2. 서비스 무중단 배포 (Blue-Green Deploy)
         // =========================================================
         stage('Zero-Downtime Deploy') {
@@ -70,8 +97,17 @@ pipeline {
                     // 실행 권한 부여
                     sh 'chmod +x scripts/deploy.sh'
                     
-                    // 스크립트 실행
-                    sh './scripts/deploy.sh'
+                    // 스크립트 실행 및 에러 캐치 구조화
+                    script {
+                        def status = sh(script: './scripts/deploy.sh > deploy_output.log 2>&1', returnStatus: true)
+                        if (status != 0) {
+                            env.FAIL_STAGE = "Deploy (Blue-Green)"
+                            env.FAIL_LOG = sh(script: 'tail -n 25 deploy_output.log', returnStdout: true).trim()
+                            error("🚨 배포 스크립트 실행 실패!")
+                        } else {
+                            sh 'cat deploy_output.log'
+                        }
+                    }
                 }
             }
         }
@@ -107,16 +143,33 @@ pipeline {
             echo "🎉 [Donttaz] 모든 배포가 성공적으로 완료되었습니다!"
             script {
                 def webhookUrl = 'https://meeting.ssafy.com/hooks/fqz6a9tj63gdub7tcaydjmhnho'
-                def payload = """{"text": "## :jenkins7: Backend Deploy 성공 ✅\\n**Jenkins**: [빌드 보기](${env.BUILD_URL})", "username": "Jenkins", "icon_emoji": ":jenkins7:"}"""
-                sh "curl -sS -H 'Content-Type: application/json' -d '${payload}' ${webhookUrl} || true"
+                def text = "## :jenkins7: Backend Deploy 성공 ✅\\n**Jenkins**: [빌드 보기](${env.BUILD_URL})"
+                def payloadMap = [
+                    text: text,
+                    username: "Jenkins",
+                    icon_emoji: ":jenkins7:"
+                ]
+                // JSON 문법 충돌을 방지하기 위해 파일 쓰기 우회 기법 사용
+                writeFile file: 'success_payload.json', text: groovy.json.JsonOutput.toJson(payloadMap)
+                sh "curl -sS -H 'Content-Type: application/json' --data-binary @success_payload.json ${webhookUrl} || true"
             }
         }
         failure {
             echo "💥 [Donttaz] 배포 중 오류가 발생했습니다. 로그를 확인해 주세요."
             script {
                 def webhookUrl = 'https://meeting.ssafy.com/hooks/fqz6a9tj63gdub7tcaydjmhnho'
-                def payload = """{"text": "## :angry_jenkins: Backend Deploy 실패 ❌\\n**Jenkins**: [빌드 보기](${env.BUILD_URL})", "username": "Jenkins", "icon_emoji": ":jenkins7:"}"""
-                sh "curl -sS -H 'Content-Type: application/json' -d '${payload}' ${webhookUrl} || true"
+                def failStage = env.FAIL_STAGE ?: "Unknown Stage"
+                def failLog = env.FAIL_LOG ?: "로그를 가져올 수 없거나 파이프라인 내부 에러입니다."
+                
+                def text = "## :angry_jenkins: Backend 파이프라인 실패 ❌\\n**실패 구간:** ${failStage}\\n**에러 내용 (최근 25줄):**\\n```text\\n${failLog}\\n```\\n**Jenkins**: [해당 빌드 보기](${env.BUILD_URL})"
+                
+                def payloadMap = [
+                    text: text,
+                    username: "Jenkins",
+                    icon_emoji: ":jenkins7:"
+                ]
+                writeFile file: 'fail_payload.json', text: groovy.json.JsonOutput.toJson(payloadMap)
+                sh "curl -sS -H 'Content-Type: application/json' --data-binary @fail_payload.json ${webhookUrl} || true"
             }
         }
     }
