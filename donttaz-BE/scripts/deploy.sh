@@ -4,7 +4,8 @@
 # 옵션 및 변수 설정
 # ==============================================================================
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)" # donttaz-BE 디렉토리
-NGINX_CONF_DIR="/etc/nginx/conf.d" # Nginx 설정 경로 (jenkins 유저에게 쓰기 권한이 필요함)
+# Nginx 설정 파일 경로 (프로젝트 내부 경로를 사용하여 Jenkins 컨테이너에서도 접근 가능하게 함)
+NGINX_CONF_PATH="$PROJECT_DIR/nginx/service-env.inc"
 MAX_RETRIES=20
 RETRY_INTERVAL=3
 API_HEALTH_URL="/actuator/health"
@@ -18,7 +19,7 @@ cd $PROJECT_DIR
 # Nginx의 대상(symbolic link 혹은 include된 파일 내용)을 보고 판단
 CURRENT_ENV=""
 
-if grep -q "api-blue.inc" $NGINX_CONF_DIR/service-env.inc 2>/dev/null; then
+if grep -q "api-blue.inc" $NGINX_CONF_PATH 2>/dev/null; then
     CURRENT_ENV="blue"
     TARGET_ENV="green"
     API_PORT=8082
@@ -85,19 +86,18 @@ fi
 # ==============================================================================
 echo "🔀 Nginx 라우팅 경로를 [$TARGET_ENV] 로 변경합니다..."
 
-# 호스트 Nginx의 include 파일 내용을 덮어씁니다
-echo "include $PROJECT_DIR/nginx/api-${TARGET_ENV}.inc;" | tee $NGINX_CONF_DIR/service-env.inc > /dev/null
+# 프로젝트 내부의 service-env.inc를 업데이트합니다.
+echo "include /etc/nginx/conf.d/api-${TARGET_ENV}.inc;" > $NGINX_CONF_PATH
 
-echo "🔄 Nginx 리로드..."
-systemctl reload nginx
+echo "🔄 Nginx 리로드 (Docker)..."
+docker exec donttaz-nginx nginx -s reload
 
 if [ $? -eq 0 ]; then
     echo "🎉 Nginx 리로드 성공! 무중단 배포 완료."
 else
-    echo "💥 Nginx 리로드 실패! 호스트 설정을 롤백합니다."
-    # 롤백: 이전 환경 설정으로 복구
-    echo "include $PROJECT_DIR/nginx/api-${CURRENT_ENV}.inc;" | tee $NGINX_CONF_DIR/service-env.inc > /dev/null
-    systemctl reload nginx
+    echo "💥 Nginx 리로드 실패! 설정을 롤백합니다."
+    echo "include /etc/nginx/conf.d/api-${CURRENT_ENV}.inc;" > $NGINX_CONF_PATH
+    docker exec donttaz-nginx nginx -s reload
     docker-compose -f docker-compose.${TARGET_ENV}.yml down
     exit 1
 fi
