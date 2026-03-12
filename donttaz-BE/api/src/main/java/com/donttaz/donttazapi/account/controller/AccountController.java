@@ -1,16 +1,21 @@
 package com.donttaz.donttazapi.account.controller;
 
 import com.donttaz.donttazapi.account.controller.docs.AccountSwagger;
+import com.donttaz.donttazapi.account.dto.request.AccountDepositRequest;
+import com.donttaz.donttazapi.account.dto.request.AccountWithdrawalRequest;
 import com.donttaz.donttazapi.account.dto.request.CreateAccountRequest;
 import com.donttaz.donttazapi.account.dto.response.AccountBalanceResponse;
+import com.donttaz.donttazapi.account.dto.response.AccountDepositResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountHolderNameResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountListResponse;
+import com.donttaz.donttazapi.account.dto.response.AccountWithdrawalResponse;
 import com.donttaz.donttazapi.account.dto.response.CreateAccountResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionListResponse;
 import com.donttaz.donttazapi.account.service.AccountCreationService;
 import com.donttaz.donttazapi.account.service.AccountQueryService;
+import com.donttaz.donttazapi.account.service.AccountTransferService;
 import com.donttaz.donttazapi.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
@@ -31,10 +36,16 @@ public class AccountController implements AccountSwagger {
 
     private final AccountCreationService accountCreationService;
     private final AccountQueryService accountQueryService;
+    private final AccountTransferService accountTransferService;
 
-    public AccountController(AccountCreationService accountCreationService, AccountQueryService accountQueryService) {
+    public AccountController(
+            AccountCreationService accountCreationService,
+            AccountQueryService accountQueryService,
+            AccountTransferService accountTransferService
+    ) {
         this.accountCreationService = accountCreationService;
         this.accountQueryService = accountQueryService;
+        this.accountTransferService = accountTransferService;
     }
 
     @PostMapping
@@ -81,6 +92,28 @@ public class AccountController implements AccountSwagger {
     ) {
         return ResponseEntity.ok(
                 ApiResponse.success("예금주 조회 성공", accountQueryService.getAccountHolderName(accountNo))
+        );
+    }
+
+    @PostMapping("/{accountNo}/deposit")
+    @Override
+    public ResponseEntity<ApiResponse<AccountDepositResponse>> deposit(
+            @PathVariable("accountNo") String accountNo,
+            @Valid @RequestBody AccountDepositRequest request
+    ) {
+        return ResponseEntity.ok(
+                ApiResponse.success("계좌 입금 성공", accountTransferService.deposit(accountNo, request))
+        );
+    }
+
+    @PostMapping("/{accountNo}/withdrawal")
+    @Override
+    public ResponseEntity<ApiResponse<AccountWithdrawalResponse>> withdrawal(
+            @PathVariable("accountNo") String accountNo,
+            @Valid @RequestBody AccountWithdrawalRequest request
+    ) {
+        return ResponseEntity.ok(
+                ApiResponse.success("계좌 출금 성공", accountTransferService.withdrawal(accountNo, request))
         );
     }
 
