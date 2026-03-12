@@ -4,7 +4,7 @@
 # 옵션 및 변수 설정
 # ==============================================================================
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)" # donttaz-BE 디렉토리
-NGINX_CONF_DIR="/etc/nginx/conf.d" # Nginx 호스트 설정 경로 (환경에 맞게 변경 필요)
+NGINX_CONF_DIR="/etc/nginx/conf.d" # Nginx 설정 경로 (jenkins 유저에게 쓰기 권한이 필요함)
 MAX_RETRIES=20
 RETRY_INTERVAL=3
 API_HEALTH_URL="/actuator/health"
@@ -86,18 +86,18 @@ fi
 echo "🔀 Nginx 라우팅 경로를 [$TARGET_ENV] 로 변경합니다..."
 
 # 호스트 Nginx의 include 파일 내용을 덮어씁니다
-echo "include $PROJECT_DIR/nginx/api-${TARGET_ENV}.inc;" | sudo tee $NGINX_CONF_DIR/service-env.inc > /dev/null
+echo "include $PROJECT_DIR/nginx/api-${TARGET_ENV}.inc;" | tee $NGINX_CONF_DIR/service-env.inc > /dev/null
 
 echo "🔄 Nginx 리로드..."
-sudo systemctl reload nginx
+systemctl reload nginx
 
 if [ $? -eq 0 ]; then
     echo "🎉 Nginx 리로드 성공! 무중단 배포 완료."
 else
     echo "💥 Nginx 리로드 실패! 호스트 설정을 롤백합니다."
     # 롤백: 이전 환경 설정으로 복구
-    echo "include $PROJECT_DIR/nginx/api-${CURRENT_ENV}.inc;" | sudo tee $NGINX_CONF_DIR/service-env.inc > /dev/null
-    sudo systemctl reload nginx
+    echo "include $PROJECT_DIR/nginx/api-${CURRENT_ENV}.inc;" | tee $NGINX_CONF_DIR/service-env.inc > /dev/null
+    systemctl reload nginx
     docker-compose -f docker-compose.${TARGET_ENV}.yml down
     exit 1
 fi
