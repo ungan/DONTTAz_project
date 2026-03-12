@@ -20,6 +20,7 @@ import com.donttaz.donttazapi.account.service.dto.AccountHolderNameResult;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountResult;
 import com.donttaz.donttazapi.common.exception.CustomException;
 import com.donttaz.donttazapi.common.exception.ErrorCode;
+import com.donttaz.donttazapi.common.security.CurrentUserProvider;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,23 +34,24 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AccountQueryService {
 
-    private static final Long DEMO_USER_ID = 1L;
-
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final DemandDepositService demandDepositService;
     private final BankingAccountQueryService bankingAccountQueryService;
+    private final CurrentUserProvider currentUserProvider;
 
     public AccountQueryService(
             AccountRepository accountRepository,
             TransactionRepository transactionRepository,
             DemandDepositService demandDepositService,
-            BankingAccountQueryService bankingAccountQueryService
+            BankingAccountQueryService bankingAccountQueryService,
+            CurrentUserProvider currentUserProvider
     ) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.demandDepositService = demandDepositService;
         this.bankingAccountQueryService = bankingAccountQueryService;
+        this.currentUserProvider = currentUserProvider;
     }
 
     public AccountListResponse getAccounts() {
@@ -244,7 +246,6 @@ public class AccountQueryService {
     }
 
     private Long resolveCurrentUserId() {
-        // TODO: Replace with authenticated user resolution when auth is implemented.
-        return DEMO_USER_ID;
+        return currentUserProvider.getCurrentUserId();
     }
 }
