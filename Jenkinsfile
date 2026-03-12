@@ -105,10 +105,19 @@ pipeline {
         }
         success {
             echo "🎉 [Donttaz] 모든 배포가 성공적으로 완료되었습니다!"
-            // [선택] 디스코드/매터모스트 웹훅으로 성공 알림 전송 가능
+            script {
+                def webhookUrl = 'https://meeting.ssafy.com/hooks/fqz6a9tj63gdub7tcaydjmhnho'
+                def payload = """{"text": "## :jenkins7: Backend Deploy 성공 ✅\\n**Jenkins**: [빌드 보기](${env.BUILD_URL})", "username": "Jenkins", "icon_emoji": ":jenkins7:"}"""
+                sh "curl -sS -H 'Content-Type: application/json' -d '${payload}' ${webhookUrl} || true"
+            }
         }
         failure {
             echo "💥 [Donttaz] 배포 중 오류가 발생했습니다. 로그를 확인해 주세요."
+            script {
+                def webhookUrl = 'https://meeting.ssafy.com/hooks/fqz6a9tj63gdub7tcaydjmhnho'
+                def payload = """{"text": "## :angry_jenkins: Backend Deploy 실패 ❌\\n**Jenkins**: [빌드 보기](${env.BUILD_URL})", "username": "Jenkins", "icon_emoji": ":jenkins7:"}"""
+                sh "curl -sS -H 'Content-Type: application/json' -d '${payload}' ${webhookUrl} || true"
+            }
         }
     }
 }
