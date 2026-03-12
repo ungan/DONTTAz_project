@@ -1,7 +1,9 @@
 package com.donttaz.donttazapi.infra.banking.mapper;
 
 import com.donttaz.donttazapi.account.service.dto.AccountBalanceResult;
+import com.donttaz.donttazapi.account.service.dto.AccountDepositResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
+import com.donttaz.donttazapi.account.service.dto.AccountWithdrawalResult;
 import com.donttaz.donttazapi.account.service.dto.AccountHolderNameResult;
 import com.donttaz.donttazapi.account.service.dto.AccountSummaryResult;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountCreateResult;
@@ -14,8 +16,10 @@ import com.donttaz.donttazapi.account.service.dto.TransactionQueryResult;
 import com.donttaz.donttazapi.account.service.dto.TransactionSummaryResult;
 import com.donttaz.donttazapi.account.service.dto.TransferResult;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountBalanceResponse;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountDepositResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountDetailResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountHolderNameResponse;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountWithdrawalResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountItemResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiCreateDemandDepositAccountRec;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiDemandDepositAccountRec;
@@ -141,6 +145,20 @@ public class FinApiBankingMapper {
                 response.rec().accountNo(),
                 response.rec().userName(),
                 response.rec().currency()
+        );
+    }
+
+    public AccountDepositResult toAccountDepositResult(FinApiAccountDepositResponse response) {
+        return new AccountDepositResult(
+                response.rec().transactionUniqueNo(),
+                response.rec().transactionDate()
+        );
+    }
+
+    public AccountWithdrawalResult toAccountWithdrawalResult(FinApiAccountWithdrawalResponse response) {
+        return new AccountWithdrawalResult(
+                response.rec().transactionUniqueNo(),
+                response.rec().transactionDate()
         );
     }
 

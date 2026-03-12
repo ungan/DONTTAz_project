@@ -1,6 +1,7 @@
 package com.donttaz.donttazapi.account.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -8,21 +9,26 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.donttaz.donttazapi.account.dto.response.AccountDepositResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountListResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountSummaryResponse;
+import com.donttaz.donttazapi.account.dto.response.AccountWithdrawalResponse;
 import com.donttaz.donttazapi.account.dto.response.CreateAccountResponse;
 import com.donttaz.donttazapi.account.service.AccountCreationService;
 import com.donttaz.donttazapi.account.service.AccountQueryService;
+import com.donttaz.donttazapi.account.service.AccountTransferService;
 import com.donttaz.donttazapi.common.exception.GlobalExceptionHandler;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(AccountController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @Import(GlobalExceptionHandler.class)
 class AccountControllerTest {
 
@@ -35,8 +41,11 @@ class AccountControllerTest {
     @MockBean
     private AccountQueryService accountQueryService;
 
+    @MockBean
+    private AccountTransferService accountTransferService;
+
     @Test
-    void 계좌_생성은_finAPI_형식의_응답을_반환한다() throws Exception {
+    void 계좌_생성은_finAPI_형식_응답을_반환한다() throws Exception {
         when(accountCreationService.createAccount(any(com.donttaz.donttazapi.account.dto.request.CreateAccountRequest.class)))
                 .thenReturn(CreateAccountResponse.builder()
                         .bankCode("001")
@@ -89,5 +98,51 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.data.totalBalance").value(8003477))
                 .andExpect(jsonPath("$.data.accountList[0].bankCode").value("020"))
                 .andExpect(jsonPath("$.data.accountList[0].accountNo").value("020-***-8182760"));
+    }
+
+    @Test
+    void 계좌_입금은_finAPI_응답을_반환한다() throws Exception {
+        when(accountTransferService.deposit(anyString(), any(com.donttaz.donttazapi.account.dto.request.AccountDepositRequest.class)))
+                .thenReturn(AccountDepositResponse.builder()
+                        .transactionUniqueNo("59")
+                        .transactionDate("20240401")
+                        .build());
+
+        mockMvc.perform(post("/api/v1/accounts/0016174648358792/deposit")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "transactionBalance": "100000000",
+                                  "transactionSummary": "(수시입출금) : 입금"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("계좌 입금 성공"))
+                .andExpect(jsonPath("$.data.transactionUniqueNo").value("59"))
+                .andExpect(jsonPath("$.data.transactionDate").value("20240401"));
+    }
+
+    @Test
+    void 계좌_출금은_finAPI_응답을_반환한다() throws Exception {
+        when(accountTransferService.withdrawal(anyString(), any(com.donttaz.donttazapi.account.dto.request.AccountWithdrawalRequest.class)))
+                .thenReturn(AccountWithdrawalResponse.builder()
+                        .transactionUniqueNo("60")
+                        .transactionDate("20240401")
+                        .build());
+
+        mockMvc.perform(post("/api/v1/accounts/0016174648358792/withdrawal")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "transactionBalance": "100000",
+                                  "transactionSummary": "(수시입출금) : 출금"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("계좌 출금 성공"))
+                .andExpect(jsonPath("$.data.transactionUniqueNo").value("60"))
+                .andExpect(jsonPath("$.data.transactionDate").value("20240401"));
     }
 }

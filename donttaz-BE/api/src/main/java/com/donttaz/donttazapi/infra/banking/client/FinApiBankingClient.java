@@ -1,7 +1,11 @@
 package com.donttaz.donttazapi.infra.banking.client;
 
 import com.donttaz.donttazapi.account.service.dto.AccountBalanceResult;
+import com.donttaz.donttazapi.account.service.dto.AccountDepositCommand;
+import com.donttaz.donttazapi.account.service.dto.AccountDepositResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
+import com.donttaz.donttazapi.account.service.dto.AccountWithdrawalCommand;
+import com.donttaz.donttazapi.account.service.dto.AccountWithdrawalResult;
 import com.donttaz.donttazapi.account.service.dto.AccountHolderNameResult;
 import com.donttaz.donttazapi.account.service.dto.AccountSummaryResult;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountCreateResult;
@@ -17,44 +21,44 @@ import com.donttaz.donttazapi.account.service.dto.TransferCommand;
 import com.donttaz.donttazapi.account.service.dto.TransferResult;
 import com.donttaz.donttazapi.common.exception.CustomException;
 import com.donttaz.donttazapi.common.exception.ErrorCode;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.donttaz.donttazapi.infra.banking.config.FinApiProperties;
-import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountBalanceRequest;
-import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountRequest;
-import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountHolderNameRequest;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiAccountDepositRequest;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiAccountWithdrawalRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiCreateDemandDepositAccountRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiCreateDemandDepositRequest;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountBalanceRequest;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountHolderNameRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountListRequest;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositListRequest;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiMemberRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiRequestHeader;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountBalanceResponse;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountDepositResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountDetailResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountHolderNameResponse;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountWithdrawalResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiCreateDemandDepositAccountResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiCreateDemandDepositResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiInquireDemandDepositAccountListResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiInquireDemandDepositListResponse;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiMemberResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiResponseHeader;
 import com.donttaz.donttazapi.infra.banking.mapper.FinApiBankingMapper;
-import com.donttaz.donttazapi.infra.banking.dto.request.FinApiMemberRequest;
-import com.donttaz.donttazapi.infra.banking.dto.response.FinApiMemberResponse;
-import com.donttaz.donttazapi.common.exception.CustomException;
-import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.donttaz.donttazapi.infra.banking.userkey.UserKeyProvider;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import org.springframework.http.MediaType;
 import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
@@ -70,6 +74,8 @@ public class FinApiBankingClient implements BankingClient {
     private static final String DEMAND_DEPOSIT_ACCOUNT_BALANCE_URI = "/demandDeposit/inquireDemandDepositAccountBalance";
     private static final String DEMAND_DEPOSIT_ACCOUNT_DETAIL_URI = "/demandDeposit/inquireDemandDepositAccount";
     private static final String DEMAND_DEPOSIT_ACCOUNT_HOLDER_NAME_URI = "/demandDeposit/inquireDemandDepositAccountHolderName";
+    private static final String DEMAND_DEPOSIT_ACCOUNT_DEPOSIT_URI = "/demandDeposit/updateDemandDepositAccountDeposit";
+    private static final String DEMAND_DEPOSIT_ACCOUNT_WITHDRAWAL_URI = "/demandDeposit/updateDemandDepositAccountWithdrawal";
     private static final String SUCCESS_CODE = "H0000";
     private static final ZoneId KOREA_ZONE_ID = ZoneId.of("Asia/Seoul");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -208,8 +214,49 @@ public class FinApiBankingClient implements BankingClient {
     }
 
     @Override
-    public TransactionQueryResult getTransactions(Long userId, String externalAccountId, LocalDate startDate,
-                                                  LocalDate endDate, String type, int page, int size) {
+    public AccountDepositResult deposit(Long userId, AccountDepositCommand command) {
+        FinApiAccountDepositResponse response = post(
+                resolveUri(DEMAND_DEPOSIT_ACCOUNT_DEPOSIT_URI),
+                new FinApiAccountDepositRequest(
+                        buildHeader("updateDemandDepositAccountDeposit", userId),
+                        command.accountNo(),
+                        command.transactionBalance(),
+                        command.transactionSummary()
+                ),
+                FinApiAccountDepositResponse.class
+        );
+
+        validateSuccess(response.header());
+        return finApiBankingMapper.toAccountDepositResult(response);
+    }
+
+    @Override
+    public AccountWithdrawalResult withdrawal(Long userId, AccountWithdrawalCommand command) {
+        FinApiAccountWithdrawalResponse response = post(
+                resolveUri(DEMAND_DEPOSIT_ACCOUNT_WITHDRAWAL_URI),
+                new FinApiAccountWithdrawalRequest(
+                        buildHeader("updateDemandDepositAccountWithdrawal", userId),
+                        command.accountNo(),
+                        command.transactionBalance(),
+                        command.transactionSummary()
+                ),
+                FinApiAccountWithdrawalResponse.class
+        );
+
+        validateSuccess(response.header());
+        return finApiBankingMapper.toAccountWithdrawalResult(response);
+    }
+
+    @Override
+    public TransactionQueryResult getTransactions(
+            Long userId,
+            String externalAccountId,
+            LocalDate startDate,
+            LocalDate endDate,
+            String type,
+            int page,
+            int size
+    ) {
         throw new UnsupportedOperationException("finAPI transaction list integration is not implemented yet.");
     }
 
@@ -231,6 +278,28 @@ public class FinApiBankingClient implements BankingClient {
     @Override
     public OneWonVerificationConfirmResult confirmOneWonVerification(Long userId, OneWonVerificationConfirmCommand command) {
         throw new UnsupportedOperationException("finAPI one-won confirm integration is not implemented yet.");
+    }
+
+    @Override
+    public String createUserKey(String email) {
+        try {
+            FinApiMemberRequest request = new FinApiMemberRequest(finApiProperties.getApiKey(), email);
+
+            FinApiMemberResponse response = restClient.post()
+                    .uri("/v1/member")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(request)
+                    .retrieve()
+                    .body(FinApiMemberResponse.class);
+
+            if (response == null || response.userKey() == null) {
+                throw new CustomException(ErrorCode.USER_KEY_ISSUANCE_FAILED);
+            }
+
+            return response.userKey();
+        } catch (RestClientException exception) {
+            throw new CustomException(ErrorCode.USER_KEY_ISSUANCE_FAILED, exception.getMessage());
+        }
     }
 
     private FinApiRequestHeader buildHeader(String apiName, Long userId) {
@@ -340,26 +409,4 @@ public class FinApiBankingClient implements BankingClient {
                 .replaceAll("(\"apiKey\"\\s*:\\s*\")([^\"]+)(\")", "$1***$3")
                 .replaceAll("(\"userKey\"\\s*:\\s*\")([^\"]+)(\")", "$1***$3");
     }
-    @Override
-    public String createUserKey(String email) {
-        try {
-            FinApiMemberRequest request = new FinApiMemberRequest(finApiProperties.getApiKey(), email);
-
-            FinApiMemberResponse response = restClient.post()
-                    .uri("/v1/member")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(request)
-                    .retrieve()
-                    .body(FinApiMemberResponse.class);
-
-            if (response == null || response.userKey() == null) {
-                throw new CustomException(ErrorCode.USER_KEY_ISSUANCE_FAILED);
-            }
-
-            return response.userKey();
-        } catch (RestClientException e) {
-            throw new CustomException(ErrorCode.USER_KEY_ISSUANCE_FAILED, e.getMessage());
-        }
-    }
-
 }
