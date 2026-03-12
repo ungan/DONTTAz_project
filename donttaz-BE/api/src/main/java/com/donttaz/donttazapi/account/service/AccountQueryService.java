@@ -4,7 +4,9 @@ import com.donttaz.donttazapi.account.domain.Account;
 import com.donttaz.donttazapi.account.domain.AccountStatus;
 import com.donttaz.donttazapi.account.domain.Transaction;
 import com.donttaz.donttazapi.account.domain.TransactionType;
+import com.donttaz.donttazapi.account.dto.response.AccountBalanceResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountDetailResponse;
+import com.donttaz.donttazapi.account.dto.response.AccountHolderNameResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountListResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountSummaryResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionDetailResponse;
@@ -12,6 +14,9 @@ import com.donttaz.donttazapi.account.dto.response.TransactionListResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionSummaryResponse;
 import com.donttaz.donttazapi.account.repository.AccountRepository;
 import com.donttaz.donttazapi.account.repository.TransactionRepository;
+import com.donttaz.donttazapi.account.service.dto.AccountBalanceResult;
+import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
+import com.donttaz.donttazapi.account.service.dto.AccountHolderNameResult;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountResult;
 import com.donttaz.donttazapi.common.exception.CustomException;
 import com.donttaz.donttazapi.common.exception.ErrorCode;
@@ -33,15 +38,18 @@ public class AccountQueryService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final DemandDepositService demandDepositService;
+    private final BankingAccountQueryService bankingAccountQueryService;
 
     public AccountQueryService(
             AccountRepository accountRepository,
             TransactionRepository transactionRepository,
-            DemandDepositService demandDepositService
+            DemandDepositService demandDepositService,
+            BankingAccountQueryService bankingAccountQueryService
     ) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.demandDepositService = demandDepositService;
+        this.bankingAccountQueryService = bankingAccountQueryService;
     }
 
     public AccountListResponse getAccounts() {
@@ -61,17 +69,50 @@ public class AccountQueryService {
                 .build();
     }
 
-    public AccountDetailResponse getAccountDetail(Long accountId) {
-        Account account = getActiveAccount(accountId);
+    public AccountBalanceResponse getAccountBalance(String accountNo) {
+        AccountBalanceResult account = bankingAccountQueryService.getAccountBalance(accountNo);
+
+        return AccountBalanceResponse.builder()
+                .bankCode(account.bankCode())
+                .accountNo(account.accountNo())
+                .accountBalance(account.accountBalance())
+                .accountCreatedDate(account.accountCreatedDate())
+                .accountExpiryDate(account.accountExpiryDate())
+                .lastTransactionDate(account.lastTransactionDate())
+                .currency(account.currency())
+                .build();
+    }
+
+    public AccountDetailResponse getAccountDetail(String accountNo) {
+        AccountDetailResult account = bankingAccountQueryService.getAccountDetail(accountNo);
 
         return AccountDetailResponse.builder()
-                .accountId(account.getId())
-                .bankCode(account.getBankCode())
-                .bankName(account.getBankName())
-                .accountNumber(account.getAccountNumber())
-                .accountAlias(account.getAccountAlias())
-                .balance(account.getBalance())
-                .linkedAt(account.getLinkedAt())
+                .bankCode(account.bankCode())
+                .bankName(account.bankName())
+                .userName(account.userName())
+                .accountNo(account.accountNo())
+                .accountName(account.accountName())
+                .accountTypeCode(account.accountTypeCode())
+                .accountTypeName(account.accountTypeName())
+                .accountCreatedDate(account.accountCreatedDate())
+                .accountExpiryDate(account.accountExpiryDate())
+                .dailyTransferLimit(account.dailyTransferLimit())
+                .oneTimeTransferLimit(account.oneTimeTransferLimit())
+                .accountBalance(account.accountBalance())
+                .lastTransactionDate(account.lastTransactionDate())
+                .currency(account.currency())
+                .build();
+    }
+
+    public AccountHolderNameResponse getAccountHolderName(String accountNo) {
+        AccountHolderNameResult account = bankingAccountQueryService.getAccountHolderName(accountNo);
+
+        return AccountHolderNameResponse.builder()
+                .bankCode(account.bankCode())
+                .bankName(account.bankName())
+                .accountNo(account.accountNo())
+                .userName(account.userName())
+                .currency(account.currency())
                 .build();
     }
 

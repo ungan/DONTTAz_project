@@ -1,6 +1,8 @@
 package com.donttaz.donttazapi.infra.banking.client;
 
+import com.donttaz.donttazapi.account.service.dto.AccountBalanceResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
+import com.donttaz.donttazapi.account.service.dto.AccountHolderNameResult;
 import com.donttaz.donttazapi.account.service.dto.AccountSummaryResult;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountCreateResult;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountResult;
@@ -32,7 +34,11 @@ public interface BankingClient {
 
     List<AccountSummaryResult> getAccounts(Long userId);
 
-    AccountDetailResult getAccountDetail(Long userId, String externalAccountId);
+    AccountBalanceResult getAccountBalance(Long userId, String accountNo);
+
+    AccountDetailResult getAccountDetail(Long userId, String accountNo);
+
+    AccountHolderNameResult getAccountHolderName(Long userId, String accountNo);
 
     TransactionQueryResult getTransactions(
             Long userId,

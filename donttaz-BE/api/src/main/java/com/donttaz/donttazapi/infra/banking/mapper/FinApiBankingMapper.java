@@ -1,6 +1,8 @@
 package com.donttaz.donttazapi.infra.banking.mapper;
 
+import com.donttaz.donttazapi.account.service.dto.AccountBalanceResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
+import com.donttaz.donttazapi.account.service.dto.AccountHolderNameResult;
 import com.donttaz.donttazapi.account.service.dto.AccountSummaryResult;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountCreateResult;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountResult;
@@ -11,7 +13,9 @@ import com.donttaz.donttazapi.account.service.dto.TransactionDetailResult;
 import com.donttaz.donttazapi.account.service.dto.TransactionQueryResult;
 import com.donttaz.donttazapi.account.service.dto.TransactionSummaryResult;
 import com.donttaz.donttazapi.account.service.dto.TransferResult;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountBalanceResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountDetailResponse;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountHolderNameResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountItemResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiCreateDemandDepositAccountRec;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiDemandDepositAccountRec;
@@ -99,14 +103,44 @@ public class FinApiBankingMapper {
     }
 
     public AccountDetailResult toAccountDetailResult(FinApiAccountDetailResponse response) {
+        FinApiDemandDepositAccountRec rec = response.rec();
         return new AccountDetailResult(
-                response.accountId(),
-                response.bankCode(),
-                response.bankName(),
-                response.accountNumber(),
-                response.accountAlias(),
-                response.balance(),
-                response.linkedAt()
+                rec.bankCode(),
+                rec.bankName(),
+                rec.userName(),
+                rec.accountNo(),
+                rec.accountName(),
+                rec.accountTypeCode(),
+                rec.accountTypeName(),
+                rec.accountCreatedDate(),
+                rec.accountExpiryDate(),
+                rec.dailyTransferLimit(),
+                rec.oneTimeTransferLimit(),
+                rec.accountBalance(),
+                rec.lastTransactionDate(),
+                rec.currency()
+        );
+    }
+
+    public AccountBalanceResult toAccountBalanceResult(FinApiAccountBalanceResponse response) {
+        return new AccountBalanceResult(
+                response.rec().bankCode(),
+                response.rec().accountNo(),
+                response.rec().accountBalance(),
+                response.rec().accountCreatedDate(),
+                response.rec().accountExpiryDate(),
+                response.rec().lastTransactionDate(),
+                response.rec().currency()
+        );
+    }
+
+    public AccountHolderNameResult toAccountHolderNameResult(FinApiAccountHolderNameResponse response) {
+        return new AccountHolderNameResult(
+                response.rec().bankCode(),
+                response.rec().bankName(),
+                response.rec().accountNo(),
+                response.rec().userName(),
+                response.rec().currency()
         );
     }
 
