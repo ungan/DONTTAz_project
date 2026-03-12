@@ -1,7 +1,7 @@
 upstream donttaz-api {
-    server 127.0.0.1:8082;
+    server donttaz-api-green:8080;
 }
 
 upstream donttaz-ai {
-    server 127.0.0.1:8002;
+    server donttaz-ai-green:8000;
 }
