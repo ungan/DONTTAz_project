@@ -3,6 +3,7 @@ package com.donttaz.donttazapi.account.service;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountCreateResult;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountResult;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositProductResult;
+import com.donttaz.donttazapi.common.security.CurrentUserProvider;
 import com.donttaz.donttazapi.infra.banking.client.BankingClient;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -12,12 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class DemandDepositService {
 
-    private static final Long DEMO_USER_ID = 1L;
-
     private final BankingClient bankingClient;
+    private final CurrentUserProvider currentUserProvider;
 
-    public DemandDepositService(BankingClient bankingClient) {
+    public DemandDepositService(BankingClient bankingClient, CurrentUserProvider currentUserProvider) {
         this.bankingClient = bankingClient;
+        this.currentUserProvider = currentUserProvider;
     }
 
     public DemandDepositProductResult createProduct(String bankCode, String accountName, String accountDescription) {
@@ -37,6 +38,6 @@ public class DemandDepositService {
     }
 
     private Long resolveCurrentUserId() {
-        return DEMO_USER_ID;
+        return currentUserProvider.getCurrentUserId();
     }
 }

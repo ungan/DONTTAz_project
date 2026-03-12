@@ -8,6 +8,7 @@ import com.donttaz.donttazapi.account.service.dto.AccountDepositCommand;
 import com.donttaz.donttazapi.account.service.dto.AccountDepositResult;
 import com.donttaz.donttazapi.account.service.dto.AccountWithdrawalCommand;
 import com.donttaz.donttazapi.account.service.dto.AccountWithdrawalResult;
+import com.donttaz.donttazapi.common.security.CurrentUserProvider;
 import com.donttaz.donttazapi.infra.banking.client.BankingClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,12 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class AccountTransferService {
 
-    private static final Long DEMO_USER_ID = 1L;
-
     private final BankingClient bankingClient;
+    private final CurrentUserProvider currentUserProvider;
 
-    public AccountTransferService(BankingClient bankingClient) {
+    public AccountTransferService(BankingClient bankingClient, CurrentUserProvider currentUserProvider) {
         this.bankingClient = bankingClient;
+        this.currentUserProvider = currentUserProvider;
     }
 
     public AccountDepositResponse deposit(String accountNo, AccountDepositRequest request) {
@@ -49,6 +50,6 @@ public class AccountTransferService {
     }
 
     private Long resolveCurrentUserId() {
-        return DEMO_USER_ID;
+        return currentUserProvider.getCurrentUserId();
     }
 }

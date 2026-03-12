@@ -27,7 +27,4 @@ public class FinApiProperties {
      * App-wide finAPI key. This is expected to be injected from environment or secret storage.
      */
     private String apiKey;
-
-    @NotBlank
-    private String mockUserKey;
 }
