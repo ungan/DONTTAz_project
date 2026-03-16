@@ -8,11 +8,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
-    List<Account> findAllByUserIdAndStatus(Long userId, AccountStatus status);
+    List<Account> findAllByUserIdAndStatusAndIsDeletedFalse(Long userId, AccountStatus status);
 
-    Optional<Account> findByIdAndUserIdAndStatus(Long id, Long userId, AccountStatus status);
+    Optional<Account> findByAccountIdAndUserIdAndStatusAndIsDeletedFalse(Long accountId, Long userId, AccountStatus status);
 
-    boolean existsByUserIdAndBankCodeAndAccountNumberAndStatus(
+    Optional<Account> findByUserIdAndBankCodeAndAccountNumber(Long userId, String bankCode, String accountNumber);
+
+    boolean existsByUserIdAndBankCodeAndAccountNumberAndStatusAndIsDeletedFalse(
             Long userId,
             String bankCode,
             String accountNumber,

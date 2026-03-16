@@ -8,7 +8,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -17,34 +19,58 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "accounts")
+@Table(
+        name = "account",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uq_account_user_bank_account",
+                        columnNames = {"user_id", "bank_code", "account_number"}
+                )
+        },
+        indexes = {
+                @Index(name = "idx_account_user_status", columnList = "user_id, status")
+        }
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Account extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "account_id")
+    private Long accountId;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(nullable = false, length = 10)
+    @Column(name = "bank_code", nullable = false, length = 10)
     private String bankCode;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "bank_name", nullable = false, length = 50)
     private String bankName;
 
-    @Column(nullable = false, length = 30)
+    @Column(name = "account_number", nullable = false, length = 30)
     private String accountNumber;
 
-    @Column(length = 100)
+    @Column(name = "account_alias", length = 100)
     private String accountAlias;
 
-    @Column(nullable = false)
-    private Integer balance;
+    @Column(name = "account_type_unique_no", length = 50)
+    private String accountTypeUniqueNo;
+
+    @Column(length = 10)
+    private String currency;
 
     @Column(nullable = false)
+    private Long balance;
+
+    @Column(name = "linked_at", nullable = false)
     private LocalDateTime linkedAt;
+
+    @Column(name = "last_synced_at")
+    private LocalDateTime lastSyncedAt;
+
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -52,14 +78,43 @@ public class Account extends BaseEntity {
 
     @Builder
     private Account(Long userId, String bankCode, String bankName, String accountNumber,
-                    String accountAlias, Integer balance, LocalDateTime linkedAt, AccountStatus status) {
+                    String accountAlias, String accountTypeUniqueNo, String currency, Long balance,
+                    LocalDateTime linkedAt, LocalDateTime lastSyncedAt, Boolean isDeleted, AccountStatus status) {
         this.userId = userId;
         this.bankCode = bankCode;
         this.bankName = bankName;
         this.accountNumber = accountNumber;
         this.accountAlias = accountAlias;
+        this.accountTypeUniqueNo = accountTypeUniqueNo;
+        this.currency = currency;
         this.balance = balance;
         this.linkedAt = linkedAt;
+        this.lastSyncedAt = lastSyncedAt;
+        this.isDeleted = isDeleted != null ? isDeleted : Boolean.FALSE;
         this.status = status;
+    }
+
+    public void synchronize(
+            String bankName,
+            String accountAlias,
+            String accountTypeUniqueNo,
+            String currency,
+            Long balance,
+            LocalDateTime lastSyncedAt
+    ) {
+        this.bankName = bankName;
+        if (accountAlias != null) {
+            this.accountAlias = accountAlias;
+        }
+        if (accountTypeUniqueNo != null) {
+            this.accountTypeUniqueNo = accountTypeUniqueNo;
+        }
+        if (currency != null) {
+            this.currency = currency;
+        }
+        this.balance = balance;
+        this.lastSyncedAt = lastSyncedAt;
+        this.isDeleted = Boolean.FALSE;
+        this.status = AccountStatus.ACTIVE;
     }
 }

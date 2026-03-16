@@ -30,6 +30,9 @@ class AccountQueryServiceTest {
     private DemandDepositService demandDepositService;
 
     @Mock
+    private AccountSyncService accountSyncService;
+
+    @Mock
     private BankingAccountQueryService bankingAccountQueryService;
 
     @Mock
@@ -39,18 +42,17 @@ class AccountQueryServiceTest {
     private AccountQueryService accountQueryService;
 
     @Test
-    @DisplayName("계좌 목록 조회 시 총액을 계산하고 계좌번호를 마스킹한다.")
+    @DisplayName("계좌 목록 조회 시 총액을 계산하고 내부 동기화를 수행한다.")
     void getAccountsSuccess() {
-        // Given
         List<DemandDepositAccountResult> results = List.of(
                 new DemandDepositAccountResult(
                         "020",
-                        "우리은행",
+                        "WOORI",
                         "USER",
                         "0201238182760",
-                        "우리은행 수시입출금 상품명",
+                        "Demand Deposit",
                         "1",
-                        "수시입출금",
+                        "DEPOSIT",
                         "20240320",
                         "20290320",
                         "100000000",
@@ -62,14 +64,13 @@ class AccountQueryServiceTest {
         );
         given(demandDepositService.getAccounts()).willReturn(results);
 
-        // When
         AccountListResponse response = accountQueryService.getAccounts();
 
-        // Then
         assertThat(response.totalBalance()).isEqualTo(8003477L);
         assertThat(response.accountList()).hasSize(1);
         assertThat(response.accountList().get(0).bankCode()).isEqualTo("020");
         assertThat(response.accountList().get(0).accountNo()).isEqualTo("020-***-182760");
         verify(demandDepositService).getAccounts();
+        verify(accountSyncService).syncDemandDepositAccounts(results);
     }
 }

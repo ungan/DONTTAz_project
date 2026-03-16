@@ -37,6 +37,7 @@ public class AccountQueryService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final DemandDepositService demandDepositService;
+    private final AccountSyncService accountSyncService;
     private final BankingAccountQueryService bankingAccountQueryService;
     private final CurrentUserProvider currentUserProvider;
 
@@ -44,18 +45,22 @@ public class AccountQueryService {
             AccountRepository accountRepository,
             TransactionRepository transactionRepository,
             DemandDepositService demandDepositService,
+            AccountSyncService accountSyncService,
             BankingAccountQueryService bankingAccountQueryService,
             CurrentUserProvider currentUserProvider
     ) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.demandDepositService = demandDepositService;
+        this.accountSyncService = accountSyncService;
         this.bankingAccountQueryService = bankingAccountQueryService;
         this.currentUserProvider = currentUserProvider;
     }
 
+    @Transactional
     public AccountListResponse getAccounts() {
         List<DemandDepositAccountResult> accounts = demandDepositService.getAccounts();
+        accountSyncService.syncDemandDepositAccounts(accounts);
 
         List<AccountSummaryResponse> accountList = accounts.stream()
                 .map(this::toAccountSummaryResponse)
@@ -150,7 +155,7 @@ public class AccountQueryService {
     public TransactionDetailResponse getTransactionDetail(Long accountId, Long transactionId) {
         getActiveAccount(accountId);
 
-        Transaction transaction = transactionRepository.findByIdAndAccountIdAndAccountUserId(
+        Transaction transaction = transactionRepository.findByIdAndAccountAccountIdAndAccountUserId(
                         transactionId,
                         accountId,
                         resolveCurrentUserId()
@@ -161,7 +166,11 @@ public class AccountQueryService {
     }
 
     private Account getActiveAccount(Long accountId) {
-        return accountRepository.findByIdAndUserIdAndStatus(accountId, resolveCurrentUserId(), AccountStatus.ACTIVE)
+        return accountRepository.findByAccountIdAndUserIdAndStatusAndIsDeletedFalse(
+                        accountId,
+                        resolveCurrentUserId(),
+                        AccountStatus.ACTIVE
+                )
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
     }
 
@@ -199,7 +208,7 @@ public class AccountQueryService {
     private TransactionDetailResponse toTransactionDetailResponse(Transaction transaction) {
         return TransactionDetailResponse.builder()
                 .transactionId(transaction.getId())
-                .accountId(transaction.getAccount().getId())
+                .accountId(transaction.getAccount().getAccountId())
                 .transactionDate(transaction.getTransactionDate())
                 .type(transaction.getType().name())
                 .amount(transaction.getAmount())
