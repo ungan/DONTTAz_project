@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
-import { Feather, AntDesign } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 interface LoginInputSectionProps {
   email: string;
@@ -19,12 +20,12 @@ export function LoginInputSection({
 
   return (
     <View style={styles.container}>
-      {/* 이메일 */}
+      {/* ID */}
       <View style={styles.inputRow}>
         <Feather name="mail" size={24} color="#9CA3AF" />
         <TextInput
           style={styles.input}
-          placeholder="이메일"
+          placeholder="ID"
           placeholderTextColor="#9CA3AF"
           value={email}
           onChangeText={onEmailChange}
@@ -35,7 +36,7 @@ export function LoginInputSection({
 
       {/* 비밀번호 */}
       <View style={styles.inputRow}>
-        <AntDesign name="lock" size={24} color="#9CA3AF" />
+        <MaterialIcons name="lock-outline" size={26} color="#9CA3AF" />
         <TextInput
           style={styles.input}
           placeholder="영문, 숫자 포함 6~12자"

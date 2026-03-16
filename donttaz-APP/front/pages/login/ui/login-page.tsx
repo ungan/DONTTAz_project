@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text } from 'react-native';
-import { LoginFormSection, LoginActionSection } from '@/features/auth';
+import { LoginFormSection, LoginActionSection, useLogin } from '@/features/auth';
 import { styles } from './login-page.styles';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { login, isPending, error } = useLogin();
 
   const handleLogin = () => {
-    // TODO: 로그인 로직
+    login(email, password);
   };
 
   const handleSignUp = () => {

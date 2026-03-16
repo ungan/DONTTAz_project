@@ -1,0 +1,47 @@
+{
+  "status": "SUCCESS",
+  "message": "거래 내역 조회 성공",
+  "data": {
+    "totalElements": 145,
+    "totalPages": 8,
+    "isLast": false,
+    "transactions": [
+      {
+        "transactionId": 1004,
+        "transactionDate": "2026-02-15T14:30:00",
+        "type": "WITHDRAWAL",
+        "amount": 15000,
+        "balanceAfter": 485000,
+        "counterpartyName": "스타벅스 강남점",
+        "category": "식비/카페"
+      },
+      {
+        "transactionId": 1003,
+        "transactionDate": "2026-02-15T09:15:22",
+        "type": "WITHDRAWAL",
+        "amount": 3200,
+        "balanceAfter": 500000,
+        "counterpartyName": "GS25 역삼점",
+        "category": "편의점/마트"
+      },
+      {
+        "transactionId": 1002,
+        "transactionDate": "2026-02-14T18:45:00",
+        "type": "DEPOSIT",
+        "amount": 50000,
+        "balanceAfter": 503200,
+        "counterpartyName": "돈땃쥐 캐시백 이벤트",
+        "category": "기타/이벤트"
+      },
+      {
+        "transactionId": 1001,
+        "transactionDate": "2026-02-13T12:00:00",
+        "type": "WITHDRAWAL",
+        "amount": 12000,
+        "balanceAfter": 453200,
+        "counterpartyName": "김밥천국",
+        "category": "식비"
+      }
+    ]
+  }
+}

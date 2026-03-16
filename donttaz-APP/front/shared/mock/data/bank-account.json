@@ -1,0 +1,9 @@
+{
+  "status": "SUCCESS",
+  "message": "계좌가 성공적으로 등록되었습니다.",
+  "data": {
+    "accountId": 42,
+    "bankName": "돈땃쥐 은행",
+    "balance": 500000
+  }
+}
