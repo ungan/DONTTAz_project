@@ -1,9 +1,9 @@
 import { Text, View } from 'react-native';
 
-export default function HomePage() {
+export function VaultPage() {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>home</Text>
+      <Text>금고 페이지</Text>
     </View>
   );
 }
