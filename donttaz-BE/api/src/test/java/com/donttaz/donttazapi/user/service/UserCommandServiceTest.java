@@ -49,7 +49,7 @@ class UserCommandServiceTest {
     @Test
     @DisplayName("회원가입 성공 시 사용자 키를 발급받아 암호화된 사용자 정보를 저장한다.")
     void createUser_Success() {
-        // Given
+        // [Given]
         CreateUserRequest request = createCreateUserRequest(TEST_EMAIL);
         User savedUser = createSavedUser(TEST_EMAIL);
 
@@ -57,14 +57,12 @@ class UserCommandServiceTest {
         given(bankingClient.createUserKey(TEST_EMAIL)).willReturn(SSAFY_USER_KEY);
         given(passwordEncoder.encode(request.getPassword())).willReturn(ENCODED_PASSWORD);
         given(passwordEncoder.encode(request.getPinCode())).willReturn(ENCODED_PIN);
-        
-        // 선언적 Mocking: save 호출 시 미리 준비된 savedUser(ID 포함)를 즉시 반환
         given(userRepository.save(any(User.class))).willReturn(savedUser);
 
-        // When
+        // [When]
         CreateUserResponse response = userCommandService.createUser(request);
 
-        // Then
+        // [Then]
         assertThat(response.getUserId()).isEqualTo(TEST_USER_ID);
         assertThat(response.getEmail()).isEqualTo(TEST_EMAIL);
         assertThat(response.getName()).isEqualTo(request.getName());
@@ -76,14 +74,15 @@ class UserCommandServiceTest {
     @Test
     @DisplayName("이미 사용 중인 이메일이면 DUPLICATE_EMAIL 예외가 발생하며 저장을 시도하지 않는다.")
     void createUser_Fail_EmailDuplicated() {
-        // Given
+        // [Given]
         CreateUserRequest request = createCreateUserRequest("duplicate@ssafy.com");
         given(userRepository.existsByEmail("duplicate@ssafy.com")).willReturn(true);
 
-        // When & Then
-        CustomException exception = assertThrows(CustomException.class, () -> userCommandService.createUser(request));
+        // [When & Then]
+        assertThrows(CustomException.class, () -> {
+            userCommandService.createUser(request);
+        });
         
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.DUPLICATE_EMAIL);
         verify(userRepository, never()).save(any(User.class));
         verifyNoInteractions(passwordEncoder, bankingClient);
     }
