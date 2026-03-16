@@ -15,7 +15,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Query("""
             select t
             from Transaction t
-            where t.account.id = :accountId
+            where t.account.accountId = :accountId
               and t.account.userId = :userId
               and (:type is null or t.type = :type)
               and (:startDate is null or t.transactionDate >= :startDate)
@@ -31,5 +31,5 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             Pageable pageable
     );
 
-    Optional<Transaction> findByIdAndAccountIdAndAccountUserId(Long id, Long accountId, Long userId);
+    Optional<Transaction> findByIdAndAccountAccountIdAndAccountUserId(Long id, Long accountId, Long userId);
 }
