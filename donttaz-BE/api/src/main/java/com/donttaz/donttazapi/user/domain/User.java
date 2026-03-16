@@ -49,9 +49,14 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private UserStatus status;
 
+    public void updatePassword(String encryptedPassword) {
+        this.password = encryptedPassword;
+    }
+
     @Builder
-    public User(String email, String password, String pinCode, String name, String phoneNumber, 
+    public User(Long userId, String email, String password, String pinCode, String name, String phoneNumber, 
                 String ci, String deviceId, String ssafyUserKey, UserStatus status) {
+        this.userId = userId;
         this.email = email;
         this.password = password;
         this.pinCode = pinCode;

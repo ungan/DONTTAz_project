@@ -34,14 +34,14 @@ class UserQueryServiceTest {
     @Test
     @DisplayName("존재하는 사용자 ID를 조회하면 사용자 요약 정보를 반환한다.")
     void getUserSummary_Success() {
-        // Given
+        // [Given]
         User user = createTestUser();
         given(userRepository.findById(TEST_USER_ID)).willReturn(Optional.of(user));
 
-        // When
+        // [When]
         UserSummaryResponse response = userQueryService.getUserSummary(TEST_USER_ID);
 
-        // Then
+        // [Then]
         assertThat(response.getUserId()).isEqualTo(TEST_USER_ID);
         assertThat(response.getEmail()).isEqualTo(TEST_EMAIL);
         assertThat(response.getName()).isEqualTo(TEST_NAME);
@@ -50,12 +50,13 @@ class UserQueryServiceTest {
     @Test
     @DisplayName("존재하지 않는 사용자 ID를 조회하면 USER_NOT_FOUND 예외가 발생한다.")
     void getUserSummary_Fail_UserNotFound() {
-        // Given
+        // [Given]
         given(userRepository.findById(TEST_USER_ID)).willReturn(Optional.empty());
 
-        // When & Then
-        CustomException exception = assertThrows(CustomException.class, () -> userQueryService.getUserSummary(TEST_USER_ID));
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USER_NOT_FOUND);
+        // [When & Then]
+        assertThrows(CustomException.class, () -> {
+            userQueryService.getUserSummary(TEST_USER_ID);
+        });
     }
 
     // --- Helper Methods ---

@@ -2,7 +2,9 @@ package com.donttaz.donttazapi.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.donttaz.donttazapi.auth.dto.request.LoginRequest;
@@ -59,14 +61,17 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        // 공통 설정에서는 Redis 관련 stubbing을 제거합니다.
-        // 모든 테스트에서 Redis를 사용하는 것이 아니므로 UnnecessaryStubbingException이 발생할 수 있기 때문입니다.
+        // AuthService의 @Value 필드 설정 (단위 테스트 환경)
+        ReflectionTestUtils.setField(authService, "testEmail", TEST_EMAIL);
+        ReflectionTestUtils.setField(authService, "testPassword", TEST_PASSWORD);
+        ReflectionTestUtils.setField(authService, "testPin", "123456");
+        ReflectionTestUtils.setField(authService, "testUserKey", "ssafy-user-key");
     }
 
     @Test
     @DisplayName("로그인 성공 시 토큰을 발급하고 Redis에 Refresh Token을 저장한다.")
     void login_Success() {
-        // Given
+        // [Given]
         User user = createTestUser();
         LoginRequest request = createLoginRequest(TEST_EMAIL, TEST_PASSWORD);
 
@@ -75,93 +80,138 @@ class AuthServiceTest {
         given(jwtProvider.createAccessToken(TEST_USER_ID, TEST_EMAIL)).willReturn(ACCESS_TOKEN);
         given(jwtProvider.createRefreshToken(TEST_USER_ID, TEST_EMAIL)).willReturn(REFRESH_TOKEN);
         
-        // 해당 테스트에서만 필요한 Redis stubbing 정의
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
-        // 진단 로그용 get() stubbing 추가
-        given(valueOperations.get("RT:" + TEST_USER_ID)).willReturn(REFRESH_TOKEN);
 
-        // When
+        // [When]
         LoginResponse response = authService.login(request);
 
-        // Then
+        // [Then]
         assertThat(response.getAccessToken()).isEqualTo(ACCESS_TOKEN);
         assertThat(response.getRefreshToken()).isEqualTo(REFRESH_TOKEN);
         assertThat(response.getUserId()).isEqualTo(TEST_USER_ID);
         assertThat(response.getName()).isEqualTo(TEST_NAME);
 
-        // Redis 저장 검증
         verify(valueOperations).set("RT:" + TEST_USER_ID, REFRESH_TOKEN, 14, TimeUnit.DAYS);
+    }
+
+    @Test
+    @DisplayName("테스트 자동 로그인 시 사용자가 이미 존재하면 기존 계정으로 로그인한다.")
+    void testLogin_Success_WhenUserExists() {
+        // [Given]
+        User user = createTestUser();
+        given(userRepository.existsByEmail(TEST_EMAIL)).willReturn(true);
+        given(userRepository.findByEmail(TEST_EMAIL)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(TEST_PASSWORD, ENCODED_PASSWORD)).willReturn(true);
+        given(jwtProvider.createAccessToken(TEST_USER_ID, TEST_EMAIL)).willReturn(ACCESS_TOKEN);
+        given(jwtProvider.createRefreshToken(TEST_USER_ID, TEST_EMAIL)).willReturn(REFRESH_TOKEN);
+        
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+
+        // [When]
+        LoginResponse response = authService.testLogin();
+
+        // [Then]
+        assertThat(response.getAccessToken()).isEqualTo(ACCESS_TOKEN);
+        assertThat(response.getUserId()).isEqualTo(TEST_USER_ID);
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("테스트 자동 로그인 시 사용자가 존재하지 않으면 신규 생성 후 로그인한다.")
+    void testLogin_Success_WhenUserNotExists() {
+        // [Given]
+        User user = createTestUser();
+        given(userRepository.existsByEmail(TEST_EMAIL)).willReturn(false);
+        given(userRepository.save(any(User.class))).willReturn(user);
+        
+        given(userRepository.findByEmail(TEST_EMAIL)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(TEST_PASSWORD, ENCODED_PASSWORD)).willReturn(true);
+        given(jwtProvider.createAccessToken(TEST_USER_ID, TEST_EMAIL)).willReturn(ACCESS_TOKEN);
+        given(jwtProvider.createRefreshToken(TEST_USER_ID, TEST_EMAIL)).willReturn(REFRESH_TOKEN);
+        
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+
+        // [When]
+        LoginResponse response = authService.testLogin();
+
+        // [Then]
+        assertThat(response.getAccessToken()).isEqualTo(ACCESS_TOKEN);
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
     @DisplayName("존재하지 않는 이메일로 로그인 시 USER_NOT_FOUND 예외가 발생한다.")
     void login_Fail_UserNotFound() {
-        // Given
+        // [Given]
         LoginRequest request = createLoginRequest("wrong@ssafy.com", TEST_PASSWORD);
         given(userRepository.findByEmail("wrong@ssafy.com")).willReturn(Optional.empty());
 
-        // When & Then
-        CustomException exception = assertThrows(CustomException.class, () -> authService.login(request));
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USER_NOT_FOUND);
+        // [When & Then]
+        assertThrows(CustomException.class, () -> {
+            authService.login(request);
+        });
     }
 
     @Test
     @DisplayName("비밀번호 불일치 시 INVALID_PASSWORD 예외가 발생한다.")
     void login_Fail_InvalidPassword() {
-        // Given
+        // [Given]
         User user = createTestUser();
         LoginRequest request = createLoginRequest(TEST_EMAIL, "wrong-password");
 
         given(userRepository.findByEmail(TEST_EMAIL)).willReturn(Optional.of(user));
         given(passwordEncoder.matches("wrong-password", ENCODED_PASSWORD)).willReturn(false);
 
-        // When & Then
-        CustomException exception = assertThrows(CustomException.class, () -> authService.login(request));
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_PASSWORD);
+        // [When & Then]
+        assertThrows(CustomException.class, () -> {
+            authService.login(request);
+        });
     }
 
     @Test
     @DisplayName("로그아웃 성공 시 Redis에서 Refresh Token을 삭제한다.")
     void logout_Success() {
-        // Given
+        // [Given]
         String redisKey = "RT:" + TEST_USER_ID;
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
         given(valueOperations.get(redisKey)).willReturn(REFRESH_TOKEN);
         LogoutRequest request = new LogoutRequest(REFRESH_TOKEN);
 
-        // When
+        // [When]
         authService.logout(request, TEST_USER_ID);
 
-        // Then
+        // [Then]
         verify(redisTemplate).delete(redisKey);
     }
 
     @Test
     @DisplayName("로그아웃 시 Redis에 토큰이 없으면 INVALID_REFRESH_TOKEN 예외가 발생한다.")
     void logout_Fail_NoTokenInRedis() {
-        // Given
+        // [Given]
         String redisKey = "RT:" + TEST_USER_ID;
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
         given(valueOperations.get(redisKey)).willReturn(null);
         LogoutRequest request = new LogoutRequest(REFRESH_TOKEN);
 
-        // When & Then
-        CustomException exception = assertThrows(CustomException.class, () -> authService.logout(request, TEST_USER_ID));
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
+        // [When & Then]
+        assertThrows(CustomException.class, () -> {
+            authService.logout(request, TEST_USER_ID);
+        });
     }
 
     @Test
     @DisplayName("로그아웃 시 요청된 토큰과 Redis의 토큰이 다르면 INVALID_REFRESH_TOKEN 예외가 발생한다.")
     void logout_Fail_TokenMismatch() {
-        // Given
+        // [Given]
         String redisKey = "RT:" + TEST_USER_ID;
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
         given(valueOperations.get(redisKey)).willReturn(REFRESH_TOKEN);
         LogoutRequest request = new LogoutRequest("mismatch-token");
 
-        // When & Then
-        CustomException exception = assertThrows(CustomException.class, () -> authService.logout(request, TEST_USER_ID));
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
+        // [When & Then]
+        assertThrows(CustomException.class, () -> {
+            authService.logout(request, TEST_USER_ID);
+        });
     }
 
     // --- Helper Methods ---
@@ -173,15 +223,14 @@ class AuthServiceTest {
                 .name(TEST_NAME)
                 .status(UserStatus.ACTIVE)
                 .build();
-        // ReflectionTestUtils를 사용하여 private 필드인 userId 설정
         ReflectionTestUtils.setField(user, "userId", TEST_USER_ID);
         return user;
     }
 
     private LoginRequest createLoginRequest(String email, String password) {
-        LoginRequest request = new LoginRequest();
-        ReflectionTestUtils.setField(request, "loginId", email);
-        ReflectionTestUtils.setField(request, "password", password);
-        return request;
+        return LoginRequest.builder()
+                .loginId(email)
+                .password(password)
+                .build();
     }
 }

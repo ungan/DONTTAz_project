@@ -34,12 +34,16 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(
                     "/api/v1/auth/login",
+                    "/api/v1/auth/verify-identity",
+                    "/api/v1/auth/find-id",
+                    "/api/v1/auth/password/**",
                     "/api/v1/users/signup",
                     "/api/v1/accounts/**",
                     "/swagger-ui.html",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
-                    "/actuator/health"
+                    "/actuator/health",
+                    "/test-auth.html"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
