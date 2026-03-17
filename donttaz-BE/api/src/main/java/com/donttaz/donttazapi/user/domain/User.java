@@ -41,9 +41,13 @@ public class User extends BaseEntity {
 
     private String ci;
 
+    private String nickname; // 신규 추가
+
     private String deviceId;
 
     private String ssafyUserKey;
+
+    private String withdrawReason; // 신규 추가 (탈퇴 사유)
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -53,9 +57,18 @@ public class User extends BaseEntity {
         this.password = encryptedPassword;
     }
 
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void withdraw(String reason) {
+        this.status = UserStatus.WITHDRAWN;
+        this.withdrawReason = reason;
+    }
+
     @Builder
     public User(Long userId, String email, String password, String pinCode, String name, String phoneNumber, 
-                String ci, String deviceId, String ssafyUserKey, UserStatus status) {
+                String ci, String nickname, String deviceId, String ssafyUserKey, UserStatus status) {
         this.userId = userId;
         this.email = email;
         this.password = password;
@@ -63,6 +76,7 @@ public class User extends BaseEntity {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.ci = ci;
+        this.nickname = nickname;
         this.deviceId = deviceId;
         this.ssafyUserKey = ssafyUserKey;
         this.status = status != null ? status : UserStatus.ACTIVE;

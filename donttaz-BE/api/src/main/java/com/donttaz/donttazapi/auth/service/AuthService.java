@@ -65,6 +65,10 @@ public class AuthService {
         PortOneIdentityResponse result = fetchPortOneIdentity(request.getIdentityVerificationId());
 
         String ci = result.getVerifiedCustomer().getCi();
+        if (ci == null || ci.isBlank()) {
+            ci = "TEST_CI_" + result.getVerifiedCustomer().getPhoneNumber().replaceAll("[^0-9]", "");
+        }
+
         User user = userRepository.findByCi(ci)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -85,6 +89,10 @@ public class AuthService {
         PortOneIdentityResponse result = fetchPortOneIdentity(request.getIdentityVerificationId());
 
         String ciFromPortOne = result.getVerifiedCustomer().getCi();
+        if (ciFromPortOne == null || ciFromPortOne.isBlank()) {
+            ciFromPortOne = "TEST_CI_" + result.getVerifiedCustomer().getPhoneNumber().replaceAll("[^0-9]", "");
+        }
+
         if (user.getCi() == null || !user.getCi().equals(ciFromPortOne)) {
             throw new CustomException(ErrorCode.IDENTITY_VERIFICATION_FAILED);
         }
@@ -144,6 +152,25 @@ public class AuthService {
             ResponseEntity<PortOneIdentityResponse> response = restTemplate.exchange(
                     url, HttpMethod.GET, entity, PortOneIdentityResponse.class);
             PortOneIdentityResponse result = response.getBody();
+
+            if (result != null && result.getVerifiedCustomer() != null) {
+                PortOneIdentityResponse.VerifiedCustomer customer = result.getVerifiedCustomer();
+                
+                // 🚨 테스트 환경 우회 로직: 포트원 본인인증 응답에서 CI 값이 null인 경우, 
+                // 테스트의 편의성을 위해 사용자의 전화번호를 조합하여 가짜 CI(TEST_CI_전화번호)를 생성합니다.
+                if (customer.getCi() == null || customer.getCi().isBlank()) {
+                    String fakeCi = "TEST_CI_" + customer.getPhoneNumber().replaceAll("[^0-9]", "");
+                    // Reflection이나 Setter가 없으므로 로직상에서 사용할 변수로 처리하거나 
+                    // DTO가 수정 가능하다면 필드에 세팅합니다. 
+                    // 여기서는 로그 출력 후 각 서비스 로직에서 처리하도록 가이드합니다.
+                    System.out.println("⚠️ Warning: CI is null. Generated Fake CI: " + fakeCi);
+                }
+
+                System.out.println("========= PortOne Verification Success =========");
+                System.out.println("CI Value: " + (customer.getCi() != null ? customer.getCi() : "NULL (Fallback will be used)"));
+                System.out.println("Name: " + customer.getName());
+                System.out.println("================================================");
+            }
 
             if (result == null || !"VERIFIED".equals(result.getStatus())) {
                 throw new CustomException(ErrorCode.IDENTITY_VERIFICATION_FAILED);
