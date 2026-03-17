@@ -1,6 +1,5 @@
 package com.donttaz.donttazapi.user.controller;
 
-import com.donttaz.donttazapi.common.response.ApiResponse;
 import com.donttaz.donttazapi.user.dto.request.CreateUserRequest;
 import com.donttaz.donttazapi.user.dto.request.FcmTokenRegisterRequest;
 import com.donttaz.donttazapi.user.dto.request.UserUpdateRequest;
@@ -25,16 +24,14 @@ public class UserController {
     private final UserQueryService userQueryService;
 
     @PostMapping("/signup")
-    public ApiResponse<CreateUserResponse> signUp(@RequestBody @Valid CreateUserRequest request) {
-        CreateUserResponse response = userCommandService.createUser(request);
-        return ApiResponse.success("회원 가입에 성공했습니다.", response);
+    public CreateUserResponse signUp(@RequestBody @Valid CreateUserRequest request) {
+        return userCommandService.createUser(request);
     }
 
     @GetMapping("/me")
-    public ApiResponse<UserSummaryResponse> getMyInfo(@AuthenticationPrincipal User principal) {
+    public UserSummaryResponse getMyInfo(@AuthenticationPrincipal User principal) {
         Long userId = Long.parseLong(principal.getUsername());
-        UserSummaryResponse response = userQueryService.getUserSummary(userId);
-        return ApiResponse.success("내 정보를 성공적으로 조회했습니다.", response);
+        return userQueryService.getUserSummary(userId);
     }
 
     @PostMapping("/fcm-token")

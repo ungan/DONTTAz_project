@@ -21,7 +21,7 @@ import com.donttaz.donttazapi.account.service.AccountCreationService;
 import com.donttaz.donttazapi.account.service.AccountManagementService;
 import com.donttaz.donttazapi.account.service.AccountQueryService;
 import com.donttaz.donttazapi.account.service.AccountTransferService;
-import com.donttaz.donttazapi.common.response.ApiResponse;
+
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -57,74 +57,62 @@ public class AccountController implements AccountSwagger {
         this.accountTransferService = accountTransferService;
     }
 
-    @PostMapping
-    @Override
-    public ResponseEntity<ApiResponse<CreateAccountResponse>> createAccount(
-            @Valid @RequestBody CreateAccountRequest request
-    ) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("계좌 생성 성공", accountCreationService.createAccount(request)));
-    }
+        @PostMapping
+        @Override
+        public ResponseEntity<CreateAccountResponse> createAccount(
+                        @Valid @RequestBody CreateAccountRequest request) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(accountCreationService.createAccount(request));
+        }
 
-    @GetMapping
-    @Override
-    public ResponseEntity<ApiResponse<AccountListResponse>> getAccounts() {
-        return ResponseEntity.ok(
-                ApiResponse.success("계좌 목록 조회 성공", accountQueryService.getAccounts())
-        );
-    }
+        @GetMapping
+        @Override
+        public ResponseEntity<AccountListResponse> getAccounts() {
+                return ResponseEntity.ok(
+                                accountQueryService.getAccounts());
+        }
 
-    @GetMapping("/{accountNo}")
-    @Override
-    public ResponseEntity<ApiResponse<AccountDetailResponse>> getAccountDetail(
-            @PathVariable("accountNo") String accountNo
-    ) {
-        return ResponseEntity.ok(
-                ApiResponse.success("계좌 상세 조회 성공", accountQueryService.getAccountDetail(accountNo))
-        );
-    }
+        @GetMapping("/{accountNo}")
+        @Override
+        public ResponseEntity<AccountDetailResponse> getAccountDetail(
+                        @PathVariable("accountNo") String accountNo) {
+                return ResponseEntity.ok(
+                                accountQueryService.getAccountDetail(accountNo));
+        }
 
-    @GetMapping("/{accountNo}/balance")
-    @Override
-    public ResponseEntity<ApiResponse<AccountBalanceResponse>> getAccountBalance(
-            @PathVariable("accountNo") String accountNo
-    ) {
-        return ResponseEntity.ok(
-                ApiResponse.success("계좌 잔액 조회 성공", accountQueryService.getAccountBalance(accountNo))
-        );
-    }
+        @GetMapping("/{accountNo}/balance")
+        @Override
+        public ResponseEntity<AccountBalanceResponse> getAccountBalance(
+                        @PathVariable("accountNo") String accountNo) {
+                return ResponseEntity.ok(
+                                accountQueryService.getAccountBalance(accountNo));
+        }
 
-    @GetMapping("/{accountNo}/holder-name")
-    @Override
-    public ResponseEntity<ApiResponse<AccountHolderNameResponse>> getAccountHolderName(
-            @PathVariable("accountNo") String accountNo
-    ) {
-        return ResponseEntity.ok(
-                ApiResponse.success("예금주 조회 성공", accountQueryService.getAccountHolderName(accountNo))
-        );
-    }
+        @GetMapping("/{accountNo}/holder-name")
+        @Override
+        public ResponseEntity<AccountHolderNameResponse> getAccountHolderName(
+                        @PathVariable("accountNo") String accountNo) {
+                return ResponseEntity.ok(
+                                accountQueryService.getAccountHolderName(accountNo));
+        }
 
-    @PostMapping("/{accountNo}/deposit")
-    @Override
-    public ResponseEntity<ApiResponse<AccountDepositResponse>> deposit(
-            @PathVariable("accountNo") String accountNo,
-            @Valid @RequestBody AccountDepositRequest request
-    ) {
-        return ResponseEntity.ok(
-                ApiResponse.success("계좌 입금 성공", accountTransferService.deposit(accountNo, request))
-        );
-    }
+        @PostMapping("/{accountNo}/deposit")
+        @Override
+        public ResponseEntity<AccountDepositResponse> deposit(
+                        @PathVariable("accountNo") String accountNo,
+                        @Valid @RequestBody AccountDepositRequest request) {
+                return ResponseEntity.ok(
+                                accountTransferService.deposit(accountNo, request));
+        }
 
-    @PostMapping("/{accountNo}/withdrawal")
-    @Override
-    public ResponseEntity<ApiResponse<AccountWithdrawalResponse>> withdrawal(
-            @PathVariable("accountNo") String accountNo,
-            @Valid @RequestBody AccountWithdrawalRequest request
-    ) {
-        return ResponseEntity.ok(
-                ApiResponse.success("계좌 출금 성공", accountTransferService.withdrawal(accountNo, request))
-        );
-    }
+        @PostMapping("/{accountNo}/withdrawal")
+        @Override
+        public ResponseEntity<AccountWithdrawalResponse> withdrawal(
+                        @PathVariable("accountNo") String accountNo,
+                        @Valid @RequestBody AccountWithdrawalRequest request) {
+                return ResponseEntity.ok(
+                                accountTransferService.withdrawal(accountNo, request));
+        }
 
     @PostMapping("/transfer")
     @Override

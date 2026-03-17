@@ -17,9 +17,13 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Getter
 @Entity
+@SQLDelete(sql = "UPDATE transactions SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = false")
 @Table(name = "transactions")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Transaction extends BaseEntity {
@@ -65,8 +69,8 @@ public class Transaction extends BaseEntity {
 
     @Builder
     private Transaction(Account account, TransactionType type, Integer amount, Integer balanceAfter,
-                        String counterpartyName, String counterpartyBank, String counterpartyAccount,
-                        Integer fee, String category, String memo, LocalDateTime transactionDate) {
+            String counterpartyName, String counterpartyBank, String counterpartyAccount,
+            Integer fee, String category, String memo, LocalDateTime transactionDate) {
         this.account = account;
         this.type = type;
         this.amount = amount;
