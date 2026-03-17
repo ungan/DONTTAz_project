@@ -19,6 +19,11 @@ public enum ErrorCode {
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "INVALID_PASSWORD", "비밀번호가 일치하지 않습니다."),
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_REFRESH_TOKEN", "유효하지 않은 갱신 토큰입니다."),
     IDENTITY_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "IDENTITY_VERIFICATION_FAILED", "본인인증 검증에 실패했습니다."),
+    VAULT_NOT_FOUND(HttpStatus.NOT_FOUND, "VAULT_NOT_FOUND", "금고를 찾을 수 없습니다."),
+    VAULT_ALREADY_EXISTS(HttpStatus.CONFLICT, "VAULT_ALREADY_EXISTS", "이미 기본 금고가 존재합니다."),
+    VAULT_ALREADY_ACHIEVED(HttpStatus.CONFLICT, "VAULT_ALREADY_ACHIEVED", "이미 목표가 달성된 금고입니다."),
+    VAULT_INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "VAULT_INSUFFICIENT_BALANCE", "금고 잔액이 부족합니다."),
+    VAULT_GOAL_NOT_MET(HttpStatus.BAD_REQUEST, "VAULT_GOAL_NOT_MET", "목표 금액에 도달하지 않았습니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.");
 
     private final HttpStatus httpStatus;
