@@ -37,13 +37,13 @@ export const styles = StyleSheet.create({
   },
   accountLabel: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#959595',
     letterSpacing: 0.018,
   },
   accountValue: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#959595',
     letterSpacing: 0.018,
   },
