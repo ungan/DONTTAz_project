@@ -70,6 +70,8 @@ class AccountSyncServiceTest {
         assertThat(saved.getAccountNumber()).isEqualTo("12345678901234");
         assertThat(saved.getCurrency()).isEqualTo("KRW");
         assertThat(saved.getBalance()).isEqualTo(7000L);
+        assertThat(saved.getDailyTransferLimit()).isEqualTo(1_000_000L);
+        assertThat(saved.getOneTimeTransferLimit()).isEqualTo(100_000L);
         assertThat(saved.getStatus()).isEqualTo(AccountStatus.ACTIVE);
         assertThat(saved.getIsDeleted()).isFalse();
         assertThat(saved.getLinkedAt()).isNotNull();
@@ -117,6 +119,8 @@ class AccountSyncServiceTest {
         assertThat(account.getAccountTypeUniqueNo()).isEqualTo("001-1-abc");
         assertThat(account.getCurrency()).isEqualTo("KRW");
         assertThat(account.getBalance()).isEqualTo(9000L);
+        assertThat(account.getDailyTransferLimit()).isEqualTo(1_000_000L);
+        assertThat(account.getOneTimeTransferLimit()).isEqualTo(100_000L);
         assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
         assertThat(account.getIsDeleted()).isFalse();
     }

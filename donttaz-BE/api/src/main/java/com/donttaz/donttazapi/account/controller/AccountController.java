@@ -2,6 +2,8 @@ package com.donttaz.donttazapi.account.controller;
 
 import com.donttaz.donttazapi.account.controller.docs.AccountSwagger;
 import com.donttaz.donttazapi.account.dto.request.AccountDepositRequest;
+import com.donttaz.donttazapi.account.dto.request.AccountTransferRequest;
+import com.donttaz.donttazapi.account.dto.request.AccountTransferLimitUpdateRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountWithdrawalRequest;
 import com.donttaz.donttazapi.account.dto.request.CreateAccountRequest;
 import com.donttaz.donttazapi.account.dto.response.AccountBalanceResponse;
@@ -9,11 +11,14 @@ import com.donttaz.donttazapi.account.dto.response.AccountDepositResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountHolderNameResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountListResponse;
+import com.donttaz.donttazapi.account.dto.response.AccountTransferLimitUpdateResponse;
+import com.donttaz.donttazapi.account.dto.response.AccountTransferResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountWithdrawalResponse;
 import com.donttaz.donttazapi.account.dto.response.CreateAccountResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionListResponse;
 import com.donttaz.donttazapi.account.service.AccountCreationService;
+import com.donttaz.donttazapi.account.service.AccountManagementService;
 import com.donttaz.donttazapi.account.service.AccountQueryService;
 import com.donttaz.donttazapi.account.service.AccountTransferService;
 import com.donttaz.donttazapi.common.response.ApiResponse;
@@ -23,6 +28,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,15 +41,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class AccountController implements AccountSwagger {
 
     private final AccountCreationService accountCreationService;
+    private final AccountManagementService accountManagementService;
     private final AccountQueryService accountQueryService;
     private final AccountTransferService accountTransferService;
 
     public AccountController(
             AccountCreationService accountCreationService,
+            AccountManagementService accountManagementService,
             AccountQueryService accountQueryService,
             AccountTransferService accountTransferService
     ) {
         this.accountCreationService = accountCreationService;
+        this.accountManagementService = accountManagementService;
         this.accountQueryService = accountQueryService;
         this.accountTransferService = accountTransferService;
     }
@@ -117,6 +126,38 @@ public class AccountController implements AccountSwagger {
         );
     }
 
+    @PostMapping("/transfer")
+    @Override
+    public ResponseEntity<ApiResponse<AccountTransferResponse>> transfer(
+            @Valid @RequestBody AccountTransferRequest request
+    ) {
+        return ResponseEntity.ok(
+                ApiResponse.success("계좌 이체 성공", accountTransferService.transfer(request))
+        );
+    }
+
+    @PatchMapping("/{accountNo}/transfer-limit")
+    @Override
+    public ResponseEntity<ApiResponse<AccountTransferLimitUpdateResponse>> updateTransferLimit(
+            @PathVariable("accountNo") String accountNo,
+            @Valid @RequestBody AccountTransferLimitUpdateRequest request
+    ) {
+        return ResponseEntity.ok(
+                ApiResponse.success("계좌 이체 한도 변경 성공", accountTransferService.updateTransferLimit(accountNo, request))
+        );
+    }
+
+    @PatchMapping("/{accountNo}/primary")
+    @Override
+    public ResponseEntity<ApiResponse<Void>> setPrimaryAccount(
+            @PathVariable("accountNo") String accountNo
+    ) {
+        accountManagementService.setPrimaryAccount(accountNo);
+        return ResponseEntity.ok(
+                ApiResponse.success("대표계좌 설정 성공", null)
+        );
+    }
+
     @GetMapping("/{accountId}/transactions")
     @Override
     public ResponseEntity<ApiResponse<TransactionListResponse>> getTransactions(
@@ -139,7 +180,7 @@ public class AccountController implements AccountSwagger {
     @Override
     public ResponseEntity<ApiResponse<TransactionDetailResponse>> getTransactionDetail(
             @PathVariable("accountId") Long accountId,
-            @PathVariable("transactionId") Long transactionId
+            @PathVariable("transactionId") String transactionId
     ) {
         return ResponseEntity.ok(
                 ApiResponse.success(

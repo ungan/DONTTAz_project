@@ -1,18 +1,15 @@
 package com.donttaz.donttazapi.infra.banking.dto.response;
 
-import java.time.LocalDateTime;
-
 public record FinApiTransactionItemResponse(
-        String transactionId,
-        LocalDateTime transactionDate,
+        String transactionUniqueNo,
+        String transactionDate,
+        String transactionTime,
         String transactionType,
-        Integer amount,
-        Integer balanceAfter,
-        String counterpartyName,
-        String counterpartyBank,
-        String counterpartyAccount,
-        Integer fee,
-        String category,
-        String memo
+        String transactionTypeName,
+        String transactionAccountNo,
+        String transactionBalance,
+        String transactionAfterBalance,
+        String transactionSummary,
+        String transactionMemo
 ) {
 }

@@ -18,6 +18,7 @@ import com.donttaz.donttazapi.account.service.dto.OneWonVerificationRequestResul
 import com.donttaz.donttazapi.account.service.dto.TransactionDetailResult;
 import com.donttaz.donttazapi.account.service.dto.TransactionQueryResult;
 import com.donttaz.donttazapi.account.service.dto.TransferCommand;
+import com.donttaz.donttazapi.account.service.dto.TransferLimitCommand;
 import com.donttaz.donttazapi.account.service.dto.TransferResult;
 import java.time.LocalDate;
 import java.util.List;
@@ -47,6 +48,8 @@ public interface BankingClient {
     AccountDepositResult deposit(Long userId, AccountDepositCommand command);
 
     AccountWithdrawalResult withdrawal(Long userId, AccountWithdrawalCommand command);
+
+    AccountDetailResult updateTransferLimit(Long userId, TransferLimitCommand command);
 
     TransactionQueryResult getTransactions(
             Long userId,

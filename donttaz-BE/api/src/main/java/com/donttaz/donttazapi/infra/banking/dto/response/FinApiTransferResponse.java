@@ -1,13 +1,12 @@
 package com.donttaz.donttazapi.infra.banking.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
+
 public record FinApiTransferResponse(
-        String responseCode,
-        String responseMessage,
-        String transactionId,
-        String depositAccountName,
-        String depositBankName,
-        Integer amount,
-        Integer fee,
-        Integer withdrawalBalance
+        @JsonProperty("Header")
+        FinApiResponseHeader header,
+        @JsonProperty("REC")
+        List<FinApiTransferRec> rec
 ) {
 }

@@ -18,6 +18,7 @@ import com.donttaz.donttazapi.account.service.dto.OneWonVerificationRequestResul
 import com.donttaz.donttazapi.account.service.dto.TransactionDetailResult;
 import com.donttaz.donttazapi.account.service.dto.TransactionQueryResult;
 import com.donttaz.donttazapi.account.service.dto.TransferCommand;
+import com.donttaz.donttazapi.account.service.dto.TransferLimitCommand;
 import com.donttaz.donttazapi.account.service.dto.TransferResult;
 import com.donttaz.donttazapi.common.exception.CustomException;
 import com.donttaz.donttazapi.common.exception.ErrorCode;
@@ -33,6 +34,10 @@ import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepos
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositListRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiMemberRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiRequestHeader;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiTransferRequest;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiTransferLimitUpdateRequest;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiTransactionDetailRequest;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiTransactionListRequest;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountBalanceResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountDepositResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountDetailResponse;
@@ -44,6 +49,9 @@ import com.donttaz.donttazapi.infra.banking.dto.response.FinApiInquireDemandDepo
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiInquireDemandDepositListResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiMemberResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiResponseHeader;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiTransactionDetailResponse;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiTransactionListResponse;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiTransferResponse;
 import com.donttaz.donttazapi.infra.banking.mapper.FinApiBankingMapper;
 import com.donttaz.donttazapi.infra.banking.userkey.UserKeyProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -76,6 +84,10 @@ public class FinApiBankingClient implements BankingClient {
     private static final String DEMAND_DEPOSIT_ACCOUNT_HOLDER_NAME_URI = "/demandDeposit/inquireDemandDepositAccountHolderName";
     private static final String DEMAND_DEPOSIT_ACCOUNT_DEPOSIT_URI = "/demandDeposit/updateDemandDepositAccountDeposit";
     private static final String DEMAND_DEPOSIT_ACCOUNT_WITHDRAWAL_URI = "/demandDeposit/updateDemandDepositAccountWithdrawal";
+    private static final String DEMAND_DEPOSIT_ACCOUNT_TRANSFER_URI = "/demandDeposit/updateDemandDepositAccountTransfer";
+    private static final String DEMAND_DEPOSIT_TRANSFER_LIMIT_URI = "/demandDeposit/updateTransferLimit";
+    private static final String DEMAND_DEPOSIT_TRANSACTION_LIST_URI = "/demandDeposit/inquireTransactionHistoryList";
+    private static final String DEMAND_DEPOSIT_TRANSACTION_DETAIL_URI = "/demandDeposit/inquireTransactionHistory";
     private static final String SUCCESS_CODE = "H0000";
     private static final ZoneId KOREA_ZONE_ID = ZoneId.of("Asia/Seoul");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -248,6 +260,23 @@ public class FinApiBankingClient implements BankingClient {
     }
 
     @Override
+    public AccountDetailResult updateTransferLimit(Long userId, TransferLimitCommand command) {
+        FinApiAccountDetailResponse response = post(
+                resolveUri(DEMAND_DEPOSIT_TRANSFER_LIMIT_URI),
+                new FinApiTransferLimitUpdateRequest(
+                        buildHeader("updateTransferLimit", userId),
+                        command.accountNo(),
+                        command.oneTimeTransferLimit(),
+                        command.dailyTransferLimit()
+                ),
+                FinApiAccountDetailResponse.class
+        );
+
+        validateSuccess(response.header());
+        return finApiBankingMapper.toAccountDetailResult(response);
+    }
+
+    @Override
     public TransactionQueryResult getTransactions(
             Long userId,
             String externalAccountId,
@@ -257,17 +286,56 @@ public class FinApiBankingClient implements BankingClient {
             int page,
             int size
     ) {
-        throw new UnsupportedOperationException("finAPI transaction list integration is not implemented yet.");
+        FinApiTransactionListResponse response = post(
+                resolveUri(DEMAND_DEPOSIT_TRANSACTION_LIST_URI),
+                new FinApiTransactionListRequest(
+                        buildHeader("inquireTransactionHistoryList", userId),
+                        externalAccountId,
+                        formatDate(startDate),
+                        formatDate(endDate),
+                        type,
+                        "ASC"
+                ),
+                FinApiTransactionListResponse.class
+        );
+
+        validateSuccess(response.header());
+        return finApiBankingMapper.toTransactionQueryResult(response, page, size);
     }
 
     @Override
     public TransactionDetailResult getTransactionDetail(Long userId, String externalAccountId, String externalTransactionId) {
-        throw new UnsupportedOperationException("finAPI transaction detail integration is not implemented yet.");
+        FinApiTransactionDetailResponse response = post(
+                resolveUri(DEMAND_DEPOSIT_TRANSACTION_DETAIL_URI),
+                new FinApiTransactionDetailRequest(
+                        buildHeader("inquireTransactionHistory", userId),
+                        externalAccountId,
+                        externalTransactionId
+                ),
+                FinApiTransactionDetailResponse.class
+        );
+
+        validateSuccess(response.header());
+        return finApiBankingMapper.toTransactionDetailResult(response);
     }
 
     @Override
     public TransferResult transfer(Long userId, TransferCommand command) {
-        throw new UnsupportedOperationException("finAPI transfer integration is not implemented yet.");
+        FinApiTransferResponse response = post(
+                resolveUri(DEMAND_DEPOSIT_ACCOUNT_TRANSFER_URI),
+                new FinApiTransferRequest(
+                        buildHeader("updateDemandDepositAccountTransfer", userId),
+                        command.depositAccountNo(),
+                        command.depositTransactionSummary(),
+                        command.transactionBalance(),
+                        command.withdrawalAccountNo(),
+                        command.withdrawalTransactionSummary()
+                ),
+                FinApiTransferResponse.class
+        );
+
+        validateSuccess(response.header());
+        return finApiBankingMapper.toTransferResult(response);
     }
 
     @Override
@@ -333,6 +401,10 @@ public class FinApiBankingClient implements BankingClient {
     private String buildInstitutionTransactionUniqueNo(LocalDateTime now) {
         return now.format(UNIQUE_NO_PREFIX_FORMATTER)
                 + String.format("%06d", ThreadLocalRandom.current().nextInt(0, 1_000_000));
+    }
+
+    private String formatDate(LocalDate value) {
+        return value == null ? null : value.format(DATE_FORMATTER);
     }
 
     private void validateSuccess(FinApiResponseHeader header) {

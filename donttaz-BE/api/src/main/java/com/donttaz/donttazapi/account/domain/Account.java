@@ -63,6 +63,12 @@ public class Account extends BaseEntity {
     @Column(nullable = false)
     private Long balance;
 
+    @Column(name = "daily_transfer_limit")
+    private Long dailyTransferLimit;
+
+    @Column(name = "one_time_transfer_limit")
+    private Long oneTimeTransferLimit;
+
     @Column(name = "linked_at", nullable = false)
     private LocalDateTime linkedAt;
 
@@ -72,6 +78,9 @@ public class Account extends BaseEntity {
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted;
 
+    @Column(name = "is_primary", nullable = false)
+    private Boolean isPrimary;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private AccountStatus status;
@@ -79,7 +88,8 @@ public class Account extends BaseEntity {
     @Builder
     private Account(Long userId, String bankCode, String bankName, String accountNumber,
                     String accountAlias, String accountTypeUniqueNo, String currency, Long balance,
-                    LocalDateTime linkedAt, LocalDateTime lastSyncedAt, Boolean isDeleted, AccountStatus status) {
+                    Long dailyTransferLimit, Long oneTimeTransferLimit,
+                    LocalDateTime linkedAt, LocalDateTime lastSyncedAt, Boolean isDeleted, Boolean isPrimary, AccountStatus status) {
         this.userId = userId;
         this.bankCode = bankCode;
         this.bankName = bankName;
@@ -88,9 +98,12 @@ public class Account extends BaseEntity {
         this.accountTypeUniqueNo = accountTypeUniqueNo;
         this.currency = currency;
         this.balance = balance;
+        this.dailyTransferLimit = dailyTransferLimit;
+        this.oneTimeTransferLimit = oneTimeTransferLimit;
         this.linkedAt = linkedAt;
         this.lastSyncedAt = lastSyncedAt;
         this.isDeleted = isDeleted != null ? isDeleted : Boolean.FALSE;
+        this.isPrimary = isPrimary != null ? isPrimary : Boolean.FALSE;
         this.status = status;
     }
 
@@ -100,6 +113,8 @@ public class Account extends BaseEntity {
             String accountTypeUniqueNo,
             String currency,
             Long balance,
+            Long dailyTransferLimit,
+            Long oneTimeTransferLimit,
             LocalDateTime lastSyncedAt
     ) {
         this.bankName = bankName;
@@ -113,8 +128,14 @@ public class Account extends BaseEntity {
             this.currency = currency;
         }
         this.balance = balance;
+        this.dailyTransferLimit = dailyTransferLimit;
+        this.oneTimeTransferLimit = oneTimeTransferLimit;
         this.lastSyncedAt = lastSyncedAt;
         this.isDeleted = Boolean.FALSE;
         this.status = AccountStatus.ACTIVE;
+    }
+
+    public void markAsPrimary() {
+        this.isPrimary = Boolean.TRUE;
     }
 }

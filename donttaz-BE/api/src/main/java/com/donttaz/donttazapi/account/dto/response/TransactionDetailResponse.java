@@ -5,7 +5,7 @@ import lombok.Builder;
 
 @Builder
 public record TransactionDetailResponse(
-        Long transactionId,
+        String transactionId,
         Long accountId,
         LocalDateTime transactionDate,
         String type,
