@@ -21,8 +21,8 @@ export const styles = StyleSheet.create({
   title: {
     color: '#FFF',
     textAlign: 'center',
-    fontFamily: 'Chewy',
-    fontSize: 70,
+    fontFamily: 'BalooDa2Bold',
+    fontSize: 75,
     fontWeight: '800',
     letterSpacing: 0.07,
   },
