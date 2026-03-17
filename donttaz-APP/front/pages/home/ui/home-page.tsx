@@ -1,5 +1,6 @@
 import React from 'react';
 import { ScrollView, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { WelcomingAlert } from '@/widgets/welcoming-alert';
 import { HeroBanner } from '@/widgets/hero-banner';
 import { FavoriteMenu } from '@/widgets/favorite-menu';
@@ -9,6 +10,13 @@ import { styles } from './home-page.styles';
 
 export function HomePage() {
   const { name } = useSessionStore();
+  const router = useRouter();
+
+  const handleFavoriteMenuPress = (id: string) => {
+    if (id === '2') {
+      router.push('/transfer-account');
+    }
+  };
 
   return (
     <ScrollView style={styles.scrollView} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -18,7 +26,7 @@ export function HomePage() {
         <HeroBanner />
       </View>
       <View style={styles.widgetsSection}>
-        <FavoriteMenu />
+        <FavoriteMenu onItemPress={handleFavoriteMenuPress} />
         <PaymentHistory />
       </View>
     </ScrollView>
