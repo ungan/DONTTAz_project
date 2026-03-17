@@ -43,15 +43,27 @@ public class AccountSyncService {
                     null,
                     account.currency(),
                     toBalance(account.accountBalance()),
+                    toAmount(account.dailyTransferLimit()),
+                    toAmount(account.oneTimeTransferLimit()),
                     syncedAt
             );
         }
     }
 
     public void syncCreatedAccount(String accountTypeUniqueNo, String accountNo) {
-        AccountDetailResult account = bankingAccountQueryService.getAccountDetail(accountNo);
+        syncAccountDetailSnapshot(bankingAccountQueryService.getAccountDetail(accountNo), accountTypeUniqueNo);
+    }
 
-        upsertAccount(
+    public Account syncAccountSnapshot(String accountNo) {
+        return syncAccountDetailSnapshot(bankingAccountQueryService.getAccountDetail(accountNo), null);
+    }
+
+    public Account syncAccountDetailSnapshot(AccountDetailResult account) {
+        return syncAccountDetailSnapshot(account, null);
+    }
+
+    public Account syncAccountDetailSnapshot(AccountDetailResult account, String accountTypeUniqueNo) {
+        return upsertAccount(
                 resolveCurrentUserId(),
                 account.bankCode(),
                 account.bankName(),
@@ -59,21 +71,8 @@ public class AccountSyncService {
                 accountTypeUniqueNo,
                 account.currency(),
                 toBalance(account.accountBalance()),
-                LocalDateTime.now()
-        );
-    }
-
-    public Account syncAccountSnapshot(String accountNo) {
-        AccountDetailResult account = bankingAccountQueryService.getAccountDetail(accountNo);
-
-        return upsertAccount(
-                resolveCurrentUserId(),
-                account.bankCode(),
-                account.bankName(),
-                account.accountNo(),
-                null,
-                account.currency(),
-                toBalance(account.accountBalance()),
+                toAmount(account.dailyTransferLimit()),
+                toAmount(account.oneTimeTransferLimit()),
                 LocalDateTime.now()
         );
     }
@@ -86,6 +85,8 @@ public class AccountSyncService {
             String accountTypeUniqueNo,
             String currency,
             Long balance,
+            Long dailyTransferLimit,
+            Long oneTimeTransferLimit,
             LocalDateTime syncedAt
     ) {
         Optional<Account> existing = accountRepository.findByUserIdAndBankCodeAndAccountNumber(
@@ -102,6 +103,8 @@ public class AccountSyncService {
                     accountTypeUniqueNo,
                     currency,
                     balance,
+                    dailyTransferLimit,
+                    oneTimeTransferLimit,
                     syncedAt
             );
             return account;
@@ -116,9 +119,12 @@ public class AccountSyncService {
                         .accountTypeUniqueNo(accountTypeUniqueNo)
                         .currency(currency)
                         .balance(balance)
+                        .dailyTransferLimit(dailyTransferLimit)
+                        .oneTimeTransferLimit(oneTimeTransferLimit)
                         .linkedAt(syncedAt)
                         .lastSyncedAt(syncedAt)
                         .isDeleted(Boolean.FALSE)
+                        .isPrimary(Boolean.FALSE)
                         .status(AccountStatus.ACTIVE)
                         .build()
         );
@@ -129,12 +135,16 @@ public class AccountSyncService {
     }
 
     private Long toBalance(String balance) {
-        if (balance == null || balance.isBlank()) {
+        return toAmount(balance);
+    }
+
+    private Long toAmount(String value) {
+        if (value == null || value.isBlank()) {
             return 0L;
         }
 
         try {
-            return Long.parseLong(balance);
+            return Long.parseLong(value);
         } catch (NumberFormatException exception) {
             return 0L;
         }

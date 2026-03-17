@@ -9,7 +9,7 @@ public record AccountSummaryResponse(
         @Schema(description = "은행 코드", example = "020")
         String bankCode,
 
-        @Schema(description = "은행 이름", example = "우리은행")
+        @Schema(description = "은행명", example = "우리은행")
         String bankName,
 
         @Schema(description = "예금주명", example = "USER")
@@ -24,7 +24,7 @@ public record AccountSummaryResponse(
         @Schema(description = "계좌 유형 코드", example = "1")
         String accountTypeCode,
 
-        @Schema(description = "계좌 유형 이름", example = "수시입출금")
+        @Schema(description = "계좌 유형명", example = "수시입출금")
         String accountTypeName,
 
         @Schema(description = "계좌 생성일", example = "20240320")
@@ -33,7 +33,7 @@ public record AccountSummaryResponse(
         @Schema(description = "계좌 만기일", example = "20290320")
         String accountExpiryDate,
 
-        @Schema(description = "일일 이체 한도", example = "100000000")
+        @Schema(description = "1일 이체 한도", example = "100000000")
         String dailyTransferLimit,
 
         @Schema(description = "1회 이체 한도", example = "20000000")
@@ -46,6 +46,9 @@ public record AccountSummaryResponse(
         String lastTransactionDate,
 
         @Schema(description = "통화 코드", example = "KRW")
-        String currency
+        String currency,
+
+        @Schema(description = "대표계좌 여부", example = "true")
+        Boolean isPrimary
 ) {
 }

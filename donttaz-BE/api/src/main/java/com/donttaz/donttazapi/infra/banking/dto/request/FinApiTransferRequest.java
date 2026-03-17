@@ -1,13 +1,14 @@
 package com.donttaz.donttazapi.infra.banking.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public record FinApiTransferRequest(
-        Long userId,
-        Long withdrawalAccountId,
-        String depositBankCode,
-        String depositAccountNumber,
-        Integer amount,
-        String withdrawalMemo,
-        String depositMemo,
-        String pinToken
+        @JsonProperty("Header")
+        FinApiRequestHeader header,
+        String depositAccountNo,
+        String depositTransactionSummary,
+        String transactionBalance,
+        String withdrawalAccountNo,
+        String withdrawalTransactionSummary
 ) {
 }

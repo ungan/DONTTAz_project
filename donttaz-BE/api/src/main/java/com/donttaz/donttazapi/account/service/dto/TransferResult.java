@@ -1,11 +1,8 @@
 package com.donttaz.donttazapi.account.service.dto;
 
+import java.util.List;
+
 public record TransferResult(
-        String externalTransactionId,
-        String depositAccountName,
-        String depositBankName,
-        Integer amount,
-        Integer fee,
-        Integer withdrawalBalance
+        List<TransferTransactionResult> transactions
 ) {
 }

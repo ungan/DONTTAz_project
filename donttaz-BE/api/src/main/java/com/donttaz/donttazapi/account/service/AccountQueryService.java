@@ -2,8 +2,6 @@ package com.donttaz.donttazapi.account.service;
 
 import com.donttaz.donttazapi.account.domain.Account;
 import com.donttaz.donttazapi.account.domain.AccountStatus;
-import com.donttaz.donttazapi.account.domain.Transaction;
-import com.donttaz.donttazapi.account.domain.TransactionType;
 import com.donttaz.donttazapi.account.dto.response.AccountBalanceResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountHolderNameResponse;
@@ -13,20 +11,21 @@ import com.donttaz.donttazapi.account.dto.response.TransactionDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionListResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionSummaryResponse;
 import com.donttaz.donttazapi.account.repository.AccountRepository;
-import com.donttaz.donttazapi.account.repository.TransactionRepository;
 import com.donttaz.donttazapi.account.service.dto.AccountBalanceResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
 import com.donttaz.donttazapi.account.service.dto.AccountHolderNameResult;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountResult;
+import com.donttaz.donttazapi.account.service.dto.TransactionDetailResult;
+import com.donttaz.donttazapi.account.service.dto.TransactionQueryResult;
+import com.donttaz.donttazapi.account.service.dto.TransactionSummaryResult;
 import com.donttaz.donttazapi.common.exception.CustomException;
 import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.List;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AccountQueryService {
 
     private final AccountRepository accountRepository;
-    private final TransactionRepository transactionRepository;
     private final DemandDepositService demandDepositService;
     private final AccountSyncService accountSyncService;
     private final BankingAccountQueryService bankingAccountQueryService;
@@ -43,14 +41,12 @@ public class AccountQueryService {
 
     public AccountQueryService(
             AccountRepository accountRepository,
-            TransactionRepository transactionRepository,
             DemandDepositService demandDepositService,
             AccountSyncService accountSyncService,
             BankingAccountQueryService bankingAccountQueryService,
             CurrentUserProvider currentUserProvider
     ) {
         this.accountRepository = accountRepository;
-        this.transactionRepository = transactionRepository;
         this.demandDepositService = demandDepositService;
         this.accountSyncService = accountSyncService;
         this.bankingAccountQueryService = bankingAccountQueryService;
@@ -61,9 +57,13 @@ public class AccountQueryService {
     public AccountListResponse getAccounts() {
         List<DemandDepositAccountResult> accounts = demandDepositService.getAccounts();
         accountSyncService.syncDemandDepositAccounts(accounts);
+        Map<String, Account> accountMetadata = accountRepository
+                .findAllByUserIdAndStatusAndIsDeletedFalse(resolveCurrentUserId(), AccountStatus.ACTIVE)
+                .stream()
+                .collect(Collectors.toMap(this::accountKey, Function.identity(), (left, right) -> left));
 
         List<AccountSummaryResponse> accountList = accounts.stream()
-                .map(this::toAccountSummaryResponse)
+                .map(account -> toAccountSummaryResponse(account, accountMetadata.get(accountKey(account.bankCode(), account.accountNo()))))
                 .toList();
 
         long totalBalance = accounts.stream()
@@ -124,45 +124,36 @@ public class AccountQueryService {
     }
 
     public TransactionListResponse getTransactions(Long accountId, LocalDate startDate, LocalDate endDate, String type, int page, int size) {
-        getActiveAccount(accountId);
-
-        Pageable pageable = PageRequest.of(page, size);
-        TransactionType transactionType = parseTransactionType(type);
-        LocalDateTime startDateTime = startDate == null ? null : startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate == null ? null : endDate.plusDays(1).atStartOfDay();
-
-        Page<Transaction> result = transactionRepository.search(
-                accountId,
-                resolveCurrentUserId(),
-                transactionType,
-                startDateTime,
-                endDateTime,
-                pageable
+        Account account = getActiveAccount(accountId);
+        TransactionQueryResult result = bankingAccountQueryService.getTransactions(
+                account.getAccountNumber(),
+                startDate,
+                endDate,
+                toExternalTransactionType(type),
+                page,
+                size
         );
 
-        List<TransactionSummaryResponse> transactions = result.getContent().stream()
+        List<TransactionSummaryResponse> transactions = result.transactions().stream()
                 .map(this::toTransactionSummaryResponse)
                 .toList();
 
         return TransactionListResponse.builder()
-                .totalElements(result.getTotalElements())
-                .totalPages(result.getTotalPages())
-                .isLast(result.isLast())
+                .totalElements(result.totalElements())
+                .totalPages(result.totalPages())
+                .isLast(result.last())
                 .transactions(transactions)
                 .build();
     }
 
-    public TransactionDetailResponse getTransactionDetail(Long accountId, Long transactionId) {
-        getActiveAccount(accountId);
+    public TransactionDetailResponse getTransactionDetail(Long accountId, String transactionId) {
+        Account account = getActiveAccount(accountId);
+        TransactionDetailResult transaction = bankingAccountQueryService.getTransactionDetail(
+                account.getAccountNumber(),
+                transactionId
+        );
 
-        Transaction transaction = transactionRepository.findByIdAndAccountAccountIdAndAccountUserId(
-                        transactionId,
-                        accountId,
-                        resolveCurrentUserId()
-                )
-                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND));
-
-        return toTransactionDetailResponse(transaction);
+        return toTransactionDetailResponse(accountId, transaction);
     }
 
     private Account getActiveAccount(Long accountId) {
@@ -174,7 +165,7 @@ public class AccountQueryService {
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
     }
 
-    private AccountSummaryResponse toAccountSummaryResponse(DemandDepositAccountResult account) {
+    private AccountSummaryResponse toAccountSummaryResponse(DemandDepositAccountResult account, Account metadata) {
         return AccountSummaryResponse.builder()
                 .bankCode(account.bankCode())
                 .bankName(account.bankName())
@@ -190,48 +181,58 @@ public class AccountQueryService {
                 .accountBalance(account.accountBalance())
                 .lastTransactionDate(account.lastTransactionDate())
                 .currency(account.currency())
+                .isPrimary(metadata != null && Boolean.TRUE.equals(metadata.getIsPrimary()))
                 .build();
     }
 
-    private TransactionSummaryResponse toTransactionSummaryResponse(Transaction transaction) {
+    private String accountKey(Account account) {
+        return accountKey(account.getBankCode(), account.getAccountNumber());
+    }
+
+    private String accountKey(String bankCode, String accountNumber) {
+        return bankCode + ":" + accountNumber;
+    }
+
+    private TransactionSummaryResponse toTransactionSummaryResponse(TransactionSummaryResult transaction) {
         return TransactionSummaryResponse.builder()
-                .transactionId(transaction.getId())
-                .transactionDate(transaction.getTransactionDate())
-                .type(transaction.getType().name())
-                .amount(transaction.getAmount())
-                .balanceAfter(transaction.getBalanceAfter())
-                .counterpartyName(transaction.getCounterpartyName())
-                .category(transaction.getCategory())
+                .transactionId(transaction.externalTransactionId())
+                .transactionDate(transaction.transactionDate())
+                .type(transaction.type())
+                .amount(transaction.amount())
+                .balanceAfter(transaction.balanceAfter())
+                .counterpartyName(transaction.counterpartyName())
+                .category(transaction.category())
                 .build();
     }
 
-    private TransactionDetailResponse toTransactionDetailResponse(Transaction transaction) {
+    private TransactionDetailResponse toTransactionDetailResponse(Long accountId, TransactionDetailResult transaction) {
         return TransactionDetailResponse.builder()
-                .transactionId(transaction.getId())
-                .accountId(transaction.getAccount().getAccountId())
-                .transactionDate(transaction.getTransactionDate())
-                .type(transaction.getType().name())
-                .amount(transaction.getAmount())
-                .balanceAfter(transaction.getBalanceAfter())
-                .counterpartyName(transaction.getCounterpartyName())
-                .counterpartyBank(transaction.getCounterpartyBank())
-                .counterpartyAccount(transaction.getCounterpartyAccount())
-                .fee(transaction.getFee())
-                .category(transaction.getCategory())
-                .memo(transaction.getMemo())
+                .transactionId(transaction.externalTransactionId())
+                .accountId(accountId)
+                .transactionDate(transaction.transactionDate())
+                .type(transaction.type())
+                .amount(transaction.amount())
+                .balanceAfter(transaction.balanceAfter())
+                .counterpartyName(transaction.counterpartyName())
+                .counterpartyBank(transaction.counterpartyBank())
+                .counterpartyAccount(transaction.counterpartyAccount())
+                .fee(transaction.fee())
+                .category(transaction.category())
+                .memo(transaction.memo())
                 .build();
     }
 
-    private TransactionType parseTransactionType(String type) {
+    private String toExternalTransactionType(String type) {
         if (type == null || type.isBlank() || "ALL".equalsIgnoreCase(type)) {
-            return null;
+            return "A";
         }
 
-        try {
-            return TransactionType.valueOf(type.toUpperCase());
-        } catch (IllegalArgumentException exception) {
-            throw new CustomException(ErrorCode.INVALID_TRANSACTION_TYPE);
-        }
+        return switch (type.toUpperCase()) {
+            case "A", "ALL" -> "A";
+            case "M", "DEPOSIT" -> "M";
+            case "D", "WITHDRAWAL" -> "D";
+            default -> throw new CustomException(ErrorCode.INVALID_TRANSACTION_TYPE);
+        };
     }
 
     private long toLongBalance(DemandDepositAccountResult account) {

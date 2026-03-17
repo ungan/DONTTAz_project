@@ -5,7 +5,7 @@ import lombok.Builder;
 
 @Builder
 public record TransactionSummaryResponse(
-        Long transactionId,
+        String transactionId,
         LocalDateTime transactionDate,
         String type,
         Integer amount,
