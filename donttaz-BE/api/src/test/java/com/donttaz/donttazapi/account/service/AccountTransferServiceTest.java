@@ -74,21 +74,23 @@ class AccountTransferServiceTest {
 
                 AccountDepositResponse response = accountTransferService.deposit("0016174648358792", request);
 
-                ArgumentCaptor<AccountDepositCommand> commandCaptor = ArgumentCaptor
-                                .forClass(AccountDepositCommand.class);
-                ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
-                verify(bankingClient).deposit(org.mockito.ArgumentMatchers.eq(1L), commandCaptor.capture());
-                verify(transactionRepository).save(transactionCaptor.capture());
-                assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0016174648358792");
-                assertThat(commandCaptor.getValue().transactionBalance()).isEqualTo("100000000");
-                assertThat(commandCaptor.getValue().transactionSummary()).isEqualTo("deposit");
-                assertThat(transactionCaptor.getValue().getAmount()).isEqualTo(100000000);
-                assertThat(transactionCaptor.getValue().getBalanceAfter()).isEqualTo(100000000);
-                assertThat(transactionCaptor.getValue().getMemo()).isEqualTo("deposit");
-                assertThat(transactionCaptor.getValue().getCategory()).isEqualTo("DEPOSIT");
-                assertThat(response.transactionUniqueNo()).isEqualTo("59");
-                assertThat(response.transactionDate()).isEqualTo("20240401");
-        }
+        ArgumentCaptor<AccountDepositCommand> commandCaptor = ArgumentCaptor.forClass(AccountDepositCommand.class);
+        ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
+        verify(bankingClient).deposit(org.mockito.ArgumentMatchers.eq(1L), commandCaptor.capture());
+        verify(transactionRepository).save(transactionCaptor.capture());
+        assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0016174648358792");
+        assertThat(commandCaptor.getValue().transactionBalance()).isEqualTo("100000000");
+        assertThat(commandCaptor.getValue().transactionSummary()).isEqualTo("deposit");
+        assertThat(transactionCaptor.getValue().getUserId()).isEqualTo(1L);
+        assertThat(transactionCaptor.getValue().getSource()).isEqualTo("FIN_API");
+        assertThat(transactionCaptor.getValue().getSourceTxId()).isEqualTo("59");
+        assertThat(transactionCaptor.getValue().getAmount()).isEqualTo(100000000L);
+        assertThat(transactionCaptor.getValue().getBalanceSnapshot()).isEqualTo(100000000L);
+        assertThat(transactionCaptor.getValue().getTransactionSummary()).isEqualTo("deposit");
+        assertThat(transactionCaptor.getValue().getTxType()).isEqualTo("1");
+        assertThat(response.transactionUniqueNo()).isEqualTo("59");
+        assertThat(response.transactionDate()).isEqualTo("20240401");
+    }
 
     @Test
     @DisplayName("출금 요청 시 외부 호출 후 내부 거래 이력을 저장한다.")
@@ -109,10 +111,13 @@ class AccountTransferServiceTest {
         assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0016174648358792");
         assertThat(commandCaptor.getValue().transactionBalance()).isEqualTo("100000");
         assertThat(commandCaptor.getValue().transactionSummary()).isEqualTo("withdrawal");
-        assertThat(transactionCaptor.getValue().getAmount()).isEqualTo(100000);
-        assertThat(transactionCaptor.getValue().getBalanceAfter()).isEqualTo(500000);
-        assertThat(transactionCaptor.getValue().getMemo()).isEqualTo("withdrawal");
-        assertThat(transactionCaptor.getValue().getCategory()).isEqualTo("WITHDRAWAL");
+        assertThat(transactionCaptor.getValue().getUserId()).isEqualTo(1L);
+        assertThat(transactionCaptor.getValue().getSource()).isEqualTo("FIN_API");
+        assertThat(transactionCaptor.getValue().getSourceTxId()).isEqualTo("60");
+        assertThat(transactionCaptor.getValue().getAmount()).isEqualTo(100000L);
+        assertThat(transactionCaptor.getValue().getBalanceSnapshot()).isEqualTo(500000L);
+        assertThat(transactionCaptor.getValue().getTransactionSummary()).isEqualTo("withdrawal");
+        assertThat(transactionCaptor.getValue().getTxType()).isEqualTo("2");
         assertThat(response.transactionUniqueNo()).isEqualTo("60");
         assertThat(response.transactionDate()).isEqualTo("20240401");
     }

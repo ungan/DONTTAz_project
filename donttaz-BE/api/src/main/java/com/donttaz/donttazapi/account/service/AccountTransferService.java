@@ -4,8 +4,8 @@ import com.donttaz.donttazapi.account.domain.Account;
 import com.donttaz.donttazapi.account.domain.Transaction;
 import com.donttaz.donttazapi.account.domain.TransactionType;
 import com.donttaz.donttazapi.account.dto.request.AccountDepositRequest;
-import com.donttaz.donttazapi.account.dto.request.AccountTransferRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountTransferLimitUpdateRequest;
+import com.donttaz.donttazapi.account.dto.request.AccountTransferRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountWithdrawalRequest;
 import com.donttaz.donttazapi.account.dto.response.AccountDepositResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountTransferItemResponse;
@@ -43,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AccountTransferService {
 
     private static final Logger log = LoggerFactory.getLogger(AccountTransferService.class);
+    private static final String TRANSACTION_SOURCE_FIN_API = "FIN_API";
 
     private final BankingClient bankingClient;
     private final AccountSyncService accountSyncService;
@@ -69,7 +70,14 @@ public class AccountTransferService {
                 resolveCurrentUserId(),
                 new AccountDepositCommand(accountNo, request.transactionBalance(), request.transactionSummary())
         );
-        persistTransaction(accountNo, TransactionType.DEPOSIT, request.transactionBalance(), request.transactionSummary(), result.transactionDate());
+        persistTransaction(
+                accountNo,
+                result.transactionUniqueNo(),
+                TransactionType.DEPOSIT,
+                request.transactionBalance(),
+                request.transactionSummary(),
+                result.transactionDate()
+        );
 
         return AccountDepositResponse.builder()
                 .transactionUniqueNo(result.transactionUniqueNo())
@@ -131,7 +139,14 @@ public class AccountTransferService {
                 resolveCurrentUserId(),
                 new AccountWithdrawalCommand(accountNo, request.transactionBalance(), request.transactionSummary())
         );
-        persistTransaction(accountNo, TransactionType.WITHDRAWAL, request.transactionBalance(), request.transactionSummary(), result.transactionDate());
+        persistTransaction(
+                accountNo,
+                result.transactionUniqueNo(),
+                TransactionType.WITHDRAWAL,
+                request.transactionBalance(),
+                request.transactionSummary(),
+                result.transactionDate()
+        );
 
         return AccountWithdrawalResponse.builder()
                 .transactionUniqueNo(result.transactionUniqueNo())
@@ -141,6 +156,7 @@ public class AccountTransferService {
 
     private void persistTransaction(
             String accountNo,
+            String externalTransactionId,
             TransactionType type,
             String amount,
             String summary,
@@ -150,14 +166,17 @@ public class AccountTransferService {
         transactionRepository.save(
                 Transaction.builder()
                         .account(account)
-                        .type(type)
-                        .amount(toInt(amount))
-                        .balanceAfter(toInt(account.getBalance()))
+                        .userId(account.getUserId())
+                        .source(TRANSACTION_SOURCE_FIN_API)
+                        .sourceTxId(externalTransactionId)
+                        .txType(toSourceTransactionType(type))
+                        .txTypeName(type.name())
+                        .amount(toLong(amount))
+                        .balanceSnapshot(toLong(account.getBalance()))
                         .counterpartyName("SELF")
-                        .fee(0)
-                        .category(type.name())
-                        .memo(summary)
-                        .transactionDate(toTransactionDate(transactionDate))
+                        .transactionSummary(summary)
+                        .transactionAt(toTransactionAt(transactionDate))
+                        .syncedAt(LocalDateTime.now())
                         .build()
         );
     }
@@ -214,18 +233,26 @@ public class AccountTransferService {
             String summary,
             String counterpartyAccountNo
     ) {
+        if (transactionResult == null) {
+            log.warn("transfer transaction result missing accountNo={} direction={}", account.getAccountNumber(), type);
+            return;
+        }
+
         transactionRepository.save(
                 Transaction.builder()
                         .account(account)
-                        .type(type)
-                        .amount(toInt(amount))
-                        .balanceAfter(toInt(account.getBalance()))
+                        .userId(account.getUserId())
+                        .source(TRANSACTION_SOURCE_FIN_API)
+                        .sourceTxId(transactionResult.transactionUniqueNo())
+                        .txType(resolveSourceTransactionType(type, transactionResult.transactionType()))
+                        .txTypeName(resolveSourceTransactionTypeName(type, transactionResult.transactionTypeName()))
+                        .amount(toLong(amount))
+                        .balanceSnapshot(toLong(account.getBalance()))
                         .counterpartyName("TRANSFER")
-                        .counterpartyAccount(counterpartyAccountNo)
-                        .fee(0)
-                        .category(type.name())
-                        .memo(summary)
-                        .transactionDate(toTransactionDate(transactionResult == null ? null : transactionResult.transactionDate()))
+                        .counterpartyAccountNo(counterpartyAccountNo)
+                        .transactionSummary(summary)
+                        .transactionAt(toTransactionAt(transactionResult.transactionDate()))
+                        .syncedAt(LocalDateTime.now())
                         .build()
         );
     }
@@ -240,23 +267,22 @@ public class AccountTransferService {
         return currentUserProvider.getCurrentUserId();
     }
 
-    private int toInt(String value) {
+    private Long toLong(String value) {
         try {
-            return Math.toIntExact(Long.parseLong(value));
-        } catch (NumberFormatException | ArithmeticException exception) {
-            throw new CustomException(ErrorCode.INVALID_REQUEST, "거래 금액이 저장 범위를 초과합니다.");
+            return Long.parseLong(value);
+        } catch (NumberFormatException exception) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST, "Transaction amount is invalid.");
         }
     }
 
-    private int toInt(Long value) {
-        try {
-            return Math.toIntExact(value);
-        } catch (ArithmeticException exception) {
-            throw new CustomException(ErrorCode.INVALID_REQUEST, "계좌 잔액이 저장 범위를 초과합니다.");
+    private Long toLong(Long value) {
+        if (value == null) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST, "Account balance is invalid.");
         }
+        return value;
     }
 
-    private LocalDateTime toTransactionDate(String transactionDate) {
+    private LocalDateTime toTransactionAt(String transactionDate) {
         if (transactionDate == null || transactionDate.isBlank()) {
             return LocalDateTime.now();
         }
@@ -266,6 +292,27 @@ public class AccountTransferService {
         } catch (DateTimeParseException exception) {
             return LocalDateTime.now();
         }
+    }
+
+    private String toSourceTransactionType(TransactionType type) {
+        return switch (type) {
+            case DEPOSIT -> "1";
+            case WITHDRAWAL -> "2";
+        };
+    }
+
+    private String resolveSourceTransactionType(TransactionType type, String txType) {
+        if (txType == null || txType.isBlank()) {
+            return toSourceTransactionType(type);
+        }
+        return txType;
+    }
+
+    private String resolveSourceTransactionTypeName(TransactionType type, String txTypeName) {
+        if (txTypeName == null || txTypeName.isBlank()) {
+            return type.name();
+        }
+        return txTypeName;
     }
 
     private AccountTransferItemResponse toAccountTransferItemResponse(TransferTransactionResult result) {

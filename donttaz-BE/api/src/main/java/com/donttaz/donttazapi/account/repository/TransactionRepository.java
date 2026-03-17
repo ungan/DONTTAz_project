@@ -1,7 +1,6 @@
 package com.donttaz.donttazapi.account.repository;
 
 import com.donttaz.donttazapi.account.domain.Transaction;
-import com.donttaz.donttazapi.account.domain.TransactionType;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -17,15 +16,15 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             from Transaction t
             where t.account.accountId = :accountId
               and t.account.userId = :userId
-              and (:type is null or t.type = :type)
-              and (:startDate is null or t.transactionDate >= :startDate)
-              and (:endDate is null or t.transactionDate < :endDate)
-            order by t.transactionDate desc
+              and (:txType is null or t.txType = :txType)
+              and (:startDate is null or t.transactionAt >= :startDate)
+              and (:endDate is null or t.transactionAt < :endDate)
+            order by t.transactionAt desc
             """)
     Page<Transaction> search(
             @Param("accountId") Long accountId,
             @Param("userId") Long userId,
-            @Param("type") TransactionType type,
+            @Param("txType") String txType,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable
