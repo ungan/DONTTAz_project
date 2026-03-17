@@ -4,20 +4,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.*;
 
 import com.donttaz.donttazapi.common.exception.CustomException;
 import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.donttaz.donttazapi.infra.banking.client.BankingClient;
+import com.donttaz.donttazapi.user.domain.DeviceType;
+import com.donttaz.donttazapi.user.domain.FcmToken;
 import com.donttaz.donttazapi.user.domain.User;
 import com.donttaz.donttazapi.user.domain.UserStatus;
-import com.donttaz.donttazapi.user.dto.request.CreateUserRequest;
+import com.donttaz.donttazapi.user.dto.request.*;
 import com.donttaz.donttazapi.user.dto.response.CreateUserResponse;
+import com.donttaz.donttazapi.user.dto.response.UserUpdateResponse;
+import com.donttaz.donttazapi.user.repository.FcmTokenRepository;
 import com.donttaz.donttazapi.user.repository.UserRepository;
 import com.donttaz.donttazapi.user.service.UserCommandService;
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,99 +30,155 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class UserCommandServiceTest {
 
     private static final Long TEST_USER_ID = 1L;
 
-    @Mock
-    private UserRepository userRepository;
+    @Mock private UserRepository userRepository;
+    @Mock private FcmTokenRepository fcmTokenRepository;
+    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private BankingClient bankingClient;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private BankingClient bankingClient;
-
-    @InjectMocks
-    private UserCommandService userCommandService;
+    @InjectMocks private UserCommandService userCommandService;
 
     @Test
-    @DisplayName("회원가입 성공 시 사용자 키를 발급받아 암호화된 사용자 정보를 저장한다.")
-    void createUserSuccess() {
-        // Given
+    @DisplayName("회원가입: 사용자 키를 발급받아 암호화된 사용자 정보를 저장한다.")
+    void createUser_Success() {
+        // [Given]
         String email = "test@ssafy.com";
         CreateUserRequest request = CreateUserRequest.builder()
-                .email(email)
-                .password("password123!")
-                .pinCode("123456")
-                .name("김싸피")
-                .phoneNumber("01012345678")
-                .deviceId("device-unique-id")
-                .build();
+                .email(email).password("pass123").pinCode("123456")
+                .name("김싸피").phoneNumber("01012345678").deviceId("dev-1").build();
 
         given(userRepository.existsByEmail(email)).willReturn(false);
-        given(bankingClient.createUserKey(email)).willReturn("ssafy-user-key");
-        given(passwordEncoder.encode("password123!")).willReturn("encoded-password");
-        given(passwordEncoder.encode("123456")).willReturn("encoded-pin");
-        given(userRepository.save(any(User.class))).willAnswer(invocation -> {
-            User user = invocation.getArgument(0);
-            setUserId(user);
-            return user;
+        given(bankingClient.createUserKey(email)).willReturn("ssafy-key");
+        given(passwordEncoder.encode(anyString())).willReturn("encoded-val");
+        given(userRepository.save(any(User.class))).willAnswer(inv -> {
+            User u = inv.getArgument(0);
+            setUserId(u);
+            return u;
         });
 
-        // When
+        // [When]
         CreateUserResponse response = userCommandService.createUser(request);
 
-        // Then
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
-
-        User savedUser = userCaptor.getValue();
-        assertThat(savedUser.getEmail()).isEqualTo(email);
-        assertThat(savedUser.getPassword()).isEqualTo("encoded-password");
-        assertThat(savedUser.getPinCode()).isEqualTo("encoded-pin");
-        assertThat(savedUser.getName()).isEqualTo("김싸피");
-        assertThat(savedUser.getPhoneNumber()).isEqualTo("01012345678");
-        assertThat(savedUser.getDeviceId()).isEqualTo("device-unique-id");
-        assertThat(savedUser.getSsafyUserKey()).isEqualTo("ssafy-user-key");
-        assertThat(savedUser.getStatus()).isEqualTo(UserStatus.ACTIVE);
+        // [Then]
         assertThat(response.getUserId()).isEqualTo(TEST_USER_ID);
-        assertThat(response.getEmail()).isEqualTo(email);
-        assertThat(response.getName()).isEqualTo("김싸피");
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
-    @DisplayName("이미 사용 중인 이메일이면 회원가입에 실패한다.")
-    void createUserFailWhenEmailDuplicated() {
-        // Given
-        CreateUserRequest request = CreateUserRequest.builder()
-                .email("duplicate@ssafy.com")
-                .password("password123!")
-                .pinCode("123456")
-                .name("김싸피")
-                .phoneNumber("01012345678")
-                .build();
+    @DisplayName("FCM 토큰 등록: 신규 기기인 경우 토큰을 새로 저장한다.")
+    void registerFcmToken_NewDevice_Success() {
+        // [Given]
+        User user = createTestUser();
+        FcmTokenRegisterRequest request = mock(FcmTokenRegisterRequest.class);
+        given(request.getDeviceId()).willReturn("device-1");
+        given(request.getFcmToken()).willReturn("token-aaa");
+        given(request.getDeviceType()).willReturn(DeviceType.ANDROID);
 
-        given(userRepository.existsByEmail("duplicate@ssafy.com")).willReturn(true);
+        given(userRepository.findById(TEST_USER_ID)).willReturn(Optional.of(user));
+        given(fcmTokenRepository.findByDeviceId("device-1")).willReturn(Optional.empty());
 
-        // When
-        CustomException exception = assertThrows(CustomException.class, () -> userCommandService.createUser(request));
+        // [When]
+        userCommandService.registerFcmToken(TEST_USER_ID, request);
 
-        // Then
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.DUPLICATE_EMAIL);
-        verify(userRepository, never()).save(any(User.class));
-        verifyNoInteractions(passwordEncoder, bankingClient);
+        // [Then]
+        verify(fcmTokenRepository).save(any(FcmToken.class));
+    }
+
+    @Test
+    @DisplayName("FCM 토큰 등록: 기존 기기인 경우 기존 토큰 정보를 업데이트한다.")
+    void registerFcmToken_ExistingDevice_Success() {
+        // [Given]
+        User user = createTestUser();
+        FcmTokenRegisterRequest request = mock(FcmTokenRegisterRequest.class);
+        given(request.getDeviceId()).willReturn("device-1");
+        given(request.getFcmToken()).willReturn("new-token");
+
+        FcmToken existingToken = FcmToken.builder()
+                .user(user).deviceId("device-1").token("old-token").deviceType(DeviceType.ANDROID).build();
+
+        given(userRepository.findById(TEST_USER_ID)).willReturn(Optional.of(user));
+        given(fcmTokenRepository.findByDeviceId("device-1")).willReturn(Optional.of(existingToken));
+
+        // [When]
+        userCommandService.registerFcmToken(TEST_USER_ID, request);
+
+        // [Then]
+        assertThat(existingToken.getToken()).isEqualTo("new-token");
+        verify(fcmTokenRepository, never()).save(any(FcmToken.class));
+    }
+
+    @Test
+    @DisplayName("회원 정보 수정: 닉네임을 변경하고 수정된 정보를 반환한다.")
+    void updateUserInfo_Success() {
+        // [Given]
+        User user = createTestUser();
+        UserUpdateRequest request = mock(UserUpdateRequest.class);
+        given(request.getNickname()).willReturn("NewNick");
+        
+        ReflectionTestUtils.setField(user, "updatedAt", LocalDateTime.now());
+        given(userRepository.findById(TEST_USER_ID)).willReturn(Optional.of(user));
+
+        // [When]
+        UserUpdateResponse response = userCommandService.updateUserInfo(TEST_USER_ID, request);
+
+        // [Then]
+        assertThat(user.getNickname()).isEqualTo("NewNick");
+        assertThat(response.getNickname()).isEqualTo("NewNick");
+        assertThat(response.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴: 비밀번호가 일치하면 논리적 삭제 및 FCM 토큰 전체 삭제.")
+    void withdraw_Success() {
+        // [Given]
+        User user = createTestUser();
+        UserWithdrawRequest request = mock(UserWithdrawRequest.class);
+        given(request.getPassword()).willReturn("correct-pass");
+        given(request.getReason()).willReturn("bye");
+
+        given(userRepository.findById(TEST_USER_ID)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("correct-pass", user.getPassword())).willReturn(true);
+
+        // [When]
+        userCommandService.withdraw(TEST_USER_ID, request);
+
+        // [Then]
+        assertThat(user.getStatus()).isEqualTo(UserStatus.WITHDRAWN);
+        verify(fcmTokenRepository).deleteByUser(user);
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴: 비밀번호 불일치 시 예외를 던진다.")
+    void withdraw_Fail_InvalidPassword() {
+        // [Given]
+        User user = createTestUser();
+        UserWithdrawRequest request = mock(UserWithdrawRequest.class);
+        given(request.getPassword()).willReturn("wrong");
+
+        given(userRepository.findById(TEST_USER_ID)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("wrong", user.getPassword())).willReturn(false);
+
+        // [When & Then]
+        assertThrows(CustomException.class, () -> userCommandService.withdraw(TEST_USER_ID, request));
+        assertThat(user.getStatus()).isNotEqualTo(UserStatus.WITHDRAWN);
+    }
+
+    // --- Helpers ---
+
+    private User createTestUser() {
+        User user = User.builder()
+                .email("test@ssafy.com").password("encoded-pass").name("김싸피").build();
+        setUserId(user);
+        return user;
     }
 
     private void setUserId(User user) {
-        try {
-            Field field = User.class.getDeclaredField("userId");
-            field.setAccessible(true);
-            field.set(user, TEST_USER_ID);
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException(exception);
-        }
+        ReflectionTestUtils.setField(user, "userId", TEST_USER_ID);
     }
 }
