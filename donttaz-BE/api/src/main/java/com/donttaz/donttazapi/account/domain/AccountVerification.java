@@ -10,9 +10,13 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Getter
 @Entity
+@SQLDelete(sql = "UPDATE account_verifications SET is_deleted = true WHERE verification_id = ?")
+@SQLRestriction("is_deleted = false")
 @Table(name = "account_verifications")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AccountVerification extends BaseEntity {
@@ -44,7 +48,7 @@ public class AccountVerification extends BaseEntity {
 
     @Builder
     private AccountVerification(String verificationId, Long userId, String bankCode, String accountNumber,
-                                String authCode, LocalDateTime expiredAt, boolean verified, String consentToken) {
+            String authCode, LocalDateTime expiredAt, boolean verified, String consentToken) {
         this.verificationId = verificationId;
         this.userId = userId;
         this.bankCode = bankCode;

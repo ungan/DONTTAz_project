@@ -16,24 +16,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@SecurityScheme(
-        name = "bearerAuth",
-        type = SecuritySchemeType.HTTP,
-        scheme = "bearer",
-        bearerFormat = "JWT",
-        in = SecuritySchemeIn.HEADER
-)
-@OpenAPIDefinition(
-        info = @Info(
-                title = "돈타즈 API",
-                version = "v1",
-                description = "SSAFY finAPI와 연동된 수시입출금 계좌 API 문서입니다.",
-                contact = @Contact(name = "Donttaz Backend")
-        ),
-        servers = {
-                @Server(url = "http://localhost:8080", description = "로컬 서버")
-        }
-)
+@SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT", in = SecuritySchemeIn.HEADER)
+@OpenAPIDefinition(info = @Info(title = "돈타즈 API", version = "v1", description = "SSAFY finAPI와 연동된 수시입출금 계좌 API 문서입니다.", contact = @Contact(name = "Donttaz Backend")), servers = {
+        @Server(url = "http://localhost:8080", description = "로컬 서버")
+}, security = {
+        @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
+})
 public class SwaggerConfig {
 
     @Bean

@@ -44,11 +44,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class AccountTransferServiceTest {
 
-    @Mock
-    private BankingClient bankingClient;
+        @Mock
+        private BankingClient bankingClient;
 
-    @Mock
-    private AccountSyncService accountSyncService;
+        @Mock
+        private AccountSyncService accountSyncService;
 
     @Mock
     private AccountRepository accountRepository;
@@ -56,11 +56,11 @@ class AccountTransferServiceTest {
     @Mock
     private TransactionRepository transactionRepository;
 
-    @Mock
-    private CurrentUserProvider currentUserProvider;
+        @Mock
+        private CurrentUserProvider currentUserProvider;
 
-    @InjectMocks
-    private AccountTransferService accountTransferService;
+        @InjectMocks
+        private AccountTransferService accountTransferService;
 
     @Test
     @DisplayName("입금 요청 시 외부 호출 후 내부 거래 이력을 저장한다.")
@@ -72,22 +72,23 @@ class AccountTransferServiceTest {
                 .willReturn(new AccountDepositResult("59", "20240401"));
         given(accountSyncService.syncAccountSnapshot("0016174648358792")).willReturn(account);
 
-        AccountDepositResponse response = accountTransferService.deposit("0016174648358792", request);
+                AccountDepositResponse response = accountTransferService.deposit("0016174648358792", request);
 
-        ArgumentCaptor<AccountDepositCommand> commandCaptor = ArgumentCaptor.forClass(AccountDepositCommand.class);
-        ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
-        verify(bankingClient).deposit(org.mockito.ArgumentMatchers.eq(1L), commandCaptor.capture());
-        verify(transactionRepository).save(transactionCaptor.capture());
-        assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0016174648358792");
-        assertThat(commandCaptor.getValue().transactionBalance()).isEqualTo("100000000");
-        assertThat(commandCaptor.getValue().transactionSummary()).isEqualTo("deposit");
-        assertThat(transactionCaptor.getValue().getAmount()).isEqualTo(100000000);
-        assertThat(transactionCaptor.getValue().getBalanceAfter()).isEqualTo(100000000);
-        assertThat(transactionCaptor.getValue().getMemo()).isEqualTo("deposit");
-        assertThat(transactionCaptor.getValue().getCategory()).isEqualTo("DEPOSIT");
-        assertThat(response.transactionUniqueNo()).isEqualTo("59");
-        assertThat(response.transactionDate()).isEqualTo("20240401");
-    }
+                ArgumentCaptor<AccountDepositCommand> commandCaptor = ArgumentCaptor
+                                .forClass(AccountDepositCommand.class);
+                ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
+                verify(bankingClient).deposit(org.mockito.ArgumentMatchers.eq(1L), commandCaptor.capture());
+                verify(transactionRepository).save(transactionCaptor.capture());
+                assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0016174648358792");
+                assertThat(commandCaptor.getValue().transactionBalance()).isEqualTo("100000000");
+                assertThat(commandCaptor.getValue().transactionSummary()).isEqualTo("deposit");
+                assertThat(transactionCaptor.getValue().getAmount()).isEqualTo(100000000);
+                assertThat(transactionCaptor.getValue().getBalanceAfter()).isEqualTo(100000000);
+                assertThat(transactionCaptor.getValue().getMemo()).isEqualTo("deposit");
+                assertThat(transactionCaptor.getValue().getCategory()).isEqualTo("DEPOSIT");
+                assertThat(response.transactionUniqueNo()).isEqualTo("59");
+                assertThat(response.transactionDate()).isEqualTo("20240401");
+        }
 
     @Test
     @DisplayName("출금 요청 시 외부 호출 후 내부 거래 이력을 저장한다.")
@@ -99,7 +100,7 @@ class AccountTransferServiceTest {
                 .willReturn(new AccountWithdrawalResult("60", "20240401"));
         given(accountSyncService.syncAccountSnapshot("0016174648358792")).willReturn(account);
 
-        AccountWithdrawalResponse response = accountTransferService.withdrawal("0016174648358792", request);
+                AccountWithdrawalResponse response = accountTransferService.withdrawal("0016174648358792", request);
 
         ArgumentCaptor<AccountWithdrawalCommand> commandCaptor = ArgumentCaptor.forClass(AccountWithdrawalCommand.class);
         ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);

@@ -16,7 +16,7 @@ import com.donttaz.donttazapi.account.dto.response.AccountWithdrawalResponse;
 import com.donttaz.donttazapi.account.dto.response.CreateAccountResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionListResponse;
-import com.donttaz.donttazapi.common.response.ApiResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -34,117 +34,64 @@ import org.springframework.web.bind.annotation.RequestParam;
 @SecurityRequirement(name = "bearerAuth")
 public interface AccountSwagger {
 
-    @Operation(
-            summary = "수시입출금 계좌 생성",
-            description = "상품 조회 API에서 받은 accountTypeUniqueNo로 수시입출금 계좌를 생성합니다.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    required = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = CreateAccountRequest.class),
-                            examples = @ExampleObject(
-                                    name = "계좌 생성 요청",
-                                    value = "{\n  \"accountTypeUniqueNo\": \"001-1-ffa4253081d540\"\n}"
-                            )
-                    )
-            )
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "계좌 생성 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
-    })
-    ResponseEntity<ApiResponse<CreateAccountResponse>> createAccount(@RequestBody CreateAccountRequest request);
+        @Operation(summary = "수시입출금 계좌 생성", description = "상품 조회 API에서 받은 accountTypeUniqueNo로 수시입출금 계좌를 생성합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = CreateAccountRequest.class), examples = @ExampleObject(name = "계좌 생성 요청", value = "{\n  \"accountTypeUniqueNo\": \"001-1-ffa4253081d540\"\n}"))))
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "계좌 생성 성공"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
+        })
+        ResponseEntity<CreateAccountResponse> createAccount(@RequestBody CreateAccountRequest request);
 
-    @Operation(summary = "수시입출금 계좌 목록 조회", description = "finAPI에서 현재 사용자의 수시입출금 계좌 목록을 조회합니다.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 목록 조회 성공")
-    })
-    ResponseEntity<ApiResponse<AccountListResponse>> getAccounts();
+        @Operation(summary = "수시입출금 계좌 목록 조회", description = "finAPI에서 현재 사용자의 수시입출금 계좌 목록을 조회합니다.")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 목록 조회 성공")
+        })
+        ResponseEntity<AccountListResponse> getAccounts();
 
-    @Operation(
-            summary = "수시입출금 계좌 상세 조회",
-            description = "계좌번호(accountNo)로 finAPI 수시입출금 계좌 상세 정보를 조회합니다."
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 상세 조회 성공")
-    })
-    ResponseEntity<ApiResponse<AccountDetailResponse>> getAccountDetail(@PathVariable("accountNo") String accountNo);
+        @Operation(summary = "수시입출금 계좌 상세 조회", description = "계좌번호(accountNo)로 finAPI 수시입출금 계좌 상세 정보를 조회합니다.")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 상세 조회 성공")
+        })
+        ResponseEntity<AccountDetailResponse> getAccountDetail(@PathVariable("accountNo") String accountNo);
 
-    @Operation(
-            summary = "계좌 잔액 조회",
-            description = "계좌번호(accountNo)로 finAPI 계좌 잔액 정보를 조회합니다."
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 잔액 조회 성공")
-    })
-    ResponseEntity<ApiResponse<AccountBalanceResponse>> getAccountBalance(@PathVariable("accountNo") String accountNo);
+        @Operation(summary = "계좌 잔액 조회", description = "계좌번호(accountNo)로 finAPI 계좌 잔액 정보를 조회합니다.")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 잔액 조회 성공")
+        })
+        ResponseEntity<AccountBalanceResponse> getAccountBalance(@PathVariable("accountNo") String accountNo);
 
-    @Operation(
-            summary = "예금주 조회",
-            description = "계좌번호(accountNo)로 finAPI 예금주 정보를 조회합니다."
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "예금주 조회 성공")
-    })
-    ResponseEntity<ApiResponse<AccountHolderNameResponse>> getAccountHolderName(@PathVariable("accountNo") String accountNo);
+        @Operation(summary = "예금주 조회", description = "계좌번호(accountNo)로 finAPI 예금주 정보를 조회합니다.")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "예금주 조회 성공")
+        })
+        ResponseEntity<AccountHolderNameResponse> getAccountHolderName(@PathVariable("accountNo") String accountNo);
 
-    @Operation(
-            summary = "계좌 입금",
-            description = "계좌번호(accountNo)로 finAPI 입금 API를 호출합니다.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    required = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AccountDepositRequest.class),
-                            examples = @ExampleObject(
-                                    name = "계좌 입금 요청",
-                                    value = """
-                                            {
-                                              "transactionBalance": "100000000",
-                                              "transactionSummary": "(수시입출금) : 입금"
-                                            }
-                                            """
-                            )
-                    )
-            )
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 입금 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
-    })
-    ResponseEntity<ApiResponse<AccountDepositResponse>> deposit(
-            @PathVariable("accountNo") String accountNo,
-            @RequestBody AccountDepositRequest request
-    );
+        @Operation(summary = "계좌 입금", description = "계좌번호(accountNo)로 finAPI 입금 API를 호출합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = AccountDepositRequest.class), examples = @ExampleObject(name = "계좌 입금 요청", value = """
+                        {
+                          "transactionBalance": "100000000",
+                          "transactionSummary": "(수시입출금) : 입금"
+                        }
+                        """))))
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 입금 성공"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
+        })
+        ResponseEntity<AccountDepositResponse> deposit(
+                        @PathVariable("accountNo") String accountNo,
+                        @RequestBody AccountDepositRequest request);
 
-    @Operation(
-            summary = "계좌 출금",
-            description = "계좌번호(accountNo)로 finAPI 출금 API를 호출합니다.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    required = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AccountWithdrawalRequest.class),
-                            examples = @ExampleObject(
-                                    name = "계좌 출금 요청",
-                                    value = """
-                                            {
-                                              "transactionBalance": "100000",
-                                              "transactionSummary": "(수시입출금) : 출금"
-                                            }
-                                            """
-                            )
-                    )
-            )
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 출금 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
-    })
-    ResponseEntity<ApiResponse<AccountWithdrawalResponse>> withdrawal(
-            @PathVariable("accountNo") String accountNo,
-            @RequestBody AccountWithdrawalRequest request
-    );
+        @Operation(summary = "계좌 출금", description = "계좌번호(accountNo)로 finAPI 출금 API를 호출합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = AccountWithdrawalRequest.class), examples = @ExampleObject(name = "계좌 출금 요청", value = """
+                        {
+                          "transactionBalance": "100000",
+                          "transactionSummary": "(수시입출금) : 출금"
+                        }
+                        """))))
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 출금 성공"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
+        })
+        ResponseEntity<AccountWithdrawalResponse> withdrawal(
+                        @PathVariable("accountNo") String accountNo,
+                        @RequestBody AccountWithdrawalRequest request);
 
     @Operation(
             summary = "계좌 이체",

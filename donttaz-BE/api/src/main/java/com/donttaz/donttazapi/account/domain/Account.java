@@ -16,21 +16,19 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Getter
 @Entity
-@Table(
-        name = "account",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uq_account_user_bank_account",
-                        columnNames = {"user_id", "bank_code", "account_number"}
-                )
-        },
-        indexes = {
-                @Index(name = "idx_account_user_status", columnList = "user_id, status")
-        }
-)
+@SQLDelete(sql = "UPDATE account SET is_deleted = true WHERE account_id = ?")
+@SQLRestriction("is_deleted = false")
+@Table(name = "account", uniqueConstraints = {
+        @UniqueConstraint(name = "uq_account_user_bank_account", columnNames = { "user_id", "bank_code",
+                "account_number" })
+}, indexes = {
+        @Index(name = "idx_account_user_status", columnList = "user_id, status")
+})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Account extends BaseEntity {
 
@@ -131,7 +129,6 @@ public class Account extends BaseEntity {
         this.dailyTransferLimit = dailyTransferLimit;
         this.oneTimeTransferLimit = oneTimeTransferLimit;
         this.lastSyncedAt = lastSyncedAt;
-        this.isDeleted = Boolean.FALSE;
         this.status = AccountStatus.ACTIVE;
     }
 

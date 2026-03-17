@@ -23,8 +23,7 @@ public class AccountSyncService {
     public AccountSyncService(
             AccountRepository accountRepository,
             BankingAccountQueryService bankingAccountQueryService,
-            CurrentUserProvider currentUserProvider
-    ) {
+            CurrentUserProvider currentUserProvider) {
         this.accountRepository = accountRepository;
         this.bankingAccountQueryService = bankingAccountQueryService;
         this.currentUserProvider = currentUserProvider;
@@ -92,8 +91,7 @@ public class AccountSyncService {
         Optional<Account> existing = accountRepository.findByUserIdAndBankCodeAndAccountNumber(
                 userId,
                 bankCode,
-                accountNumber
-        );
+                accountNumber);
 
         if (existing.isPresent()) {
             Account account = existing.get();
@@ -126,8 +124,7 @@ public class AccountSyncService {
                         .isDeleted(Boolean.FALSE)
                         .isPrimary(Boolean.FALSE)
                         .status(AccountStatus.ACTIVE)
-                        .build()
-        );
+                        .build());
     }
 
     private Long resolveCurrentUserId() {
