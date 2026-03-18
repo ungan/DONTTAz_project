@@ -92,9 +92,6 @@ pipeline {
             steps {
                 dir('donttaz-BE') {
                     echo "🚀 배포 시작! Nginx 상태 점검 및 무중단 배포를 진행합니다..."
-
-                    // Nginx 컨테이너 자동화 (IaC)
-                    sh 'docker-compose -f docker-compose.nginx.yml up -d'
                     
                     // 실행 권한 부여
                     sh 'chmod +x scripts/deploy.sh'
