@@ -2,9 +2,7 @@ package com.donttaz.donttazapi.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.donttaz.donttazapi.auth.dto.request.LoginRequest;
@@ -12,7 +10,6 @@ import com.donttaz.donttazapi.auth.dto.request.LogoutRequest;
 import com.donttaz.donttazapi.auth.dto.response.LoginResponse;
 import com.donttaz.donttazapi.auth.util.JwtProvider;
 import com.donttaz.donttazapi.common.exception.CustomException;
-import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.donttaz.donttazapi.user.domain.User;
 import com.donttaz.donttazapi.user.domain.UserStatus;
 import com.donttaz.donttazapi.user.repository.UserRepository;
@@ -61,11 +58,6 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        // AuthService의 @Value 필드 설정 (단위 테스트 환경)
-        ReflectionTestUtils.setField(authService, "testEmail", TEST_EMAIL);
-        ReflectionTestUtils.setField(authService, "testPassword", TEST_PASSWORD);
-        ReflectionTestUtils.setField(authService, "testPin", "123456");
-        ReflectionTestUtils.setField(authService, "testUserKey", "ssafy-user-key");
     }
 
     @Test
@@ -79,7 +71,7 @@ class AuthServiceTest {
         given(passwordEncoder.matches(TEST_PASSWORD, ENCODED_PASSWORD)).willReturn(true);
         given(jwtProvider.createAccessToken(TEST_USER_ID, TEST_EMAIL)).willReturn(ACCESS_TOKEN);
         given(jwtProvider.createRefreshToken(TEST_USER_ID, TEST_EMAIL)).willReturn(REFRESH_TOKEN);
-        
+
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
 
         // [When]
@@ -92,51 +84,6 @@ class AuthServiceTest {
         assertThat(response.getName()).isEqualTo(TEST_NAME);
 
         verify(valueOperations).set("RT:" + TEST_USER_ID, REFRESH_TOKEN, 14, TimeUnit.DAYS);
-    }
-
-    @Test
-    @DisplayName("테스트 자동 로그인 시 사용자가 이미 존재하면 기존 계정으로 로그인한다.")
-    void testLogin_Success_WhenUserExists() {
-        // [Given]
-        User user = createTestUser();
-        given(userRepository.existsByEmail(TEST_EMAIL)).willReturn(true);
-        given(userRepository.findByEmail(TEST_EMAIL)).willReturn(Optional.of(user));
-        given(passwordEncoder.matches(TEST_PASSWORD, ENCODED_PASSWORD)).willReturn(true);
-        given(jwtProvider.createAccessToken(TEST_USER_ID, TEST_EMAIL)).willReturn(ACCESS_TOKEN);
-        given(jwtProvider.createRefreshToken(TEST_USER_ID, TEST_EMAIL)).willReturn(REFRESH_TOKEN);
-        
-        given(redisTemplate.opsForValue()).willReturn(valueOperations);
-
-        // [When]
-        LoginResponse response = authService.testLogin();
-
-        // [Then]
-        assertThat(response.getAccessToken()).isEqualTo(ACCESS_TOKEN);
-        assertThat(response.getUserId()).isEqualTo(TEST_USER_ID);
-        verify(userRepository, never()).save(any(User.class));
-    }
-
-    @Test
-    @DisplayName("테스트 자동 로그인 시 사용자가 존재하지 않으면 신규 생성 후 로그인한다.")
-    void testLogin_Success_WhenUserNotExists() {
-        // [Given]
-        User user = createTestUser();
-        given(userRepository.existsByEmail(TEST_EMAIL)).willReturn(false);
-        given(userRepository.save(any(User.class))).willReturn(user);
-        
-        given(userRepository.findByEmail(TEST_EMAIL)).willReturn(Optional.of(user));
-        given(passwordEncoder.matches(TEST_PASSWORD, ENCODED_PASSWORD)).willReturn(true);
-        given(jwtProvider.createAccessToken(TEST_USER_ID, TEST_EMAIL)).willReturn(ACCESS_TOKEN);
-        given(jwtProvider.createRefreshToken(TEST_USER_ID, TEST_EMAIL)).willReturn(REFRESH_TOKEN);
-        
-        given(redisTemplate.opsForValue()).willReturn(valueOperations);
-
-        // [When]
-        LoginResponse response = authService.testLogin();
-
-        // [Then]
-        assertThat(response.getAccessToken()).isEqualTo(ACCESS_TOKEN);
-        verify(userRepository).save(any(User.class));
     }
 
     @Test

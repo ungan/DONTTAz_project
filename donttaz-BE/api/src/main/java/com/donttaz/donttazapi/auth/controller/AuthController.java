@@ -56,12 +56,6 @@ public class AuthController {
         return authService.login(request);
     }
 
-    @org.springframework.context.annotation.Profile({ "local", "dev" })
-    @PostMapping("/test-login")
-    public LoginResponse testLogin() {
-        return authService.testLogin();
-    }
-
     @PostMapping("/logout")
     public Void logout(
             @Valid @RequestBody LogoutRequest request,

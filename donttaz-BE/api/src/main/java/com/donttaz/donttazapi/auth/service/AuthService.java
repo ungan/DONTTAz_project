@@ -48,18 +48,6 @@ public class AuthService {
     @org.springframework.beans.factory.annotation.Value("${portone.api-secret:}")
     private String apiSecret;
 
-    @org.springframework.beans.factory.annotation.Value("${local.test-user.email:}")
-    private String testEmail;
-
-    @org.springframework.beans.factory.annotation.Value("${local.test-user.password:}")
-    private String testPassword;
-
-    @org.springframework.beans.factory.annotation.Value("${local.test-user.pin:}")
-    private String testPin;
-
-    @org.springframework.beans.factory.annotation.Value("${local.test-user.user-key:}")
-    private String testUserKey;
-
     @Transactional
     public FindIdResponse findId(FindIdRequest request) {
         PortOneIdentityResponse result = fetchPortOneIdentity(request.getIdentityVerificationId());
@@ -226,29 +214,6 @@ public class AuthService {
                 .userId(user.getUserId())
                 .name(user.getName())
                 .build();
-    }
-
-    @Transactional
-    public LoginResponse testLogin() {
-        if (!userRepository.existsByEmail(testEmail)) {
-            User user = User.builder()
-                    .email(testEmail)
-                    .password(passwordEncoder.encode(testPassword))
-                    .pinCode(passwordEncoder.encode(testPin))
-                    .name("테스트유저")
-                    .phoneNumber("01012345678")
-                    .ssafyUserKey(testUserKey)
-                    .status(com.donttaz.donttazapi.user.domain.UserStatus.ACTIVE)
-                    .build();
-            userRepository.save(user);
-        }
-
-        LoginRequest request = LoginRequest.builder()
-                .loginId(testEmail)
-                .password(testPassword)
-                .build();
-
-        return login(request);
     }
 
     @Transactional
