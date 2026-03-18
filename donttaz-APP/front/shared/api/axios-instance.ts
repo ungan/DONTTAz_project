@@ -1,4 +1,5 @@
 import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';
 import { applyMockInterceptor } from '../mock';
 
 export const apiClient = axios.create({
@@ -8,4 +9,12 @@ export const apiClient = axios.create({
   },
 });
 
-applyMockInterceptor(apiClient); // 실제 API 연결 시 이 줄 제거
+apiClient.interceptors.request.use(async (config) => {
+  const token = await SecureStore.getItemAsync('accessToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+applyMockInterceptor(apiClient);

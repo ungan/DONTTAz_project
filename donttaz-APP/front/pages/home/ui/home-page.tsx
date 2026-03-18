@@ -13,8 +13,11 @@ export function HomePage() {
   const router = useRouter();
 
   const handleFavoriteMenuPress = (id: string) => {
-    if (id === '2') {
+    if (id === '1') {
       router.push('/transfer-account');
+    }
+    if (id === '2') {
+      router.push('/report');
     }
   };
 

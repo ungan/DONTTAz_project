@@ -30,6 +30,8 @@ export default function RootLayout() {
           <Stack.Screen name="transfer-amount" options={{ headerShown: false }} />
           <Stack.Screen name="transfer-memo" options={{ headerShown: false }} />
         <Stack.Screen name="transfer-confirm" options={{ headerShown: false }} />
+          <Stack.Screen name="report" options={{ headerShown: false }} />
+          <Stack.Screen name="report-monthly" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>

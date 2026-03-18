@@ -6,18 +6,18 @@ import { styles } from './favorite-menu.styles';
 const MENU_ITEMS = [
   {
     id: '1',
-    icon: require('@/shared/assets/icons/medium-icon1.svg'),
-    label: '결제내역',
-  },
-  {
-    id: '2',
     icon: require('@/shared/assets/icons/medium-icon2.svg'),
     label: '송금',
   },
   {
+    id: '2',
+    icon: require('@/shared/assets/icons/medium-icon1.svg'),
+    label: '리포트',
+  },
+  {
     id: '3',
     icon: require('@/shared/assets/icons/medium-icon3.svg'),
-    label: '플랜',
+    label: '소비 플랜',
   },
   {
     id: '4',

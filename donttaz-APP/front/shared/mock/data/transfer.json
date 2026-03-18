@@ -3,7 +3,7 @@
   "message": "이체가 성공적으로 완료되었습니다.",
   "data": {
     "transactionId": 2048,
-    "depositAccountName": "김*싸",
+    "depositAccountName": "김싸피",
     "depositBankName": "신한은행",
     "amount": 50000,
     "fee": 0,
