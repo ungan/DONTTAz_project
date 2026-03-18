@@ -100,7 +100,7 @@ pipeline {
                     
                     // 스크립트 실행 및 에러 캐치 구조화
                     script {
-                        def status = sh(script: './scripts/deploy.sh > deploy_output.log 2>&1', returnStatus: true)
+                        def status = sh(script: 'set -o pipefail; bash -x ./scripts/deploy.sh | tee deploy_output.log', returnStatus: true)
                         if (status != 0) {
                             env.FAIL_STAGE = "Deploy (Blue-Green)"
                             env.FAIL_LOG = sh(script: 'tail -n 25 deploy_output.log', returnStdout: true).trim()

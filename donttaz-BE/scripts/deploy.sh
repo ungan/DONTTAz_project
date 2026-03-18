@@ -50,8 +50,8 @@ docker-compose -f docker-compose.${TARGET_ENV}.yml up -d --build
 echo "⏳ [$TARGET_ENV] Spring Boot API 기동 대기 중..."
 API_IS_READY=false
 for i in $(seq 1 $MAX_RETRIES); do
-    STATUS_CODE=$(docker exec donttaz-api-$TARGET_ENV curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080$API_HEALTH_URL)
-    if [ "$STATUS_CODE" -eq 200 ]; then
+    STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://donttaz-api-${TARGET_ENV}:8080${API_HEALTH_URL})
+    if [ "${STATUS_CODE:-000}" -eq 200 ]; then
         echo "✅ [$TARGET_ENV] Spring Boot API 정상 기동 확인 (200 OK)"
         API_IS_READY=true
         break
@@ -64,8 +64,8 @@ done
 # echo "⏳ [$TARGET_ENV] FastAPI AI 기동 대기 중... (단자: $AI_PORT)"
 # AI_IS_READY=false
 # for i in $(seq 1 $MAX_RETRIES); do
-#     STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$AI_PORT$AI_HEALTH_URL)
-#     if [ "$STATUS_CODE" -eq 200 ]; then
+#     STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://donttaz-ai-${TARGET_ENV}:8000${AI_HEALTH_URL})
+#     if [ "${STATUS_CODE:-000}" -eq 200 ]; then
 #         echo "✅ [$TARGET_ENV] FastAPI AI 정상 기동 확인 (200 OK)"
 #         AI_IS_READY=true
 #         break
