@@ -6,7 +6,7 @@ services:
     container_name: donttaz-api-green
     ports:
       - "127.0.0.1:8082:8080"
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - .env
     networks:
@@ -19,7 +19,7 @@ services:
     container_name: donttaz-ai-green
     ports:
       - "127.0.0.1:8002:8000"
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - .env
     networks:
