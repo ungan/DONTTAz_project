@@ -1,6 +1,7 @@
 package com.donttaz.donttazapi.infra.banking.mapper;
 
 import com.donttaz.donttazapi.account.service.dto.AccountBalanceResult;
+import com.donttaz.donttazapi.account.service.dto.AccountCloseResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDepositResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
 import com.donttaz.donttazapi.account.service.dto.AccountWithdrawalResult;
@@ -23,6 +24,7 @@ import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountHolderName
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountWithdrawalResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountItemResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiCreateDemandDepositAccountRec;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiDeleteDemandDepositAccountResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiDemandDepositAccountRec;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiDemandDepositProductRec;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiOneWonConfirmResponse;
@@ -169,6 +171,15 @@ public class FinApiBankingMapper {
         return new AccountWithdrawalResult(
                 response.rec().transactionUniqueNo(),
                 response.rec().transactionDate()
+        );
+    }
+
+    public AccountCloseResult toAccountCloseResult(FinApiDeleteDemandDepositAccountResponse response) {
+        return new AccountCloseResult(
+                response.rec().status(),
+                response.rec().accountNo(),
+                response.rec().refundAccountNo(),
+                response.rec().accountBalance()
         );
     }
 

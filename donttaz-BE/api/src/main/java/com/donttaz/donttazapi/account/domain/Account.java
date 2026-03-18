@@ -135,4 +135,11 @@ public class Account extends BaseEntity {
     public void markAsPrimary() {
         this.isPrimary = Boolean.TRUE;
     }
+
+    public void unlink(Long balance, LocalDateTime lastSyncedAt) {
+        this.balance = balance;
+        this.lastSyncedAt = lastSyncedAt;
+        this.isPrimary = Boolean.FALSE;
+        this.status = AccountStatus.UNLINKED;
+    }
 }

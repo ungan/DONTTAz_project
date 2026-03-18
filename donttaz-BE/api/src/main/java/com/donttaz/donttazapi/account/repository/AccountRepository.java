@@ -21,18 +21,18 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
             AccountStatus status
     );
 
-    Optional<Account> findByUserIdAndAccountNumberAndIsDeletedFalse(Long userId, String accountNumber);
-
-    Optional<Account> findByUserIdAndBankCodeAndAccountNumber(Long userId, String bankCode, String accountNumber);
-
-    boolean existsByUserIdAndBankCodeAndAccountNumberAndStatusAndIsDeletedFalse(
+    Optional<Account> findByUserIdAndBankCodeAndAccountNumberAndStatusAndIsDeletedFalse(
             Long userId,
             String bankCode,
             String accountNumber,
             AccountStatus status
     );
 
+    Optional<Account> findByUserIdAndAccountNumberAndIsDeletedFalse(Long userId, String accountNumber);
+
+    Optional<Account> findByUserIdAndBankCodeAndAccountNumber(Long userId, String bankCode, String accountNumber);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update Account a set a.isPrimary = false where a.userId = :userId and a.isPrimary = true")
-    int clearPrimaryByUserId(@Param("userId") Long userId);
+    void clearPrimaryByUserId(@Param("userId") Long userId);
 }

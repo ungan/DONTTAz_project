@@ -1,6 +1,8 @@
 package com.donttaz.donttazapi.infra.banking.client;
 
 import com.donttaz.donttazapi.account.service.dto.AccountBalanceResult;
+import com.donttaz.donttazapi.account.service.dto.AccountCloseCommand;
+import com.donttaz.donttazapi.account.service.dto.AccountCloseResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDepositCommand;
 import com.donttaz.donttazapi.account.service.dto.AccountDepositResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
@@ -27,6 +29,7 @@ import com.donttaz.donttazapi.infra.banking.dto.request.FinApiAccountDepositRequ
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiAccountWithdrawalRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiCreateDemandDepositAccountRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiCreateDemandDepositRequest;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiDeleteDemandDepositAccountRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountBalanceRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountHolderNameRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountListRequest;
@@ -45,6 +48,7 @@ import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountHolderName
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiAccountWithdrawalResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiCreateDemandDepositAccountResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiCreateDemandDepositResponse;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiDeleteDemandDepositAccountResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiInquireDemandDepositAccountListResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiInquireDemandDepositListResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiMemberResponse;
@@ -84,6 +88,7 @@ public class FinApiBankingClient implements BankingClient {
     private static final String DEMAND_DEPOSIT_ACCOUNT_HOLDER_NAME_URI = "/demandDeposit/inquireDemandDepositAccountHolderName";
     private static final String DEMAND_DEPOSIT_ACCOUNT_DEPOSIT_URI = "/demandDeposit/updateDemandDepositAccountDeposit";
     private static final String DEMAND_DEPOSIT_ACCOUNT_WITHDRAWAL_URI = "/demandDeposit/updateDemandDepositAccountWithdrawal";
+    private static final String DEMAND_DEPOSIT_ACCOUNT_CLOSE_URI = "/demandDeposit/deleteDemandDepositAccount";
     private static final String DEMAND_DEPOSIT_ACCOUNT_TRANSFER_URI = "/demandDeposit/updateDemandDepositAccountTransfer";
     private static final String DEMAND_DEPOSIT_TRANSFER_LIMIT_URI = "/demandDeposit/updateTransferLimit";
     private static final String DEMAND_DEPOSIT_TRANSACTION_LIST_URI = "/demandDeposit/inquireTransactionHistoryList";
@@ -257,6 +262,22 @@ public class FinApiBankingClient implements BankingClient {
 
         validateSuccess(response.header());
         return finApiBankingMapper.toAccountWithdrawalResult(response);
+    }
+
+    @Override
+    public AccountCloseResult closeAccount(Long userId, AccountCloseCommand command) {
+        FinApiDeleteDemandDepositAccountResponse response = post(
+                resolveUri(DEMAND_DEPOSIT_ACCOUNT_CLOSE_URI),
+                new FinApiDeleteDemandDepositAccountRequest(
+                        buildHeader("deleteDemandDepositAccount", userId),
+                        command.accountNo(),
+                        command.refundAccountNo()
+                ),
+                FinApiDeleteDemandDepositAccountResponse.class
+        );
+
+        validateSuccess(response.header());
+        return finApiBankingMapper.toAccountCloseResult(response);
     }
 
     @Override
