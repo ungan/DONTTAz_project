@@ -51,13 +51,13 @@ public class AuthService {
     @org.springframework.beans.factory.annotation.Value("${local.test-user.email:}")
     private String testEmail;
 
-    @org.springframework.beans.factory.annotation.Value("${local.test-user.password}")
+    @org.springframework.beans.factory.annotation.Value("${local.test-user.password:}")
     private String testPassword;
 
-    @org.springframework.beans.factory.annotation.Value("${local.test-user.pin}")
+    @org.springframework.beans.factory.annotation.Value("${local.test-user.pin:}")
     private String testPin;
 
-    @org.springframework.beans.factory.annotation.Value("${local.test-user.user-key}")
+    @org.springframework.beans.factory.annotation.Value("${local.test-user.user-key:}")
     private String testUserKey;
 
     @Transactional
