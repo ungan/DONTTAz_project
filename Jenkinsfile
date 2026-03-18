@@ -87,6 +87,8 @@ pipeline {
                     changeset "donttaz-BE/api/**"
                     changeset "donttaz-BE/ai/**"
                     changeset "donttaz-BE/nginx/**"
+                    changeset "donttaz-BE/scripts/**"
+                    changeset "Jenkinsfile"
                 }
             }
             steps {
