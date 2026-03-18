@@ -93,87 +93,53 @@ public interface AccountSwagger {
                         @PathVariable("accountNo") String accountNo,
                         @RequestBody AccountWithdrawalRequest request);
 
-    @Operation(
-            summary = "계좌 이체",
-            description = "출금 계좌에서 입금 계좌로 이체를 수행합니다.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    required = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AccountTransferRequest.class),
-                            examples = @ExampleObject(
-                                    name = "계좌 이체 요청",
-                                    value = """
-                                            {
-                                              "depositAccountNo": "0204667768182760",
-                                              "depositTransactionSummary": "(수시입출금) : 입금(이체)",
-                                              "transactionBalance": "10000000",
-                                              "withdrawalAccountNo": "0016174648358792",
-                                              "withdrawalTransactionSummary": "(수시입출금) : 출금(이체)"
-                                            }
-                                            """
-                            )
-                    )
-            )
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 이체 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
-    })
-    ResponseEntity<ApiResponse<AccountTransferResponse>> transfer(@RequestBody AccountTransferRequest request);
+        @Operation(summary = "계좌 이체", description = "출금 계좌에서 입금 계좌로 이체를 수행합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = AccountTransferRequest.class), examples = @ExampleObject(name = "계좌 이체 요청", value = """
+                        {
+                          "depositAccountNo": "0204667768182760",
+                          "depositTransactionSummary": "(수시입출금) : 입금(이체)",
+                          "transactionBalance": "10000000",
+                          "withdrawalAccountNo": "0016174648358792",
+                          "withdrawalTransactionSummary": "(수시입출금) : 출금(이체)"
+                        }
+                        """))))
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 이체 성공"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
+        })
+        ResponseEntity<AccountTransferResponse> transfer(@RequestBody AccountTransferRequest request);
 
-    @Operation(
-            summary = "계좌 이체 한도 변경",
-            description = "계좌번호(accountNo)의 1회 및 1일 이체 한도를 변경합니다.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    required = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AccountTransferLimitUpdateRequest.class),
-                            examples = @ExampleObject(
-                                    name = "계좌 이체 한도 변경 요청",
-                                    value = """
-                                            {
-                                              "oneTimeTransferLimit": "20000000",
-                                              "dailyTransferLimit": "100000000"
-                                            }
-                                            """
-                            )
-                    )
-            )
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 이체 한도 변경 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
-    })
-    ResponseEntity<ApiResponse<AccountTransferLimitUpdateResponse>> updateTransferLimit(
-            @PathVariable("accountNo") String accountNo,
-            @RequestBody AccountTransferLimitUpdateRequest request
-    );
+        @Operation(summary = "계좌 이체 한도 변경", description = "계좌번호(accountNo)의 1회 및 1일 이체 한도를 변경합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = AccountTransferLimitUpdateRequest.class), examples = @ExampleObject(name = "계좌 이체 한도 변경 요청", value = """
+                        {
+                          "oneTimeTransferLimit": "20000000",
+                          "dailyTransferLimit": "100000000"
+                        }
+                        """))))
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 이체 한도 변경 성공"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
+        })
+        ResponseEntity<AccountTransferLimitUpdateResponse> updateTransferLimit(
+                        @PathVariable("accountNo") String accountNo,
+                        @RequestBody AccountTransferLimitUpdateRequest request);
 
-    @Operation(
-            summary = "대표계좌 설정",
-            description = "현재 사용자의 활성 계좌 중 하나를 대표계좌로 설정합니다."
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "대표계좌 설정 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "계좌를 찾을 수 없음")
-    })
-    ResponseEntity<ApiResponse<Void>> setPrimaryAccount(@PathVariable("accountNo") String accountNo);
+        @Operation(summary = "대표계좌 설정", description = "현재 사용자의 활성 계좌 중 하나를 대표계좌로 설정합니다.")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "대표계좌 설정 성공"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "계좌를 찾을 수 없음")
+        })
+        ResponseEntity<Void> setPrimaryAccount(@PathVariable("accountNo") String accountNo);
 
-    @Operation(summary = "거래내역 목록 조회", description = "계좌 거래내역 목록 API입니다. 현재는 로컬 저장소 기준으로 조회합니다.")
-    ResponseEntity<ApiResponse<TransactionListResponse>> getTransactions(
-            @PathVariable("accountId") Long accountId,
-            @RequestParam(required = false, name = "startDate") LocalDate startDate,
-            @RequestParam(required = false, name = "endDate") LocalDate endDate,
-            @RequestParam(required = false, name = "type") String type,
-            @RequestParam(defaultValue = "0", name = "page") int page,
-            @RequestParam(defaultValue = "20", name = "size") int size
-    );
+        @Operation(summary = "거래내역 목록 조회", description = "계좌 거래내역 목록 API입니다. 현재는 로컬 저장소 기준으로 조회합니다.")
+        ResponseEntity<TransactionListResponse> getTransactions(
+                        @PathVariable("accountId") Long accountId,
+                        @RequestParam(required = false, name = "startDate") LocalDate startDate,
+                        @RequestParam(required = false, name = "endDate") LocalDate endDate,
+                        @RequestParam(required = false, name = "type") String type,
+                        @RequestParam(defaultValue = "0", name = "page") int page,
+                        @RequestParam(defaultValue = "20", name = "size") int size);
 
-    @Operation(summary = "거래내역 상세 조회", description = "계좌 거래내역 상세 API입니다. 현재는 로컬 저장소 기준으로 조회합니다.")
-    ResponseEntity<ApiResponse<TransactionDetailResponse>> getTransactionDetail(
-            @PathVariable("accountId") Long accountId,
-            @PathVariable("transactionId") String transactionId
-    );
+        @Operation(summary = "거래내역 상세 조회", description = "계좌 거래내역 상세 API입니다. 현재는 로컬 저장소 기준으로 조회합니다.")
+        ResponseEntity<TransactionDetailResponse> getTransactionDetail(
+                        @PathVariable("accountId") Long accountId,
+                        @PathVariable("transactionId") String transactionId);
 }

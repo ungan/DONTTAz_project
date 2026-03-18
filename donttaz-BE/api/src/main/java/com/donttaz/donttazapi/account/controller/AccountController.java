@@ -40,22 +40,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/accounts")
 public class AccountController implements AccountSwagger {
 
-    private final AccountCreationService accountCreationService;
-    private final AccountManagementService accountManagementService;
-    private final AccountQueryService accountQueryService;
-    private final AccountTransferService accountTransferService;
+        private final AccountCreationService accountCreationService;
+        private final AccountManagementService accountManagementService;
+        private final AccountQueryService accountQueryService;
+        private final AccountTransferService accountTransferService;
 
-    public AccountController(
-            AccountCreationService accountCreationService,
-            AccountManagementService accountManagementService,
-            AccountQueryService accountQueryService,
-            AccountTransferService accountTransferService
-    ) {
-        this.accountCreationService = accountCreationService;
-        this.accountManagementService = accountManagementService;
-        this.accountQueryService = accountQueryService;
-        this.accountTransferService = accountTransferService;
-    }
+        public AccountController(
+                        AccountCreationService accountCreationService,
+                        AccountManagementService accountManagementService,
+                        AccountQueryService accountQueryService,
+                        AccountTransferService accountTransferService) {
+                this.accountCreationService = accountCreationService;
+                this.accountManagementService = accountManagementService;
+                this.accountQueryService = accountQueryService;
+                this.accountTransferService = accountTransferService;
+        }
 
         @PostMapping
         @Override
@@ -114,67 +113,50 @@ public class AccountController implements AccountSwagger {
                                 accountTransferService.withdrawal(accountNo, request));
         }
 
-    @PostMapping("/transfer")
-    @Override
-    public ResponseEntity<ApiResponse<AccountTransferResponse>> transfer(
-            @Valid @RequestBody AccountTransferRequest request
-    ) {
-        return ResponseEntity.ok(
-                ApiResponse.success("계좌 이체 성공", accountTransferService.transfer(request))
-        );
-    }
+        @PostMapping("/transfer")
+        @Override
+        public ResponseEntity<AccountTransferResponse> transfer(
+                        @Valid @RequestBody AccountTransferRequest request) {
+                return ResponseEntity.ok(
+                                accountTransferService.transfer(request));
+        }
 
-    @PatchMapping("/{accountNo}/transfer-limit")
-    @Override
-    public ResponseEntity<ApiResponse<AccountTransferLimitUpdateResponse>> updateTransferLimit(
-            @PathVariable("accountNo") String accountNo,
-            @Valid @RequestBody AccountTransferLimitUpdateRequest request
-    ) {
-        return ResponseEntity.ok(
-                ApiResponse.success("계좌 이체 한도 변경 성공", accountTransferService.updateTransferLimit(accountNo, request))
-        );
-    }
+        @PatchMapping("/{accountNo}/transfer-limit")
+        @Override
+        public ResponseEntity<AccountTransferLimitUpdateResponse> updateTransferLimit(
+                        @PathVariable("accountNo") String accountNo,
+                        @Valid @RequestBody AccountTransferLimitUpdateRequest request) {
+                return ResponseEntity.ok(
+                                accountTransferService.updateTransferLimit(accountNo, request));
+        }
 
-    @PatchMapping("/{accountNo}/primary")
-    @Override
-    public ResponseEntity<ApiResponse<Void>> setPrimaryAccount(
-            @PathVariable("accountNo") String accountNo
-    ) {
-        accountManagementService.setPrimaryAccount(accountNo);
-        return ResponseEntity.ok(
-                ApiResponse.success("대표계좌 설정 성공", null)
-        );
-    }
+        @PatchMapping("/{accountNo}/primary")
+        @Override
+        public ResponseEntity<Void> setPrimaryAccount(
+                        @PathVariable("accountNo") String accountNo) {
+                accountManagementService.setPrimaryAccount(accountNo);
+                return ResponseEntity.ok().build();
+        }
 
-    @GetMapping("/{accountId}/transactions")
-    @Override
-    public ResponseEntity<ApiResponse<TransactionListResponse>> getTransactions(
-            @PathVariable("accountId") Long accountId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(required = false) String type,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        "거래내역 목록 조회 성공",
-                        accountQueryService.getTransactions(accountId, startDate, endDate, type, page, size)
-                )
-        );
-    }
+        @GetMapping("/{accountId}/transactions")
+        @Override
+        public ResponseEntity<TransactionListResponse> getTransactions(
+                        @PathVariable("accountId") Long accountId,
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                        @RequestParam(required = false) String type,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "20") int size) {
+                return ResponseEntity.ok(
+                                accountQueryService.getTransactions(accountId, startDate, endDate, type, page, size));
+        }
 
-    @GetMapping("/{accountId}/transactions/{transactionId}")
-    @Override
-    public ResponseEntity<ApiResponse<TransactionDetailResponse>> getTransactionDetail(
-            @PathVariable("accountId") Long accountId,
-            @PathVariable("transactionId") String transactionId
-    ) {
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        "거래내역 상세 조회 성공",
-                        accountQueryService.getTransactionDetail(accountId, transactionId)
-                )
-        );
-    }
+        @GetMapping("/{accountId}/transactions/{transactionId}")
+        @Override
+        public ResponseEntity<TransactionDetailResponse> getTransactionDetail(
+                        @PathVariable("accountId") Long accountId,
+                        @PathVariable("transactionId") String transactionId) {
+                return ResponseEntity.ok(
+                                accountQueryService.getTransactionDetail(accountId, transactionId));
+        }
 }

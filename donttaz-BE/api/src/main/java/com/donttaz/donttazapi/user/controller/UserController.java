@@ -35,29 +35,26 @@ public class UserController {
     }
 
     @PostMapping("/fcm-token")
-    public ApiResponse<Void> registerFcmToken(
+    public void registerFcmToken(
             @AuthenticationPrincipal User principal,
             @RequestBody @Valid FcmTokenRegisterRequest request) {
         Long userId = Long.parseLong(principal.getUsername());
         userCommandService.registerFcmToken(userId, request);
-        return ApiResponse.success("알림 토큰이 성공적으로 등록되었습니다.", null);
     }
 
     @PatchMapping("/me")
-    public ApiResponse<UserUpdateResponse> updateMyInfo(
+    public UserUpdateResponse updateMyInfo(
             @AuthenticationPrincipal User principal,
             @RequestBody @Valid UserUpdateRequest request) {
         Long userId = Long.parseLong(principal.getUsername());
-        UserUpdateResponse response = userCommandService.updateUserInfo(userId, request);
-        return ApiResponse.success("회원 정보가 성공적으로 수정되었습니다.", response);
+        return userCommandService.updateUserInfo(userId, request);
     }
 
     @DeleteMapping("/me")
-    public ApiResponse<Void> withdrawAccount(
+    public void withdrawAccount(
             @AuthenticationPrincipal User principal,
             @RequestBody @Valid UserWithdrawRequest request) {
         Long userId = Long.parseLong(principal.getUsername());
         userCommandService.withdraw(userId, request);
-        return ApiResponse.success("회원 탈퇴가 정상적으로 처리되었습니다.", null);
     }
 }
