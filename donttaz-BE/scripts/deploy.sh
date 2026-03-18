@@ -4,8 +4,8 @@
 # 옵션 및 변수 설정
 # ==============================================================================
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)" # donttaz-BE 디렉토리
-# Nginx 설정 파일 경로 (프로젝트 내부 경로를 사용하여 Jenkins 컨테이너에서도 접근 가능하게 함)
-NGINX_CONF_PATH="$PROJECT_DIR/nginx/service-env.inc"
+# 기존 인프라망의 Nginx 컨테이너 명
+NGINX_CONTAINER="nginx"
 MAX_RETRIES=20
 RETRY_INTERVAL=3
 API_HEALTH_URL="/actuator/health"
@@ -19,7 +19,7 @@ cd $PROJECT_DIR
 # Nginx의 대상(symbolic link 혹은 include된 파일 내용)을 보고 판단
 CURRENT_ENV=""
 
-if grep -q "api-blue.inc" $NGINX_CONF_PATH 2>/dev/null; then
+if docker exec $NGINX_CONTAINER grep -q "api-blue.inc" /etc/nginx/conf.d/service-env.inc 2>/dev/null; then
     CURRENT_ENV="blue"
     TARGET_ENV="green"
     API_PORT=8082
@@ -86,18 +86,22 @@ fi
 # ==============================================================================
 echo "🔀 Nginx 라우팅 경로를 [$TARGET_ENV] 로 변경합니다..."
 
-# 프로젝트 내부의 service-env.inc를 업데이트합니다.
-echo "include /etc/nginx/conf.d/api-${TARGET_ENV}.inc;" > $NGINX_CONF_PATH
+# 최신 라우팅 파일을 Nginx 컨테이너 내부로 복사
+docker cp ./nginx/api-blue.inc $NGINX_CONTAINER:/etc/nginx/conf.d/api-blue.inc
+docker cp ./nginx/api-green.inc $NGINX_CONTAINER:/etc/nginx/conf.d/api-green.inc
+
+# Nginx 에 사용될 프로파일 변경
+docker exec $NGINX_CONTAINER sh -c "echo 'include /etc/nginx/conf.d/api-${TARGET_ENV}.inc;' > /etc/nginx/conf.d/service-env.inc"
 
 echo "🔄 Nginx 리로드 (Docker)..."
-docker exec donttaz-nginx nginx -s reload
+docker exec $NGINX_CONTAINER nginx -s reload
 
 if [ $? -eq 0 ]; then
     echo "🎉 Nginx 리로드 성공! 무중단 배포 완료."
 else
     echo "💥 Nginx 리로드 실패! 설정을 롤백합니다."
-    echo "include /etc/nginx/conf.d/api-${CURRENT_ENV}.inc;" > $NGINX_CONF_PATH
-    docker exec donttaz-nginx nginx -s reload
+    docker exec $NGINX_CONTAINER sh -c "echo 'include /etc/nginx/conf.d/api-${CURRENT_ENV}.inc;' > /etc/nginx/conf.d/service-env.inc"
+    docker exec $NGINX_CONTAINER nginx -s reload
     docker-compose -f docker-compose.${TARGET_ENV}.yml down
     exit 1
 fi
