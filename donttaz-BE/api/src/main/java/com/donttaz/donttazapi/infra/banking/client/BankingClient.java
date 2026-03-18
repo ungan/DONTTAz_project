@@ -1,6 +1,8 @@
 package com.donttaz.donttazapi.infra.banking.client;
 
 import com.donttaz.donttazapi.account.service.dto.AccountBalanceResult;
+import com.donttaz.donttazapi.account.service.dto.AccountCloseCommand;
+import com.donttaz.donttazapi.account.service.dto.AccountCloseResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDepositCommand;
 import com.donttaz.donttazapi.account.service.dto.AccountDepositResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
@@ -48,6 +50,8 @@ public interface BankingClient {
     AccountDepositResult deposit(Long userId, AccountDepositCommand command);
 
     AccountWithdrawalResult withdrawal(Long userId, AccountWithdrawalCommand command);
+
+    AccountCloseResult closeAccount(Long userId, AccountCloseCommand command);
 
     AccountDetailResult updateTransferLimit(Long userId, TransferLimitCommand command);
 

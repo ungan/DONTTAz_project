@@ -1,11 +1,13 @@
 package com.donttaz.donttazapi.account.controller.docs;
 
+import com.donttaz.donttazapi.account.dto.request.AccountCloseRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountDepositRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountTransferLimitUpdateRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountTransferRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountWithdrawalRequest;
 import com.donttaz.donttazapi.account.dto.request.CreateAccountRequest;
 import com.donttaz.donttazapi.account.dto.response.AccountBalanceResponse;
+import com.donttaz.donttazapi.account.dto.response.AccountCloseResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountDepositResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountHolderNameResponse;
@@ -128,6 +130,22 @@ public interface AccountSwagger {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "계좌를 찾을 수 없음")
         })
         ResponseEntity<Void> setPrimaryAccount(@PathVariable("accountNo") String accountNo);
+
+        @Operation(summary = "계좌 해지", description = "은행 코드(bankCode)와 계좌번호(accountNo)로 해지 대상을 지정하고, 환급 계좌 정보로 finAPI 계좌 해지 API를 호출합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = AccountCloseRequest.class), examples = @ExampleObject(name = "계좌 해지 요청", value = """
+                        {
+                          "refundBankCode": "032",
+                          "refundAccountNo": "0324003842129948"
+                        }
+                        """))))
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 해지 성공"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "계좌를 찾을 수 없음")
+        })
+        ResponseEntity<AccountCloseResponse> closeAccount(
+                        @PathVariable("bankCode") String bankCode,
+                        @PathVariable("accountNo") String accountNo,
+                        @RequestBody AccountCloseRequest request);
 
         @Operation(summary = "거래내역 목록 조회", description = "계좌 거래내역 목록 API입니다. 현재는 로컬 저장소 기준으로 조회합니다.")
         ResponseEntity<TransactionListResponse> getTransactions(

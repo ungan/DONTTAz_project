@@ -57,8 +57,8 @@ public class AccountSyncService {
         return syncAccountDetailSnapshot(bankingAccountQueryService.getAccountDetail(accountNo), null);
     }
 
-    public Account syncAccountDetailSnapshot(AccountDetailResult account) {
-        return syncAccountDetailSnapshot(account, null);
+    public void syncAccountDetailSnapshot(AccountDetailResult account) {
+        syncAccountDetailSnapshot(account, null);
     }
 
     public Account syncAccountDetailSnapshot(AccountDetailResult account, String accountTypeUniqueNo) {
@@ -95,6 +95,10 @@ public class AccountSyncService {
 
         if (existing.isPresent()) {
             Account account = existing.get();
+            // Keep closed accounts terminal until an explicit relink flow is introduced.
+            if (account.getStatus() == AccountStatus.UNLINKED) {
+                return account;
+            }
             account.synchronize(
                     bankName,
                     null,

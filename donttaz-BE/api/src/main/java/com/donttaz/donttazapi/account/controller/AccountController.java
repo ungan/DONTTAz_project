@@ -1,12 +1,14 @@
 package com.donttaz.donttazapi.account.controller;
 
 import com.donttaz.donttazapi.account.controller.docs.AccountSwagger;
+import com.donttaz.donttazapi.account.dto.request.AccountCloseRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountDepositRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountTransferRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountTransferLimitUpdateRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountWithdrawalRequest;
 import com.donttaz.donttazapi.account.dto.request.CreateAccountRequest;
 import com.donttaz.donttazapi.account.dto.response.AccountBalanceResponse;
+import com.donttaz.donttazapi.account.dto.response.AccountCloseResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountDepositResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountHolderNameResponse;
@@ -136,6 +138,16 @@ public class AccountController implements AccountSwagger {
                         @PathVariable("accountNo") String accountNo) {
                 accountManagementService.setPrimaryAccount(accountNo);
                 return ResponseEntity.ok().build();
+        }
+
+        @PostMapping("/{bankCode}/{accountNo}/close")
+        @Override
+        public ResponseEntity<AccountCloseResponse> closeAccount(
+                        @PathVariable("bankCode") String bankCode,
+                        @PathVariable("accountNo") String accountNo,
+                        @Valid @RequestBody AccountCloseRequest request) {
+                return ResponseEntity.ok(
+                                accountManagementService.closeAccount(bankCode, accountNo, request));
         }
 
         @GetMapping("/{accountId}/transactions")

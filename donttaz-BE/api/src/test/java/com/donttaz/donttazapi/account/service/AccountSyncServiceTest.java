@@ -24,41 +24,43 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class AccountSyncServiceTest {
 
-        @Mock
-        private AccountRepository accountRepository;
+    @Mock
+    private AccountRepository accountRepository;
 
-        @Mock
-        private BankingAccountQueryService bankingAccountQueryService;
+    @Mock
+    private BankingAccountQueryService bankingAccountQueryService;
 
-        @Mock
-        private CurrentUserProvider currentUserProvider;
+    @Mock
+    private CurrentUserProvider currentUserProvider;
 
-        @InjectMocks
-        private AccountSyncService accountSyncService;
+    @InjectMocks
+    private AccountSyncService accountSyncService;
 
-        @Test
-        @DisplayName("외부 계좌 목록 동기화 시 누락된 내부 계좌를 생성한다.")
-        void syncDemandDepositAccountsCreatesNewAccount() {
-                DemandDepositAccountResult externalAccount = new DemandDepositAccountResult(
-                                "001",
-                                "BANK",
-                                "USER",
-                                "12345678901234",
-                                "ACCOUNT",
-                                "1",
-                                "TYPE",
-                                "20240101",
-                                "20290101",
-                                "1000000",
-                                "100000",
-                                "7000",
-                                "20240102",
-                                "KRW");
-                given(currentUserProvider.getCurrentUserId()).willReturn(1L);
-                given(accountRepository.findByUserIdAndBankCodeAndAccountNumber(1L, "001", "12345678901234"))
-                                .willReturn(Optional.empty());
+    @Test
+    @DisplayName("입출금 계좌 목록 동기화 시 신규 계좌를 생성한다")
+    void syncDemandDepositAccountsCreatesNewAccount() {
+        DemandDepositAccountResult externalAccount = new DemandDepositAccountResult(
+                "001",
+                "BANK",
+                "USER",
+                "12345678901234",
+                "ACCOUNT",
+                "1",
+                "TYPE",
+                "20240101",
+                "20290101",
+                "1000000",
+                "100000",
+                "7000",
+                "20240102",
+                "KRW"
+        );
 
-                accountSyncService.syncDemandDepositAccounts(List.of(externalAccount));
+        given(currentUserProvider.getCurrentUserId()).willReturn(1L);
+        given(accountRepository.findByUserIdAndBankCodeAndAccountNumber(1L, "001", "12345678901234"))
+                .willReturn(Optional.empty());
+
+        accountSyncService.syncDemandDepositAccounts(List.of(externalAccount));
 
         ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
         verify(accountRepository).save(captor.capture());
@@ -77,40 +79,42 @@ class AccountSyncServiceTest {
         assertThat(saved.getLastSyncedAt()).isNotNull();
     }
 
-        @Test
-        @DisplayName("생성된 계좌 동기화 시 기존 계좌를 복구하고 최신 값으로 갱신한다.")
-        void syncCreatedAccountUpdatesExistingAccount() {
-                Account account = Account.builder()
-                                .userId(1L)
-                                .bankCode("001")
-                                .bankName("OLD")
-                                .accountNumber("12345678901234")
-                                .balance(0L)
-                                .linkedAt(LocalDateTime.of(2024, 1, 1, 0, 0))
-                                .lastSyncedAt(LocalDateTime.of(2024, 1, 1, 0, 0))
-                                .status(AccountStatus.UNLINKED)
-                                .build();
-                AccountDetailResult detail = new AccountDetailResult(
-                                "001",
-                                "NEW BANK",
-                                "USER",
-                                "12345678901234",
-                                "ACCOUNT",
-                                "1",
-                                "TYPE",
-                                "20240101",
-                                "20290101",
-                                "1000000",
-                                "100000",
-                                "9000",
-                                "20240102",
-                                "KRW");
-                given(currentUserProvider.getCurrentUserId()).willReturn(1L);
-                given(bankingAccountQueryService.getAccountDetail("12345678901234")).willReturn(detail);
-                given(accountRepository.findByUserIdAndBankCodeAndAccountNumber(1L, "001", "12345678901234"))
-                                .willReturn(Optional.of(account));
+    @Test
+    @DisplayName("활성 계좌는 동기화 시 최신 값으로 갱신한다")
+    void syncCreatedAccountUpdatesActiveAccount() {
+        Account account = Account.builder()
+                .userId(1L)
+                .bankCode("001")
+                .bankName("OLD")
+                .accountNumber("12345678901234")
+                .balance(0L)
+                .linkedAt(LocalDateTime.of(2024, 1, 1, 0, 0))
+                .lastSyncedAt(LocalDateTime.of(2024, 1, 1, 0, 0))
+                .status(AccountStatus.ACTIVE)
+                .build();
+        AccountDetailResult detail = new AccountDetailResult(
+                "001",
+                "NEW BANK",
+                "USER",
+                "12345678901234",
+                "ACCOUNT",
+                "1",
+                "TYPE",
+                "20240101",
+                "20290101",
+                "1000000",
+                "100000",
+                "9000",
+                "20240102",
+                "KRW"
+        );
 
-                accountSyncService.syncCreatedAccount("001-1-abc", "12345678901234");
+        given(currentUserProvider.getCurrentUserId()).willReturn(1L);
+        given(bankingAccountQueryService.getAccountDetail("12345678901234")).willReturn(detail);
+        given(accountRepository.findByUserIdAndBankCodeAndAccountNumber(1L, "001", "12345678901234"))
+                .willReturn(Optional.of(account));
+
+        accountSyncService.syncCreatedAccount("001-1-abc", "12345678901234");
 
         assertThat(account.getBankName()).isEqualTo("NEW BANK");
         assertThat(account.getAccountTypeUniqueNo()).isEqualTo("001-1-abc");
@@ -120,5 +124,57 @@ class AccountSyncServiceTest {
         assertThat(account.getOneTimeTransferLimit()).isEqualTo(100_000L);
         assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
         assertThat(account.getIsDeleted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("UNLINKED 계좌는 동기화가 와도 재활성화하지 않는다")
+    void syncCreatedAccountKeepsUnlinkedAccountClosed() {
+        LocalDateTime syncedAt = LocalDateTime.of(2024, 1, 1, 0, 0);
+        Account account = Account.builder()
+                .userId(1L)
+                .bankCode("001")
+                .bankName("OLD")
+                .accountNumber("12345678901234")
+                .accountTypeUniqueNo("old-type")
+                .currency("KRW")
+                .balance(0L)
+                .dailyTransferLimit(10_000L)
+                .oneTimeTransferLimit(5_000L)
+                .linkedAt(syncedAt)
+                .lastSyncedAt(syncedAt)
+                .status(AccountStatus.UNLINKED)
+                .build();
+        AccountDetailResult detail = new AccountDetailResult(
+                "001",
+                "NEW BANK",
+                "USER",
+                "12345678901234",
+                "ACCOUNT",
+                "1",
+                "TYPE",
+                "20240101",
+                "20290101",
+                "1000000",
+                "100000",
+                "9000",
+                "20240102",
+                "USD"
+        );
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(1L);
+        given(bankingAccountQueryService.getAccountDetail("12345678901234")).willReturn(detail);
+        given(accountRepository.findByUserIdAndBankCodeAndAccountNumber(1L, "001", "12345678901234"))
+                .willReturn(Optional.of(account));
+
+        accountSyncService.syncCreatedAccount("001-1-new", "12345678901234");
+
+        assertThat(account.getBankName()).isEqualTo("OLD");
+        assertThat(account.getAccountTypeUniqueNo()).isEqualTo("old-type");
+        assertThat(account.getCurrency()).isEqualTo("KRW");
+        assertThat(account.getBalance()).isZero();
+        assertThat(account.getDailyTransferLimit()).isEqualTo(10_000L);
+        assertThat(account.getOneTimeTransferLimit()).isEqualTo(5_000L);
+        assertThat(account.getLastSyncedAt()).isEqualTo(syncedAt);
+        assertThat(account.getStatus()).isEqualTo(AccountStatus.UNLINKED);
     }
 }
