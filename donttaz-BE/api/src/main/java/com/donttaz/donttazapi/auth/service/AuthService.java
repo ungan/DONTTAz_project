@@ -48,7 +48,7 @@ public class AuthService {
     @org.springframework.beans.factory.annotation.Value("${portone.api-secret:}")
     private String apiSecret;
 
-    @org.springframework.beans.factory.annotation.Value("${local.test-user.email}")
+    @org.springframework.beans.factory.annotation.Value("${local.test-user.email:}")
     private String testEmail;
 
     @org.springframework.beans.factory.annotation.Value("${local.test-user.password}")
@@ -118,7 +118,7 @@ public class AuthService {
         Long userId = Long.parseLong(userIdStr);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        
+
         user.updatePassword(passwordEncoder.encode(request.getNewPassword()));
         redisTemplate.delete(redisKey);
     }
@@ -155,19 +155,20 @@ public class AuthService {
 
             if (result != null && result.getVerifiedCustomer() != null) {
                 PortOneIdentityResponse.VerifiedCustomer customer = result.getVerifiedCustomer();
-                
-                // 🚨 테스트 환경 우회 로직: 포트원 본인인증 응답에서 CI 값이 null인 경우, 
+
+                // 🚨 테스트 환경 우회 로직: 포트원 본인인증 응답에서 CI 값이 null인 경우,
                 // 테스트의 편의성을 위해 사용자의 전화번호를 조합하여 가짜 CI(TEST_CI_전화번호)를 생성합니다.
                 if (customer.getCi() == null || customer.getCi().isBlank()) {
                     String fakeCi = "TEST_CI_" + customer.getPhoneNumber().replaceAll("[^0-9]", "");
-                    // Reflection이나 Setter가 없으므로 로직상에서 사용할 변수로 처리하거나 
-                    // DTO가 수정 가능하다면 필드에 세팅합니다. 
+                    // Reflection이나 Setter가 없으므로 로직상에서 사용할 변수로 처리하거나
+                    // DTO가 수정 가능하다면 필드에 세팅합니다.
                     // 여기서는 로그 출력 후 각 서비스 로직에서 처리하도록 가이드합니다.
                     System.out.println("⚠️ Warning: CI is null. Generated Fake CI: " + fakeCi);
                 }
 
                 System.out.println("========= PortOne Verification Success =========");
-                System.out.println("CI Value: " + (customer.getCi() != null ? customer.getCi() : "NULL (Fallback will be used)"));
+                System.out.println(
+                        "CI Value: " + (customer.getCi() != null ? customer.getCi() : "NULL (Fallback will be used)"));
                 System.out.println("Name: " + customer.getName());
                 System.out.println("================================================");
             }
@@ -182,18 +183,20 @@ public class AuthService {
     }
 
     private String maskEmail(String email) {
-        if (email == null || !email.contains("@")) return email;
+        if (email == null || !email.contains("@"))
+            return email;
         String[] parts = email.split("@");
         String id = parts[0];
         String domain = parts[1];
 
-        if (id.length() <= 2) return id + "***@" + domain;
-        
+        if (id.length() <= 2)
+            return id + "***@" + domain;
+
         // 아이디가 5글자보다 길면 앞 2자리, 뒤 2자리를 보여줌
         if (id.length() > 5) {
             return id.substring(0, 2) + "****" + id.substring(id.length() - 2) + "@" + domain;
         }
-        
+
         // 그 외에는 앞 2자리만 보여주고 뒤는 가림
         return id.substring(0, 2) + "****@" + domain;
     }
