@@ -6,7 +6,7 @@
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)" # donttaz-BE 디렉토리
 # 기존 인프라망의 Nginx 컨테이너 명
 NGINX_CONTAINER="nginx"
-MAX_RETRIES=20
+MAX_RETRIES=40
 RETRY_INTERVAL=3
 API_HEALTH_URL="/actuator/health"
 AI_HEALTH_URL="/api/health" # FastAPI 헬스 체크 경로 (임시. 실제 경로로 수정 필요)
@@ -77,6 +77,8 @@ AI_IS_READY=true # 일단 AI는 무조건 패스하는 것으로 임시 설정
 
 if [ "$API_IS_READY" = false ] || [ "$AI_IS_READY" = false ]; then
     echo "❌ [$TARGET_ENV] 헬스 체크 실패. 배포를 중단하고 새로 띄운 컨테이너를 종료합니다."
+    echo "🔍 에러 원인 파악을 위해 멈춘 컨테이너의 로그(최근 100줄)를 확인합니다:"
+    docker logs donttaz-api-${TARGET_ENV} --tail 100
     docker-compose -f docker-compose.${TARGET_ENV}.yml down
     exit 1
 fi
