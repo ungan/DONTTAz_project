@@ -19,6 +19,9 @@ export function HomePage() {
     if (id === '2') {
       router.push('/report');
     }
+    if (id === '3') {
+      router.push('/(tabs)/plan');
+    }
   };
 
   return (
