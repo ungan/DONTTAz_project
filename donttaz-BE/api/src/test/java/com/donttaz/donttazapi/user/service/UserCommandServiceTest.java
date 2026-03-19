@@ -9,7 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.donttaz.donttazapi.common.exception.CustomException;
-import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.donttaz.donttazapi.infra.banking.client.BankingClient;
 import com.donttaz.donttazapi.user.domain.User;
 import com.donttaz.donttazapi.user.domain.UserStatus;

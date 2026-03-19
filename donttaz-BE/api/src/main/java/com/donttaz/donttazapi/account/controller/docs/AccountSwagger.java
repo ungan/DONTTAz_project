@@ -18,6 +18,7 @@ import com.donttaz.donttazapi.account.dto.response.AccountWithdrawalResponse;
 import com.donttaz.donttazapi.account.dto.response.CreateAccountResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionListResponse;
+import com.donttaz.donttazapi.common.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

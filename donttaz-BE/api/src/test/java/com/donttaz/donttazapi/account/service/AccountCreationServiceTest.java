@@ -24,6 +24,12 @@ class AccountCreationServiceTest {
     @Mock
     private AccountSyncService accountSyncService;
 
+    @Mock
+    private com.donttaz.donttazapi.vault.service.VaultCommandService vaultCommandService;
+
+    @Mock
+    private com.donttaz.donttazapi.common.security.CurrentUserProvider currentUserProvider;
+
     @InjectMocks
     private AccountCreationService accountCreationService;
 
@@ -35,9 +41,9 @@ class AccountCreationServiceTest {
                 "001",
                 "0011234567890123",
                 "KRW",
-                "Korean Won"
-        );
+                "Korean Won");
         given(demandDepositService.createAccount("001-1-abc")).willReturn(result);
+        given(currentUserProvider.getCurrentUserId()).willReturn(1L);
 
         CreateAccountResponse response = accountCreationService.createAccount(request);
 
@@ -46,6 +52,7 @@ class AccountCreationServiceTest {
         assertThat(response.currency()).isEqualTo("KRW");
         assertThat(response.currencyName()).isEqualTo("Korean Won");
         verify(demandDepositService).createAccount("001-1-abc");
+        verify(vaultCommandService).createDefaultVault(1L);
         verify(accountSyncService).syncCreatedAccount("001-1-abc", "0011234567890123");
     }
 
@@ -57,9 +64,9 @@ class AccountCreationServiceTest {
                 "001",
                 "0011234567890123",
                 "KRW",
-                "Korean Won"
-        );
+                "Korean Won");
         given(demandDepositService.createAccount("001-1-abc")).willReturn(result);
+        given(currentUserProvider.getCurrentUserId()).willReturn(1L);
         doThrow(new IllegalStateException("sync failed"))
                 .when(accountSyncService)
                 .syncCreatedAccount("001-1-abc", "0011234567890123");
