@@ -1,9 +1,44 @@
-import { Text, View } from 'react-native';
+import { useState } from 'react';
+import { SafeAreaView, ScrollView, ActivityIndicator, Text } from 'react-native';
+import { PageHeader } from '@/shared/ui';
+import { BurndownChart } from '@/widgets/burndown-chart';
+import { BurndownDailyList } from '@/widgets/burndown-daily-list';
+import { useBurndown, useBurndownStats } from '@/entities/plan';
+import { styles } from './plan-page.styles';
+
+function getCurrentYearMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
 
 export function PlanPage() {
+  const [yearMonth] = useState(getCurrentYearMonth());
+  const [isListView, setIsListView] = useState(false);
+  const { data, isPending, error } = useBurndown(yearMonth);
+  const { vsIdealPercent, daysUntilBankrupt } = useBurndownStats(data);
+
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>플랜 페이지</Text>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <PageHeader title="소비 플랜" />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {isPending && <ActivityIndicator color="#5899FD" style={styles.loader} />}
+        {!!error && <Text style={styles.errorText}>{error}</Text>}
+        {data && !isListView && (
+          <BurndownChart
+            data={data}
+            yearMonth={yearMonth}
+            vsIdealPercent={vsIdealPercent}
+            daysUntilBankrupt={daysUntilBankrupt}
+            onToggleView={() => setIsListView(true)}
+          />
+        )}
+        {data && isListView && (
+          <BurndownDailyList
+            data={data}
+            onToggleView={() => setIsListView(false)}
+          />
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }

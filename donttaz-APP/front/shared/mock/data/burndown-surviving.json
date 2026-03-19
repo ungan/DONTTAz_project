@@ -1,0 +1,43 @@
+{
+  "status": "SUCCESS",
+  "message": "생존 번다운 차트 데이터 조회 성공",
+  "data": {
+    "targetYearMonth": "2026-03",
+    "totalBudget": 2500000,
+    "currentRemaining": 1110000,
+    "isSurviving": true,
+    "chartData": [
+      { "date": "2026-03-01", "idealRemaining": 2500000, "actualRemaining": 2500000 },
+      { "date": "2026-03-02", "idealRemaining": 2419355, "actualRemaining": 2450000 },
+      { "date": "2026-03-03", "idealRemaining": 2338710, "actualRemaining": 2380000 },
+      { "date": "2026-03-04", "idealRemaining": 2258065, "actualRemaining": 2310000 },
+      { "date": "2026-03-05", "idealRemaining": 2177419, "actualRemaining": 2230000 },
+      { "date": "2026-03-06", "idealRemaining": 2096774, "actualRemaining": 2160000 },
+      { "date": "2026-03-07", "idealRemaining": 2016129, "actualRemaining": 2080000 },
+      { "date": "2026-03-08", "idealRemaining": 1935484, "actualRemaining": 2000000 },
+      { "date": "2026-03-09", "idealRemaining": 1854839, "actualRemaining": 1920000 },
+      { "date": "2026-03-10", "idealRemaining": 1774194, "actualRemaining": 1840000 },
+      { "date": "2026-03-11", "idealRemaining": 1693548, "actualRemaining": 1600000 },
+      { "date": "2026-03-12", "idealRemaining": 1612903, "actualRemaining": 1480000 },
+      { "date": "2026-03-13", "idealRemaining": 1532258, "actualRemaining": 1380000 },
+      { "date": "2026-03-14", "idealRemaining": 1451613, "actualRemaining": 1300000 },
+      { "date": "2026-03-15", "idealRemaining": 1370968, "actualRemaining": 1230000 },
+      { "date": "2026-03-16", "idealRemaining": 1290323, "actualRemaining": 1220000 },
+      { "date": "2026-03-17", "idealRemaining": 1209677, "actualRemaining": 1170000 },
+      { "date": "2026-03-18", "idealRemaining": 1129032, "actualRemaining": 1140000 },
+      { "date": "2026-03-19", "idealRemaining": 1048387, "actualRemaining": 1110000 },
+      { "date": "2026-03-20", "idealRemaining": 967742, "actualRemaining": null },
+      { "date": "2026-03-21", "idealRemaining": 887097, "actualRemaining": null },
+      { "date": "2026-03-22", "idealRemaining": 806452, "actualRemaining": null },
+      { "date": "2026-03-23", "idealRemaining": 725806, "actualRemaining": null },
+      { "date": "2026-03-24", "idealRemaining": 645161, "actualRemaining": null },
+      { "date": "2026-03-25", "idealRemaining": 564516, "actualRemaining": null },
+      { "date": "2026-03-26", "idealRemaining": 483871, "actualRemaining": null },
+      { "date": "2026-03-27", "idealRemaining": 403226, "actualRemaining": null },
+      { "date": "2026-03-28", "idealRemaining": 322581, "actualRemaining": null },
+      { "date": "2026-03-29", "idealRemaining": 241935, "actualRemaining": null },
+      { "date": "2026-03-30", "idealRemaining": 161290, "actualRemaining": null },
+      { "date": "2026-03-31", "idealRemaining": 80645, "actualRemaining": null }
+    ]
+  }
+}
