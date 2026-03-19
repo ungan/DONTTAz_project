@@ -9,6 +9,7 @@ import com.donttaz.donttazapi.user.dto.response.UserSummaryResponse;
 import com.donttaz.donttazapi.user.dto.response.UserUpdateResponse;
 import com.donttaz.donttazapi.user.service.UserCommandService;
 import com.donttaz.donttazapi.user.service.UserQueryService;
+import com.donttaz.donttazapi.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

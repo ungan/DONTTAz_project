@@ -7,6 +7,7 @@ import com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest;
 import com.donttaz.donttazapi.vault.dto.request.VaultWithdrawRequest;
 import com.donttaz.donttazapi.vault.dto.response.CreateVaultResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultDepositResponse;
+import com.donttaz.donttazapi.vault.dto.response.VaultHistoryResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultListResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultSummaryResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultWithdrawResponse;

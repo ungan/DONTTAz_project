@@ -5,8 +5,10 @@ import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
 import com.donttaz.donttazapi.vault.domain.Vault;
 import com.donttaz.donttazapi.vault.domain.VaultStatus;
+import com.donttaz.donttazapi.vault.dto.response.VaultHistoryResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultListResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultSummaryResponse;
+import com.donttaz.donttazapi.vault.repository.VaultHistoryRepository;
 import com.donttaz.donttazapi.vault.repository.VaultRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -22,10 +24,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class VaultQueryService {
 
     private final VaultRepository vaultRepository;
+    private final VaultHistoryRepository vaultHistoryRepository;
     private final CurrentUserProvider currentUserProvider;
 
-    public VaultQueryService(VaultRepository vaultRepository, CurrentUserProvider currentUserProvider) {
+    public VaultQueryService(VaultRepository vaultRepository,
+            VaultHistoryRepository vaultHistoryRepository,
+            CurrentUserProvider currentUserProvider) {
         this.vaultRepository = vaultRepository;
+        this.vaultHistoryRepository = vaultHistoryRepository;
         this.currentUserProvider = currentUserProvider;
     }
 
@@ -36,15 +42,26 @@ public class VaultQueryService {
      */
     public VaultListResponse getMyVaults() {
         Long userId = currentUserProvider.getCurrentUserId();
-        List<Vault> vaults = vaultRepository.findAllByUserIdAndStatusNot(userId, VaultStatus.CLOSED);
-
-        List<VaultSummaryResponse> summaries = vaults.stream()
-                .map(this::toVaultSummaryResponse)
-                .toList();
+        List<VaultSummaryResponse> summaries = getActiveVaults(userId);
 
         return VaultListResponse.builder()
                 .vaults(summaries)
                 .build();
+    }
+
+    public List<VaultSummaryResponse> getActiveVaults(Long userId) {
+        return vaultRepository.findAllByUserIdAndStatus(userId, VaultStatus.LOCKED).stream()
+                .map(vault -> new VaultSummaryResponse(
+                        vault.getVaultId(),
+                        vault.getVaultKind().name(),
+                        vault.getLockedAmount(),
+                        vault.getStatus().name(),
+                        vault.getWishName(),
+                        vault.getGoalAmount(),
+                        vault.getTargetDate(),
+                        vault.getBaseInterestRate(),
+                        vault.getPenaltyInterestRate()))
+                .toList();
     }
 
     /**
@@ -60,19 +77,39 @@ public class VaultQueryService {
         Vault vault = vaultRepository.findByVaultIdAndUserId(vaultId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
 
-        return toVaultSummaryResponse(vault);
+        return new VaultSummaryResponse(
+                vault.getVaultId(),
+                vault.getVaultKind().name(),
+                vault.getLockedAmount(),
+                vault.getStatus().name(),
+                vault.getWishName(),
+                vault.getGoalAmount(),
+                vault.getTargetDate(),
+                vault.getBaseInterestRate(),
+                vault.getPenaltyInterestRate());
     }
 
-    private VaultSummaryResponse toVaultSummaryResponse(Vault vault) {
-        return VaultSummaryResponse.builder()
-                .vaultId(vault.getVaultId())
-                .vaultKind(vault.getVaultKind().name())
-                .balance(vault.getBalance())
-                .status(vault.getStatus().name())
-                .wishlistName(vault.getWishlistName())
-                .goalAmount(vault.getGoalAmount())
-                .goalDate(vault.getGoalDate())
-                .isAchieved(vault.getIsAchieved())
-                .build();
+    /**
+     * 특정 금고의 거래 내역 목록을 조회합니다.
+     *
+     * @param vaultId 내역을 조회할 금고 ID
+     * @return 거래 내역 목록 응답
+     */
+    public List<VaultHistoryResponse> getVaultHistory(Long vaultId) {
+        Long userId = currentUserProvider.getCurrentUserId();
+        // 본인 금고인지 검증
+        vaultRepository.findByVaultIdAndUserId(vaultId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
+
+        return vaultHistoryRepository.findAllByVaultIdOrderByCreatedAtDesc(vaultId).stream()
+                .map(history -> VaultHistoryResponse.builder()
+                        .id(history.getId())
+                        .vaultId(history.getVaultId())
+                        .transactionType(history.getTransactionType().name())
+                        .amount(history.getAmount())
+                        .interestPaid(history.getInterestPaid())
+                        .createdAt(history.getCreatedAt())
+                        .build())
+                .toList();
     }
 }

@@ -6,11 +6,9 @@ import lombok.Builder;
 @Builder
 @Schema(description = "금고 생성 응답")
 public record CreateVaultResponse(
-                @Schema(description = "금고 ID", example = "1") Long vaultId,
+        @Schema(description = "금고 ID", example = "1") Long vaultId,
 
-                @Schema(description = "금고 종류 (DEFAULT / WISHLIST)", example = "DEFAULT") String vaultKind,
+        @Schema(description = "지켜낸 돈 (잠긴 원금)", example = "0") Long lockedAmount,
 
-                @Schema(description = "가상 잔액", example = "0") Long balance,
-
-                @Schema(description = "금고 상태", example = "LOCKED") String status) {
+        @Schema(description = "금고 상태", example = "LOCKED") String status) {
 }
