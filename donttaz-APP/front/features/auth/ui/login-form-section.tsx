@@ -4,18 +4,18 @@ import { TextLink } from '@/shared/ui';
 import { LoginInputSection } from './login-input-section';
 
 interface LoginFormSectionProps {
-  email: string;
+  loginId: string;
   password: string;
-  onEmailChange: (text: string) => void;
+  onLoginIdChange: (text: string) => void;
   onPasswordChange: (text: string) => void;
   onFindId: () => void;
   onFindPassword: () => void;
 }
 
 export function LoginFormSection({
-  email,
+  loginId,
   password,
-  onEmailChange,
+  onLoginIdChange,
   onPasswordChange,
   onFindId,
   onFindPassword,
@@ -23,13 +23,12 @@ export function LoginFormSection({
   return (
     <View style={styles.container}>
       <LoginInputSection
-        email={email}
+        loginId={loginId}
         password={password}
-        onEmailChange={onEmailChange}
+        onLoginIdChange={onLoginIdChange}
         onPasswordChange={onPasswordChange}
       />
 
-      {/* 아이디 찾기 | 비밀번호 찾기 */}
       <View style={styles.findRow}>
         <TextLink
           label="아이디 찾기"

@@ -1,5 +1,6 @@
 package com.donttaz.donttazapi.auth.controller;
 
+import com.donttaz.donttazapi.auth.dto.request.RefreshRequest;
 import com.donttaz.donttazapi.auth.dto.request.FindIdRequest;
 import com.donttaz.donttazapi.auth.dto.request.IdentityVerificationRequest;
 import com.donttaz.donttazapi.auth.dto.request.LoginRequest;
@@ -63,5 +64,11 @@ public class AuthController {
         Long userId = Long.parseLong(principal.getUsername());
         authService.logout(request, userId);
         return null;
+    }
+
+    @PostMapping("/refresh")
+    public ApiResponse<LoginResponse> refresh(@Valid @RequestBody RefreshRequest request) {
+        LoginResponse response = authService.refresh(request);
+        return ApiResponse.success("토큰이 성공적으로 재발급되었습니다.", response);
     }
 }

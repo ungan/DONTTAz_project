@@ -22,7 +22,34 @@ export const mockHandlers: MockHandler[] = [
         accessToken: 'mock-access-token',
         refreshToken: 'mock-refresh-token',
         userId: 105,
-        name: '김싸피',
+        name: '김토피',
+      },
+    },
+  },
+  {
+    method: 'POST',
+    url: '/auth/verify-identity',
+    response: {
+      status: 'SUCCESS',
+      message: '본인인증이 완료되었습니다.',
+      data: {
+        name: '홍길동',
+        phoneNumber: '01012345678',
+        isRegistered: false,
+        maskedEmail: null,
+      },
+    },
+  },
+  {
+    method: 'POST',
+    url: '/users/signup',
+    response: {
+      status: 'SUCCESS',
+      message: '회원가입이 완료되었습니다.',
+      data: {
+        userId: 105,
+        email: 'hong@example.com',
+        name: '홍길동',
       },
     },
   },

@@ -1,6 +1,7 @@
 package com.donttaz.donttazapi.auth.service;
 
 import com.donttaz.donttazapi.auth.dto.PortOneIdentityResponse;
+import com.donttaz.donttazapi.auth.dto.request.RefreshRequest;
 import com.donttaz.donttazapi.auth.dto.request.FindIdRequest;
 import com.donttaz.donttazapi.auth.dto.request.IdentityVerificationRequest;
 import com.donttaz.donttazapi.auth.dto.request.LoginRequest;
@@ -118,6 +119,10 @@ public class AuthService {
         PortOneIdentityResponse.VerifiedCustomer customer = result.getVerifiedCustomer();
         String ci = customer.getCi();
 
+        if (ci == null || ci.isBlank()) {
+            ci = "TEST_CI_" + customer.getPhoneNumber().replaceAll("[^0-9]", "");
+        }
+
         Optional<User> existingUser = userRepository.findByCi(ci);
         boolean isRegistered = existingUser.isPresent();
         String maskedEmail = isRegistered ? maskEmail(existingUser.get().getEmail()) : null;
@@ -226,5 +231,48 @@ public class AuthService {
         }
 
         redisTemplate.delete(redisKey);
+    }
+
+    @Transactional
+    public LoginResponse refresh(RefreshRequest request) {
+        String refreshToken = request.getRefreshToken();
+
+        // 1. Refresh Token 유효성 검증
+        if (!jwtProvider.validateToken(refreshToken)) {
+            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        // 2. 토큰에서 User ID 추출
+        Long userId = jwtProvider.getUserIdFromToken(refreshToken);
+
+        // 3. Redis에 저장된 Refresh Token과 대조
+        String redisKey = "RT:" + userId;
+        String savedRefreshToken = (String) redisTemplate.opsForValue().get(redisKey);
+
+        if (savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {
+            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        // 4. 사용자 존재 여부 확인
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        // 5. 새로운 Access Token & Refresh Token 생성 (Rotation)
+        String newAccessToken = jwtProvider.createAccessToken(user.getUserId(), user.getEmail());
+        String newRefreshToken = jwtProvider.createRefreshToken(user.getUserId(), user.getEmail());
+
+        // 6. Redis 업데이트
+        try {
+            redisTemplate.opsForValue().set(redisKey, newRefreshToken, 14, TimeUnit.DAYS);
+        } catch (Exception e) {
+            System.err.println(">>> [Refresh] Redis 저장 중 에러 발생: " + e.getMessage());
+        }
+
+        return LoginResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .userId(user.getUserId())
+                .name(user.getName())
+                .build();
     }
 }

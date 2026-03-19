@@ -13,12 +13,14 @@ interface CustomInputProps extends TextInputProps {
   label?: string;
   errorMessage?: string;
   rightIcon?: React.ReactNode;
+  onRightIconPress?: () => void;
 }
 
 export function CustomInput({
   label,
   errorMessage,
   rightIcon,
+  onRightIconPress,
   style,
   ...props
 }: CustomInputProps) {
@@ -43,7 +45,12 @@ export function CustomInput({
           {...props}
         />
         {rightIcon && (
-          <TouchableOpacity style={styles.rightIcon} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.rightIcon}
+            activeOpacity={0.7}
+            onPress={onRightIconPress}
+            disabled={!onRightIconPress}
+          >
             {rightIcon}
           </TouchableOpacity>
         )}
