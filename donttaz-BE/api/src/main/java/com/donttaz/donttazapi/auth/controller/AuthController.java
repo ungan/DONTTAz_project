@@ -12,6 +12,7 @@ import com.donttaz.donttazapi.auth.dto.response.IdentityVerificationResponse;
 import com.donttaz.donttazapi.auth.dto.response.LoginResponse;
 import com.donttaz.donttazapi.auth.dto.response.PasswordResetTokenResponse;
 import com.donttaz.donttazapi.auth.service.AuthService;
+import com.donttaz.donttazapi.common.response.ApiResponse;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
