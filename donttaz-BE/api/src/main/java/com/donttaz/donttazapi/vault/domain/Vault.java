@@ -88,6 +88,15 @@ public class Vault extends BaseEntity {
         this.lockedAmount += amount;
     }
 
+    /**
+     * 일일 이자를 잔액에 가산합니다. (배치 작업용)
+     */
+    public void addInterest(Long interestAmount) {
+        if (interestAmount != null && interestAmount > 0) {
+            this.lockedAmount += interestAmount;
+        }
+    }
+
     public void updateGoal(String wishName, Long goalAmount, LocalDate targetDate) {
         if (this.status != VaultStatus.LOCKED) {
             throw new CustomException(ErrorCode.INVALID_REQUEST, "잠금 상태인 금고만 목표를 수정할 수 있습니다.");
@@ -151,6 +160,20 @@ public class Vault extends BaseEntity {
         // 보관 일수 반영 시 '일일 이자' 개념 적용
         double dailyRate = currentEffectiveRate / 100.0 / 365.0;
         return (long) (this.lockedAmount * dailyRate * days);
+    }
+
+    /**
+     * 하루치 이자를 계산합니다. (배치 작업용)
+     */
+    public Long calculateDailyInterest() {
+        applyMonthlyRecovery();
+
+        double currentEffectiveRate = this.baseInterestRate - this.penaltyInterestRate;
+        if (currentEffectiveRate < 0)
+            currentEffectiveRate = 0;
+
+        double dailyRate = currentEffectiveRate / 100.0 / 365.0;
+        return (long) (this.lockedAmount * dailyRate);
     }
 
     /**

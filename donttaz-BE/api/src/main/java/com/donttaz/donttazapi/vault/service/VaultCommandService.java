@@ -11,15 +11,15 @@ import com.donttaz.donttazapi.vault.dto.request.SetWishlistGoalRequest;
 import com.donttaz.donttazapi.vault.dto.response.CreateVaultResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultDepositResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultWithdrawResponse;
-import com.donttaz.donttazapi.account.service.AccountTransferService;
-import com.donttaz.donttazapi.account.dto.request.AccountWithdrawalRequest;
-import com.donttaz.donttazapi.account.dto.request.AccountDepositRequest;
 import com.donttaz.donttazapi.vault.domain.TransactionType;
 import com.donttaz.donttazapi.vault.domain.VaultHistory;
 import com.donttaz.donttazapi.vault.repository.VaultHistoryRepository;
 import com.donttaz.donttazapi.vault.repository.VaultRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.donttaz.donttazapi.infra.banking.client.BankingClient;
+import com.donttaz.donttazapi.account.service.dto.TransferCommand;
 
 /**
  * 금고(Vault) 관련 상태 변경(Command)을 처리하는 서비스.
@@ -34,17 +34,23 @@ public class VaultCommandService {
 
     private final VaultRepository vaultRepository;
     private final VaultHistoryRepository vaultHistoryRepository;
-    private final AccountTransferService accountTransferService;
+    private final BankingClient bankingClient;
     private final CurrentUserProvider currentUserProvider;
+
+    @Value("${vault.admin-user-id}")
+    private Long adminUserId;
+
+    @Value("${vault.admin-account-no}")
+    private String adminAccountNo;
 
     public VaultCommandService(
             VaultRepository vaultRepository,
             VaultHistoryRepository vaultHistoryRepository,
-            AccountTransferService accountTransferService,
+            BankingClient bankingClient,
             CurrentUserProvider currentUserProvider) {
         this.vaultRepository = vaultRepository;
         this.vaultHistoryRepository = vaultHistoryRepository;
-        this.accountTransferService = accountTransferService;
+        this.bankingClient = bankingClient;
         this.currentUserProvider = currentUserProvider;
     }
 
@@ -122,10 +128,13 @@ public class VaultCommandService {
         Vault vault = vaultRepository.findByVaultIdAndUserId(vaultId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
 
-        // 모계좌(금고)로 자금 이체: 사용자의 계좌에서 출금 처리
-        accountTransferService.withdrawal(
+        // 입금 로직: 사용자 계좌 -> 관리자 모계좌 이체
+        bankingClient.transfer(userId, new TransferCommand(
+                adminAccountNo,
+                "금고 입금 수납",
+                String.valueOf(request.amount()),
                 request.accountNo(),
-                new AccountWithdrawalRequest(String.valueOf(request.amount()), "금고 입금"));
+                "금고 입금"));
 
         vault.deposit(request.amount());
 
@@ -156,11 +165,14 @@ public class VaultCommandService {
         // 2. 출금 로직 실행 (패널티 누적 및 복구 반영)
         vault.withdraw(request.amount());
 
-        // 3. 모계좌(금고)에서 자금 이체: 사용자의 계좌로 원금+이자 입금 처리
+        // 3. 출금 로직: 관리자 모계좌 -> 사용자 계좌 이체
         Long totalTransferAmount = request.amount() + interest;
-        accountTransferService.deposit(
+        bankingClient.transfer(adminUserId, new TransferCommand(
                 request.accountNo(),
-                new AccountDepositRequest(String.valueOf(totalTransferAmount), "금고 출금"));
+                "금고 출금 지급",
+                String.valueOf(totalTransferAmount),
+                adminAccountNo,
+                "금고 출금"));
 
         // 4. 거래 내역 저장
         vaultHistoryRepository.save(VaultHistory.builder()
