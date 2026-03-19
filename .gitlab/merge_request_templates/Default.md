@@ -1,9 +1,3 @@
-## 📌 관련 이슈 (Related Issue)
-
-Closed #
-
-
-
 ## 📝 변경 사항 (Changes)
 
 ## 🛠️ 작업 유형 (Type of Change)
