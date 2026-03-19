@@ -87,5 +87,6 @@ public interface VaultSwagger {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "거래 내역 조회 성공"),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "금고를 찾을 수 없음")
         })
-        ResponseEntity<ApiResponse<java.util.List<VaultHistoryResponse>>> getVaultHistory(@PathVariable Long vaultId);
+        ResponseEntity<com.donttaz.donttazapi.common.response.ApiResponse<java.util.List<VaultHistoryResponse>>> getVaultHistory(
+                        @PathVariable Long vaultId);
 }
