@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
 import { View, Text } from 'react-native';
+import { router } from 'expo-router';
 import { LoginFormSection, LoginActionSection, useLogin } from '@/features/auth';
 import { styles } from './login-page.styles';
 
 export function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const { login, isPending, error } = useLogin();
 
   const handleLogin = () => {
-    login(email, password);
+    login(loginId, password);
   };
 
   const handleSignUp = () => {
-    // TODO: 회원가입 페이지 이동
+    router.push('/signup-start' as never);
   };
 
   const handleFindId = () => {
@@ -28,21 +29,24 @@ export function LoginPage() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>DONTTAz</Text>
-        <Text style={styles.subtitle}>당신의 월급을 지키는 작은 감시자</Text>
+        <Text style={styles.subtitle}>당신의 소비를 지켜보는 작은 감시자</Text>
       </View>
 
       <LoginFormSection
-        email={email}
+        loginId={loginId}
         password={password}
-        onEmailChange={setEmail}
+        onLoginIdChange={setLoginId}
         onPasswordChange={setPassword}
         onFindId={handleFindId}
         onFindPassword={handleFindPassword}
       />
 
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
       <LoginActionSection
         onLogin={handleLogin}
         onSignUp={handleSignUp}
+        isLoggingIn={isPending}
       />
     </View>
   );

@@ -1,22 +1,22 @@
 import { useEffect, useState } from 'react';
-
-// TODO: API 연결 시 true로 변경 후 토큰 검증 로직 구현
-const checked = false;
+import { getStoredAccessToken } from '@/shared/api/auth-storage';
 
 export function useAuthCheck(): 'loading' | 'authenticated' | 'unauthenticated' {
-  const [status, setStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
+  const [status, setStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>(
+    'loading'
+  );
 
   useEffect(() => {
     const check = async () => {
-      const [authResult] = await Promise.all([
-        // TODO: checked=true 시 토큰 검증 로직으로 교체
-        Promise.resolve(checked ? 'authenticated' : 'unauthenticated'),
-        new Promise(resolve => setTimeout(resolve, 1500)),
+      const [accessToken] = await Promise.all([
+        getStoredAccessToken(),
+        new Promise(resolve => setTimeout(resolve, 800)),
       ]);
-      setStatus(authResult as 'authenticated' | 'unauthenticated');
+
+      setStatus(accessToken ? 'authenticated' : 'unauthenticated');
     };
 
-    check();
+    void check();
   }, []);
 
   return status;

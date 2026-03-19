@@ -29,4 +29,9 @@ export const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '400',
   },
+  errorText: {
+    fontSize: 14,
+    color: '#DC2626',
+    textAlign: 'center',
+  },
 });

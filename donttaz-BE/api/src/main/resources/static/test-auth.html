@@ -5,11 +5,69 @@
     <title>포트원 V2 본인인증 테스트</title>
     <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f4f7f6; }
-        .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
-        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 20px; }
-        button:hover { background-color: #0056b3; }
-        #result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #fafafa; display: none; text-align: left; max-width: 400px; word-break: break-all; }
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f7f6;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 420px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        a.button-link {
+            display: inline-block;
+            background-color: #1f7a1f;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin-top: 12px;
+        }
+
+        a.button-link:hover {
+            background-color: #155d15;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fafafa;
+            display: none;
+            text-align: left;
+            word-break: break-all;
+        }
+
+        #returnToApp {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -17,38 +75,90 @@
         <h1>본인인증 테스트</h1>
         <p>버튼을 눌러 포트원 본인인증을 시작하세요.</p>
         <button onclick="requestCert()">본인인증 시작</button>
+
         <div id="result">
-            <strong>인증 성공!</strong><br>
-            아래 ID를 복사하여 Postman에서 사용하세요:<br>
+            <strong>인증 성공</strong><br>
+            아래 ID를 복사하거나 앱으로 돌아가기를 눌러 주세요.<br>
             <code id="certId"></code>
+            <br>
+            <a id="returnToApp" class="button-link" href="#">앱으로 돌아가기</a>
         </div>
     </div>
 
     <script>
+        function createIdentityVerificationId() {
+            if (window.crypto && typeof window.crypto.randomUUID === "function") {
+                return `cert-${window.crypto.randomUUID()}`;
+            }
+
+            if (window.crypto && typeof window.crypto.getRandomValues === "function") {
+                const bytes = new Uint8Array(16);
+                window.crypto.getRandomValues(bytes);
+                const randomHex = Array.from(bytes, (byte) =>
+                    byte.toString(16).padStart(2, "0")
+                ).join("");
+                return `cert-${randomHex}`;
+            }
+
+            return `cert-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        }
+
+        function getRedirectUri() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get("redirectUri");
+        }
+
+        function redirectToApp(values) {
+            const redirectUri = getRedirectUri();
+
+            if (!redirectUri) {
+                return false;
+            }
+
+            const query = new URLSearchParams(values).toString();
+            const nextUrl = query ? `${redirectUri}?${query}` : redirectUri;
+            const returnToAppLink = document.getElementById("returnToApp");
+
+            returnToAppLink.href = nextUrl;
+            returnToAppLink.style.display = "inline-block";
+            window.location.replace(nextUrl);
+            return true;
+        }
+
         async function requestCert() {
             try {
                 const response = await PortOne.requestIdentityVerification({
-                    storeId: "store-e9d6a7c5-fb1d-4094-a7b6-c2fe37b55e8a", // ★ 가맹점 식별코드 입력 필요
-                    identityVerificationId: `cert-${crypto.randomUUID()}`,
-                    channelKey: "channel-key-f0acd432-a0ca-4c76-a481-1a219e2fc9a5", // ★ 진짜 채널 키로 수정됨
+                    storeId: "store-e9d6a7c5-fb1d-4094-a7b6-c2fe37b55e8a",
+                    identityVerificationId: createIdentityVerificationId(),
+                    channelKey: "channel-key-f0acd432-a0ca-4c76-a481-1a219e2fc9a5",
                 });
-                
+
                 if (response.code != null) {
-                    alert("인증 실패: " + response.message);
+                    redirectToApp({
+                        code: response.code,
+                        message: response.message ?? "본인인증에 실패했습니다.",
+                    });
+                    alert(`인증 실패: ${response.message}`);
                     return;
                 }
-                
+
                 console.log("인증 성공 응답:", response);
-                document.getElementById('result').style.display = 'block';
-                document.getElementById('certId').innerText = response.identityVerificationId;
-                
-                // 복사하기 편하게 콘솔에도 출력
+                document.getElementById("result").style.display = "block";
+                document.getElementById("certId").innerText = response.identityVerificationId;
+
                 console.log("---------------------------------------");
                 console.log("ID 복사용:", response.identityVerificationId);
                 console.log("---------------------------------------");
-            } catch (e) {
-                console.error(e);
-                alert("에러 발생: " + e.message);
+
+                redirectToApp({
+                    identityVerificationId: response.identityVerificationId,
+                });
+            } catch (error) {
+                console.error(error);
+                redirectToApp({
+                    message: error?.message ?? "본인인증 처리 중 오류가 발생했습니다.",
+                });
+                alert(`에러 발생: ${error?.message}`);
             }
         }
     </script>
