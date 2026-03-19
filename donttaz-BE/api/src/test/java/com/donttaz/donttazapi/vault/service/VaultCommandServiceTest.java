@@ -13,7 +13,7 @@ import com.donttaz.donttazapi.vault.dto.request.CreateVaultRequest;
 import com.donttaz.donttazapi.vault.dto.response.CreateVaultResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultDepositResponse;
 import com.donttaz.donttazapi.vault.repository.VaultRepository;
-import com.donttaz.donttazapi.account.service.AccountTransferService;
+import com.donttaz.donttazapi.infra.banking.client.BankingClient;
 import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -36,7 +36,7 @@ class VaultCommandServiceTest {
         private CurrentUserProvider currentUserProvider;
 
         @Mock
-        private com.donttaz.donttazapi.account.service.AccountTransferService accountTransferService;
+        private BankingClient bankingClient;
 
         @InjectMocks
         private VaultCommandService vaultCommandService;

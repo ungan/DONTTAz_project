@@ -15,5 +15,7 @@ public interface VaultRepository extends JpaRepository<Vault, Long> {
 
     List<Vault> findAllByUserIdAndStatus(Long userId, VaultStatus status);
 
+    List<Vault> findAllByStatus(VaultStatus status);
+
     boolean existsByUserIdAndVaultKindAndStatus(Long userId, VaultKind vaultKind, VaultStatus status);
 }
