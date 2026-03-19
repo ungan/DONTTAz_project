@@ -45,7 +45,7 @@ public interface VaultSwagger {
         })
         ResponseEntity<VaultSummaryResponse> getVaultDetail(@PathVariable Long vaultId);
 
-        @Operation(summary = "금고 입금", description = "금고로 자금을 입금합니다. 입금 시 'DEPOSIT' 타입의 거래 내역이 생성됩니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaultDepositRequest.class), examples = @ExampleObject(name = "금고 입금 요청", value = "{\n  \"amount\": 100000\n}"))))
+        @Operation(summary = "금고 입금", description = "금고로 자금을 입금합니다. 입금 시 'DEPOSIT' 타입의 거래 내역이 생성됩니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaultDepositRequest.class), examples = @ExampleObject(name = "금고 입금 요청", value = "{\n  \"accountNo\": \"10000000001\",\n  \"amount\": 100000\n}"))))
 
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "금고 입금 성공"),
@@ -55,7 +55,7 @@ public interface VaultSwagger {
                         @PathVariable Long vaultId,
                         @RequestBody VaultDepositRequest request);
 
-        @Operation(summary = "금고 긴급 출금", description = "금고에서 자금을 긴급(중도) 출금합니다. 출금 시점에 계산된 이자가 지급되지만, 패널티 이자율이 증가합니다. 'WITHDRAW_BROKEN' 타입의 거래 내역이 생성됩니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaultWithdrawRequest.class), examples = @ExampleObject(name = "금고 긴급 출금 요청", value = "{\n  \"amount\": 50000\n}"))))
+        @Operation(summary = "금고 긴급 출금", description = "금고에서 자금을 긴급(중도) 출금합니다. 출금 시점에 계산된 이자가 지급되지만, 패널티 이자율이 증가합니다. 'WITHDRAW_BROKEN' 타입의 거래 내역이 생성됩니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaultWithdrawRequest.class), examples = @ExampleObject(name = "금고 긴급 출금 요청", value = "{\n  \"accountNo\": \"10000000001\",\n  \"amount\": 50000\n}"))))
 
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "금고 긴급 출금 성공"),

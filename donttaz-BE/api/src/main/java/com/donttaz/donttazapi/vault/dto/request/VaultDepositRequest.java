@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Positive;
 
 @Schema(description = "금고 입금 요청")
 public record VaultDepositRequest(
-        @Schema(description = "입금액", example = "100000") 
-        @NotNull(message = "입금액은 필수입니다.") 
-        @Positive(message = "입금액은 0보다 커야 합니다.") Long amount) {
+                @Schema(description = "출금할 내 계좌번호", example = "10000000001") @NotNull(message = "계좌번호는 필수입니다.") String accountNo,
+
+                @Schema(description = "입금액", example = "100000") @NotNull(message = "입금액은 필수입니다.") @Positive(message = "입금액은 0보다 커야 합니다.") Long amount) {
 }

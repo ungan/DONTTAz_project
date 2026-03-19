@@ -13,6 +13,7 @@ import com.donttaz.donttazapi.vault.dto.request.CreateVaultRequest;
 import com.donttaz.donttazapi.vault.dto.response.CreateVaultResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultDepositResponse;
 import com.donttaz.donttazapi.vault.repository.VaultRepository;
+import com.donttaz.donttazapi.account.service.AccountTransferService;
 import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +35,9 @@ class VaultCommandServiceTest {
         @Mock
         private CurrentUserProvider currentUserProvider;
 
+        @Mock
+        private com.donttaz.donttazapi.account.service.AccountTransferService accountTransferService;
+
         @InjectMocks
         private VaultCommandService vaultCommandService;
 
@@ -44,6 +48,8 @@ class VaultCommandServiceTest {
         @DisplayName("금고를 성공적으로 생성한다.")
         void createVault_success() {
                 given(currentUserProvider.getCurrentUserId()).willReturn(USER_ID);
+                given(vaultRepository.findAllByUserIdAndStatus(USER_ID, VaultStatus.LOCKED))
+                                .willReturn(java.util.Collections.emptyList());
 
                 Vault saved = Vault.builder()
                                 .userId(USER_ID)
@@ -53,12 +59,13 @@ class VaultCommandServiceTest {
                                 .targetDate(LocalDate.now().plusDays(30))
                                 .lockedAmount(0L)
 
-                                        .build();
-                                
-                        given(vaultRepository.save(any(Vault.class))).willReturn(saved);
+                                .build();
 
-        CreateVaultRequest request = new CreateVaultRequest(VaultKind.WISHLIST, "애플워치", 500000L, LocalDate.now().plusDays(30));
-        CreateVaultResponse response = vaultCommandService.createVault(request);
+                given(vaultRepository.save(any(Vault.class))).willReturn(saved);
+
+                CreateVaultRequest request = new CreateVaultRequest(VaultKind.WISHLIST, "애플워치", 500000L,
+                                LocalDate.now().plusDays(30));
+                CreateVaultResponse response = vaultCommandService.createVault(request);
 
                 assertThat(response.lockedAmount()).isEqualTo(0L);
                 assertThat(response.status()).isEqualTo("LOCKED");
@@ -81,7 +88,9 @@ class VaultCommandServiceTest {
                                 .build();
                 given(vaultRepository.findByVaultIdAndUserId(VAULT_ID, USER_ID)).willReturn(Optional.of(vault));
 
-                VaultDepositResponse response = vaultCommandService.deposit(VAULT_ID, 100000L);
+                VaultDepositResponse response = vaultCommandService.deposit(VAULT_ID,
+                                new com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest("1000000000",
+                                                100000L));
 
                 assertThat(response.depositedAmount()).isEqualTo(100000L);
                 assertThat(response.lockedAmount()).isEqualTo(100000L);
