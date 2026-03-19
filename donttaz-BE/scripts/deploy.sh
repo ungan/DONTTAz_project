@@ -16,17 +16,31 @@ cd $PROJECT_DIR
 # ==============================================================================
 # 현재 활성화된 환경(Blue/Green) 확인
 # ==============================================================================
-# Nginx의 대상(symbolic link 혹은 include된 파일 내용)을 보고 판단
+# 1. Nginx의 설정을 보고 판단
 CURRENT_ENV=""
-
 if docker exec $NGINX_CONTAINER grep -q "api-blue.inc" /etc/nginx/conf.d/service-env.inc 2>/dev/null; then
     CURRENT_ENV="blue"
+elif docker exec $NGINX_CONTAINER grep -q "api-green.inc" /etc/nginx/conf.d/service-env.inc 2>/dev/null; then
+    CURRENT_ENV="green"
+fi
+
+# 2. Nginx 설정으로 확인 불가 시, 실제 실행 중인 컨테이너 확인
+if [ -z "$CURRENT_ENV" ]; then
+    if docker ps --format '{{.Names}}' | grep -q "donttaz-api-blue"; then
+        CURRENT_ENV="blue"
+    elif docker ps --format '{{.Names}}' | grep -q "donttaz-api-green"; then
+        CURRENT_ENV="green"
+    else
+        # 둘 다 없으면 초기 상태이므로 green이 활성 상태였다고 가정 (최초 배포 시 blue를 띄움)
+        CURRENT_ENV="green"
+    fi
+fi
+
+if [ "$CURRENT_ENV" = "blue" ]; then
     TARGET_ENV="green"
     API_PORT=8082
     AI_PORT=8002
 else
-    # 파일이 없거나 green이라고 가정
-    CURRENT_ENV="green"
     TARGET_ENV="blue"
     API_PORT=8081
     AI_PORT=8001
@@ -41,7 +55,8 @@ echo "================================================="
 # Target 환경의 도커 컨테이너 띄우기 (Up)
 # ==============================================================================
 echo "📦 [$TARGET_ENV] 환경 도커 이미지 빌드 및 실행 중..."
-docker-compose -f docker-compose.${TARGET_ENV}.yml up -d --build
+# 프로젝트 이름(-p)을 명시하여 Blue/Green 환경이 서로 간섭(down 시 다른 색상 삭제)하지 않도록 격리함
+docker-compose -p donttaz-${TARGET_ENV} -f docker-compose.${TARGET_ENV}.yml up -d --build
 
 # ==============================================================================
 # Health Check (API & AI)
@@ -60,26 +75,13 @@ for i in $(seq 1 $MAX_RETRIES); do
     sleep $RETRY_INTERVAL
 done
 
-# FastAPI AI Health Check (선택적)
-# echo "⏳ [$TARGET_ENV] FastAPI AI 기동 대기 중... (단자: $AI_PORT)"
-# AI_IS_READY=false
-# for i in $(seq 1 $MAX_RETRIES); do
-#     STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://donttaz-ai-${TARGET_ENV}:8000${AI_HEALTH_URL})
-#     if [ "${STATUS_CODE:-000}" -eq 200 ]; then
-#         echo "✅ [$TARGET_ENV] FastAPI AI 정상 기동 확인 (200 OK)"
-#         AI_IS_READY=true
-#         break
-#     fi
-#     echo "  - 아직 준비되지 않음 (상태 코드: $STATUS_CODE). $RETRY_INTERVAL초 후 재시도... ($i/$MAX_RETRIES)"
-#     sleep $RETRY_INTERVAL
-# done
-AI_IS_READY=true # 일단 AI는 무조건 패스하는 것으로 임시 설정
+AI_IS_READY=true # AI 보류
 
 if [ "$API_IS_READY" = false ] || [ "$AI_IS_READY" = false ]; then
     echo "❌ [$TARGET_ENV] 헬스 체크 실패. 배포를 중단하고 새로 띄운 컨테이너를 종료합니다."
-    echo "🔍 에러 원인 파악을 위해 멈춘 컨테이너의 로그(최근 100줄)를 확인합니다:"
+    echo "🔍 에러 원인 파악을 위해 멈춘 컨테이너의 로그(최근 100줄)를 확인합니다."
     docker logs donttaz-api-${TARGET_ENV} --tail 100
-    docker-compose -f docker-compose.${TARGET_ENV}.yml down
+    docker-compose -p donttaz-${TARGET_ENV} -f docker-compose.${TARGET_ENV}.yml down
     exit 1
 fi
 
@@ -104,15 +106,16 @@ else
     echo "💥 Nginx 리로드 실패! 설정을 롤백합니다."
     docker exec $NGINX_CONTAINER sh -c "echo 'include /etc/nginx/conf.d/api-${CURRENT_ENV}.inc;' > /etc/nginx/conf.d/service-env.inc"
     docker exec $NGINX_CONTAINER nginx -s reload
-    docker-compose -f docker-compose.${TARGET_ENV}.yml down
+    docker-compose -p donttaz-${TARGET_ENV} -f docker-compose.${TARGET_ENV}.yml down
     exit 1
 fi
 
 # ==============================================================================
 # 이전 환경 (Current) 종료 (Down)
 # ==============================================================================
-# 시스템 리로드 후 구 버전 컨테이너는 더 이상 트래픽을 받지 않으므로 내립니다.
+# 배포 완료 후 5초 대기 (안정화)
+sleep 5
 echo "🛑 이전 [$CURRENT_ENV] 환경 컨테이너 종료..."
-docker-compose -f docker-compose.${CURRENT_ENV}.yml down
+docker-compose -p donttaz-${CURRENT_ENV} -f docker-compose.${CURRENT_ENV}.yml down
 
 echo "✨ 모든 배포 파이프라인이 성공적으로 종료되었습니다."
