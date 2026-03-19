@@ -11,6 +11,9 @@ import com.donttaz.donttazapi.vault.dto.request.SetWishlistGoalRequest;
 import com.donttaz.donttazapi.vault.dto.response.CreateVaultResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultDepositResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultWithdrawResponse;
+import com.donttaz.donttazapi.account.service.AccountTransferService;
+import com.donttaz.donttazapi.account.dto.request.AccountWithdrawalRequest;
+import com.donttaz.donttazapi.account.dto.request.AccountDepositRequest;
 import com.donttaz.donttazapi.vault.domain.TransactionType;
 import com.donttaz.donttazapi.vault.domain.VaultHistory;
 import com.donttaz.donttazapi.vault.repository.VaultHistoryRepository;
@@ -31,14 +34,17 @@ public class VaultCommandService {
 
     private final VaultRepository vaultRepository;
     private final VaultHistoryRepository vaultHistoryRepository;
+    private final AccountTransferService accountTransferService;
     private final CurrentUserProvider currentUserProvider;
 
     public VaultCommandService(
             VaultRepository vaultRepository,
             VaultHistoryRepository vaultHistoryRepository,
+            AccountTransferService accountTransferService,
             CurrentUserProvider currentUserProvider) {
         this.vaultRepository = vaultRepository;
         this.vaultHistoryRepository = vaultHistoryRepository;
+        this.accountTransferService = accountTransferService;
         this.currentUserProvider = currentUserProvider;
     }
 
@@ -51,9 +57,9 @@ public class VaultCommandService {
     public CreateVaultResponse createVault(CreateVaultRequest request) {
         Long userId = currentUserProvider.getCurrentUserId();
 
-        if (request.vaultKind() == VaultKind.DEFAULT) {
-            validateDefaultVaultUniqueness(userId);
-        } else {
+        validateVaultUniqueness(userId);
+
+        if (request.vaultKind() == VaultKind.WISHLIST) {
             validateWishlistRequirement(request);
         }
 
@@ -96,9 +102,9 @@ public class VaultCommandService {
         vaultRepository.save(vault);
     }
 
-    private void validateDefaultVaultUniqueness(Long userId) {
-        if (vaultRepository.existsByUserIdAndVaultKindAndStatus(userId, VaultKind.DEFAULT, VaultStatus.LOCKED)) {
-            throw new CustomException(ErrorCode.INVALID_REQUEST, "기본 금고는 사용자당 1개만 생성할 수 있습니다.");
+    private void validateVaultUniqueness(Long userId) {
+        if (!vaultRepository.findAllByUserIdAndStatus(userId, VaultStatus.LOCKED).isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST, "사용자는 1개의 활성 금고만 가질 수 있습니다.");
         }
     }
 
@@ -110,53 +116,65 @@ public class VaultCommandService {
     }
 
     @Transactional
-    public VaultDepositResponse deposit(Long vaultId, Long amount) {
+    public VaultDepositResponse deposit(Long vaultId,
+            com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest request) {
         Long userId = currentUserProvider.getCurrentUserId();
         Vault vault = vaultRepository.findByVaultIdAndUserId(vaultId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
 
-        // 자산 이체 및 금고 잠금 처리 (금융 연동 예정)
-        vault.deposit(amount);
+        // 모계좌(금고)로 자금 이체: 사용자의 계좌에서 출금 처리
+        accountTransferService.withdrawal(
+                request.accountNo(),
+                new AccountWithdrawalRequest(String.valueOf(request.amount()), "금고 입금"));
+
+        vault.deposit(request.amount());
 
         vaultHistoryRepository.save(VaultHistory.builder()
                 .vaultId(vaultId)
                 .transactionType(TransactionType.DEPOSIT)
-                .amount(amount)
+                .amount(request.amount())
                 .interestPaid(0L)
                 .build());
 
         return VaultDepositResponse.builder()
                 .vaultId(vault.getVaultId())
-                .depositedAmount(amount)
+                .depositedAmount(request.amount())
                 .lockedAmount(vault.getLockedAmount())
                 .build();
     }
 
     @Transactional
-    public VaultWithdrawResponse withdraw(Long vaultId, Long amount) {
+    public VaultWithdrawResponse withdraw(Long vaultId,
+            com.donttaz.donttazapi.vault.dto.request.VaultWithdrawRequest request) {
         Long userId = currentUserProvider.getCurrentUserId();
         Vault vault = vaultRepository.findByVaultIdAndUserId(vaultId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
 
-        // 1. 현재 시점 이자 계산 (금액 비례가 아닌 전체 잔액 기준 이자 지급으로 가정)
+        // 1. 현재 시점 이자 계산
         Long interest = vault.calculateInterest();
 
         // 2. 출금 로직 실행 (패널티 누적 및 복구 반영)
-        vault.withdraw(amount);
+        vault.withdraw(request.amount());
 
-        // 3. 거래 내역 저장
+        // 3. 모계좌(금고)에서 자금 이체: 사용자의 계좌로 원금+이자 입금 처리
+        Long totalTransferAmount = request.amount() + interest;
+        accountTransferService.deposit(
+                request.accountNo(),
+                new AccountDepositRequest(String.valueOf(totalTransferAmount), "금고 출금"));
+
+        // 4. 거래 내역 저장
         vaultHistoryRepository.save(VaultHistory.builder()
                 .vaultId(vaultId)
                 .transactionType(TransactionType.WITHDRAW_BROKEN)
-                .amount(amount)
+                .amount(request.amount())
                 .interestPaid(interest)
                 .build());
 
         return VaultWithdrawResponse.builder()
                 .vaultId(vault.getVaultId())
-                .withdrawnAmount(amount)
+                .withdrawnAmount(request.amount())
                 .interestPaid(interest)
-                .totalRefundAmount(amount + interest)
+                .totalRefundAmount(totalTransferAmount)
                 .build();
     }
 
@@ -180,7 +198,7 @@ public class VaultCommandService {
 
         Long interest = vault.calculateInterest();
         Long finalAmount = vault.getLockedAmount();
-        
+
         vault.matureVault();
 
         vaultHistoryRepository.save(VaultHistory.builder()

@@ -67,7 +67,7 @@ public class VaultController implements VaultSwagger {
                         @PathVariable Long vaultId,
                         @Valid @RequestBody VaultDepositRequest request) {
                 return ResponseEntity.ok(
-                                vaultCommandService.deposit(vaultId, request.amount()));
+                                vaultCommandService.deposit(vaultId, request));
         }
 
         @Override
@@ -76,7 +76,7 @@ public class VaultController implements VaultSwagger {
                         @PathVariable Long vaultId,
                         @Valid @RequestBody VaultWithdrawRequest request) {
                 return ResponseEntity.ok(
-                                vaultCommandService.withdraw(vaultId, request.amount()));
+                                vaultCommandService.withdraw(vaultId, request));
         }
 
         @Override
