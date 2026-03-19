@@ -1,0 +1,73 @@
+import { useState } from 'react';
+import { isAxiosError } from 'axios';
+import { router } from 'expo-router';
+import { getStoredAccessToken, getStoredRefreshToken } from '@/shared/api/auth-storage';
+import { logoutApi } from '../api/logout';
+import { clearLocalAuthSession } from './clear-local-auth-session';
+
+function shouldClearSessionOnError(error: unknown) {
+  if (!isAxiosError(error)) {
+    return false;
+  }
+
+  return error.response?.status === 400 || error.response?.status === 401;
+}
+
+function getLogoutErrorMessage(error: unknown) {
+  if (isAxiosError(error)) {
+    return error.response?.data?.message ?? '로그아웃 처리 중 문제가 발생했습니다.';
+  }
+
+  return '로그아웃 처리 중 문제가 발생했습니다.';
+}
+
+export function useLogout() {
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const logout = async () => {
+    setIsPending(true);
+    setError(null);
+
+    try {
+      const [accessToken, refreshToken] = await Promise.all([
+        getStoredAccessToken(),
+        getStoredRefreshToken(),
+      ]);
+
+      if (!accessToken) {
+        await clearLocalAuthSession();
+        router.replace('/login');
+        return true;
+      }
+
+      if (refreshToken) {
+        await logoutApi({ refreshToken });
+      }
+
+      await clearLocalAuthSession();
+      router.replace('/login');
+      return true;
+    } catch (error) {
+      if (shouldClearSessionOnError(error)) {
+        await clearLocalAuthSession();
+        router.replace('/login');
+        return true;
+      }
+
+      setError(getLogoutErrorMessage(error));
+      return false;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const resetError = () => setError(null);
+
+  return {
+    logout,
+    isPending,
+    error,
+    resetError,
+  };
+}

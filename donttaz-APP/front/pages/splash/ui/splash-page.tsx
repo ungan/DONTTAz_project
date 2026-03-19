@@ -2,15 +2,17 @@ import { useEffect } from 'react';
 import { Image, Text, View } from 'react-native';
 import { router } from 'expo-router';
 
-import { useAuthCheck } from '@/features/auth';
+import { useAppEntryCheck } from '@/features/auth';
 import { styles } from './splash-page.styles';
 
 export function SplashPage() {
-  const authStatus = useAuthCheck();
+  const authStatus = useAppEntryCheck();
 
   useEffect(() => {
     if (authStatus === 'authenticated') {
-      router.replace('/home');
+      router.replace('/(tabs)/home');
+    } else if (authStatus === 'pin-required') {
+      router.replace('/pin-login');
     } else if (authStatus === 'unauthenticated') {
       router.replace('/login');
     }

@@ -24,7 +24,11 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="home" options={{ headerShown: false }} />
+          <Stack.Screen name="pin-login" options={{ headerShown: false }} />
+          <Stack.Screen name="signup-start" options={{ headerShown: false }} />
+          <Stack.Screen name="signup-account" options={{ headerShown: false }} />
+          <Stack.Screen name="signup-pin" options={{ headerShown: false }} />
+          <Stack.Screen name="signup-complete" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="transfer-account" options={{ headerShown: false }} />
           <Stack.Screen name="transfer-amount" options={{ headerShown: false }} />

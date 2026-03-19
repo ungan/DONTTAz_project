@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import { getStoredAccessToken } from './auth-storage';
 import { applyMockInterceptor } from '../mock';
 
 export const apiClient = axios.create({
@@ -10,10 +10,12 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use(async (config) => {
-  const token = await SecureStore.getItemAsync('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const accessToken = await getStoredAccessToken();
+
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
   }
+
   return config;
 });
 

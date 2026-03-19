@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import com.donttaz.donttazapi.auth.dto.request.RefreshRequest;
 import com.donttaz.donttazapi.auth.dto.request.LoginRequest;
 import com.donttaz.donttazapi.auth.dto.request.LogoutRequest;
 import com.donttaz.donttazapi.auth.dto.response.LoginResponse;
@@ -158,6 +159,79 @@ class AuthServiceTest {
         // [When & Then]
         assertThrows(CustomException.class, () -> {
             authService.logout(request, TEST_USER_ID);
+        });
+    }
+
+    @Test
+    @DisplayName("유효한 Refresh Token으로 액세스 토큰 재발급 성공 시 새로운 토큰 세트를 반환하고 Redis를 업데이트한다.")
+    void refresh_Success() {
+        // [Given]
+        User user = createTestUser();
+        RefreshRequest request = new RefreshRequest(REFRESH_TOKEN);
+        String newAccessToken = "new-access-token";
+        String newRefreshToken = "new-refresh-token";
+
+        given(jwtProvider.validateToken(REFRESH_TOKEN)).willReturn(true);
+        given(jwtProvider.getUserIdFromToken(REFRESH_TOKEN)).willReturn(TEST_USER_ID);
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.get("RT:" + TEST_USER_ID)).willReturn(REFRESH_TOKEN);
+        given(userRepository.findById(TEST_USER_ID)).willReturn(Optional.of(user));
+        
+        given(jwtProvider.createAccessToken(TEST_USER_ID, TEST_EMAIL)).willReturn(newAccessToken);
+        given(jwtProvider.createRefreshToken(TEST_USER_ID, TEST_EMAIL)).willReturn(newRefreshToken);
+
+        // [When]
+        LoginResponse response = authService.refresh(request);
+
+        // [Then]
+        assertThat(response.getAccessToken()).isEqualTo(newAccessToken);
+        assertThat(response.getRefreshToken()).isEqualTo(newRefreshToken);
+        verify(valueOperations).set("RT:" + TEST_USER_ID, newRefreshToken, 14, TimeUnit.DAYS);
+    }
+
+    @Test
+    @DisplayName("유효하지 않은 Refresh Token으로 재발급 시 INVALID_REFRESH_TOKEN 예외가 발생한다.")
+    void refresh_Fail_InvalidToken() {
+        // [Given]
+        RefreshRequest request = new RefreshRequest("invalid-token");
+        given(jwtProvider.validateToken("invalid-token")).willReturn(false);
+
+        // [When & Then]
+        assertThrows(CustomException.class, () -> {
+            authService.refresh(request);
+        });
+    }
+
+    @Test
+    @DisplayName("Redis에 저장된 토큰과 일치하지 않으면 INVALID_REFRESH_TOKEN 예외가 발생한다.")
+    void refresh_Fail_TokenMismatch() {
+        // [Given]
+        RefreshRequest request = new RefreshRequest(REFRESH_TOKEN);
+        given(jwtProvider.validateToken(REFRESH_TOKEN)).willReturn(true);
+        given(jwtProvider.getUserIdFromToken(REFRESH_TOKEN)).willReturn(TEST_USER_ID);
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.get("RT:" + TEST_USER_ID)).willReturn("different-token");
+
+        // [When & Then]
+        assertThrows(CustomException.class, () -> {
+            authService.refresh(request);
+        });
+    }
+
+    @Test
+    @DisplayName("토큰은 유효하나 사용자가 존재하지 않으면 USER_NOT_FOUND 예외가 발생한다.")
+    void refresh_Fail_UserNotFound() {
+        // [Given]
+        RefreshRequest request = new RefreshRequest(REFRESH_TOKEN);
+        given(jwtProvider.validateToken(REFRESH_TOKEN)).willReturn(true);
+        given(jwtProvider.getUserIdFromToken(REFRESH_TOKEN)).willReturn(TEST_USER_ID);
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.get("RT:" + TEST_USER_ID)).willReturn(REFRESH_TOKEN);
+        given(userRepository.findById(TEST_USER_ID)).willReturn(Optional.empty());
+
+        // [When & Then]
+        assertThrows(CustomException.class, () -> {
+            authService.refresh(request);
         });
     }
 
