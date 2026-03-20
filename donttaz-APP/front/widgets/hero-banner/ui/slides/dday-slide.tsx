@@ -1,0 +1,20 @@
+import React from 'react';
+import { View, Text } from 'react-native';
+import { useBurndown, useBurndownStats } from '@/entities/plan';
+import { styles } from './dday-slide.styles';
+
+export function DdaySlide() {
+  const now = new Date();
+  const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const { data } = useBurndown(yearMonth);
+  const { daysUntilBankrupt } = useBurndownStats(data);
+
+  const ddayText = daysUntilBankrupt !== null ? `D-${daysUntilBankrupt}` : 'D-17';
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>사망일</Text>
+      <Text style={styles.dday}>{ddayText}</Text>
+    </View>
+  );
+}

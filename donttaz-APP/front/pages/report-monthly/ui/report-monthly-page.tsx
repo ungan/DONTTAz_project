@@ -1,5 +1,6 @@
 import React from 'react';
-import { SafeAreaView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { PageHeader } from '@/shared/ui';
 import { MonthlyReport } from '@/widgets/monthly-report';

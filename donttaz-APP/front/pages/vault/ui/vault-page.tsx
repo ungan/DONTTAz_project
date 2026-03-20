@@ -1,9 +1,11 @@
-import { Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { PageHeader } from '@/shared/ui';
+import { styles } from './vault-page.styles';
 
 export function VaultPage() {
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>금고 페이지</Text>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <PageHeader title="가상금고" />
+    </SafeAreaView>
   );
 }
