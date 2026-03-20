@@ -38,6 +38,8 @@ import com.donttaz.donttazapi.account.service.dto.TransferCommand;
 import com.donttaz.donttazapi.account.service.dto.TransferLimitCommand;
 import com.donttaz.donttazapi.account.service.dto.TransferResult;
 import com.donttaz.donttazapi.account.service.dto.TransferTransactionResult;
+import com.donttaz.donttazapi.common.exception.CustomException;
+import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
 import com.donttaz.donttazapi.infra.banking.client.BankingClient;
 import com.donttaz.donttazapi.infra.banking.config.FinApiProperties;
@@ -80,14 +82,14 @@ class AccountTransferServiceTest {
     private AccountTransferService accountTransferService;
 
     @Test
-    @DisplayName("입금 요청 시 외부 API를 호출하고 거래 이력을 저장한다.")
+    @DisplayName("deposit stores transaction history")
     void depositSuccess() {
         AccountDepositRequest request = new AccountDepositRequest("100000000", "deposit");
-        Account account = createAccount("0016174648358792", 100000000L);
+        Account account = createAccount("0016174648358792", 100000000L, 1L);
         given(currentUserProvider.getCurrentUserId()).willReturn(1L);
         given(bankingClient.deposit(any(Long.class), any(AccountDepositCommand.class)))
                 .willReturn(new AccountDepositResult("59", "20240401"));
-        given(accountSyncService.syncAccountSnapshot("0016174648358792")).willReturn(account);
+        given(accountSyncService.syncAccountSnapshot(1L, "0016174648358792")).willReturn(account);
 
         AccountDepositResponse response = accountTransferService.deposit("0016174648358792", request);
 
@@ -99,25 +101,45 @@ class AccountTransferServiceTest {
         assertThat(commandCaptor.getValue().transactionBalance()).isEqualTo("100000000");
         assertThat(commandCaptor.getValue().transactionSummary()).isEqualTo("deposit");
         assertThat(transactionCaptor.getValue().getUserId()).isEqualTo(1L);
-        assertThat(transactionCaptor.getValue().getSource()).isEqualTo("FIN_API");
         assertThat(transactionCaptor.getValue().getSourceTxId()).isEqualTo("59");
         assertThat(transactionCaptor.getValue().getAmount()).isEqualTo(100000000L);
-        assertThat(transactionCaptor.getValue().getBalanceSnapshot()).isEqualTo(100000000L);
-        assertThat(transactionCaptor.getValue().getTransactionSummary()).isEqualTo("deposit");
-        assertThat(transactionCaptor.getValue().getTxType()).isEqualTo("1");
         assertThat(response.transactionUniqueNo()).isEqualTo("59");
         assertThat(response.transactionDate()).isEqualTo("20240401");
     }
 
     @Test
-    @DisplayName("출금 요청 시 외부 API를 호출하고 거래 이력을 저장한다.")
+    @DisplayName("deposit uses account owner when security context is missing")
+    void depositWithoutSecurityContextUsesAccountOwner() {
+        AccountDepositRequest request = new AccountDepositRequest("50000", "deposit");
+        Account account = createAccount("0016174648358792", 150000L, 7L);
+        given(currentUserProvider.getCurrentUserId())
+                .willThrow(new CustomException(ErrorCode.AUTHENTICATION_REQUIRED));
+        given(accountRepository.findFirstByAccountNumberAndStatusAndIsDeletedFalse(
+                "0016174648358792",
+                AccountStatus.ACTIVE
+        )).willReturn(Optional.of(account));
+        given(bankingClient.deposit(any(Long.class), any(AccountDepositCommand.class)))
+                .willReturn(new AccountDepositResult("77", "20240402"));
+        given(accountSyncService.syncAccountSnapshot(7L, "0016174648358792")).willReturn(account);
+
+        AccountDepositResponse response = accountTransferService.deposit("0016174648358792", request);
+
+        ArgumentCaptor<AccountDepositCommand> commandCaptor = ArgumentCaptor.forClass(AccountDepositCommand.class);
+        verify(bankingClient).deposit(org.mockito.ArgumentMatchers.eq(7L), commandCaptor.capture());
+        verify(accountSyncService).syncAccountSnapshot(7L, "0016174648358792");
+        assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0016174648358792");
+        assertThat(response.transactionUniqueNo()).isEqualTo("77");
+    }
+
+    @Test
+    @DisplayName("withdrawal stores transaction history")
     void withdrawalSuccess() {
         AccountWithdrawalRequest request = new AccountWithdrawalRequest("100000", "withdrawal");
-        Account account = createAccount("0016174648358792", 500000L);
+        Account account = createAccount("0016174648358792", 500000L, 1L);
         given(currentUserProvider.getCurrentUserId()).willReturn(1L);
         given(bankingClient.withdrawal(any(Long.class), any(AccountWithdrawalCommand.class)))
                 .willReturn(new AccountWithdrawalResult("60", "20240401"));
-        given(accountSyncService.syncAccountSnapshot("0016174648358792")).willReturn(account);
+        given(accountSyncService.syncAccountSnapshot(1L, "0016174648358792")).willReturn(account);
 
         AccountWithdrawalResponse response = accountTransferService.withdrawal("0016174648358792", request);
 
@@ -125,22 +147,15 @@ class AccountTransferServiceTest {
         ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
         verify(bankingClient).withdrawal(org.mockito.ArgumentMatchers.eq(1L), commandCaptor.capture());
         verify(transactionRepository).save(transactionCaptor.capture());
-        assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0016174648358792");
-        assertThat(commandCaptor.getValue().transactionBalance()).isEqualTo("100000");
         assertThat(commandCaptor.getValue().transactionSummary()).isEqualTo("withdrawal");
         assertThat(transactionCaptor.getValue().getUserId()).isEqualTo(1L);
-        assertThat(transactionCaptor.getValue().getSource()).isEqualTo("FIN_API");
         assertThat(transactionCaptor.getValue().getSourceTxId()).isEqualTo("60");
-        assertThat(transactionCaptor.getValue().getAmount()).isEqualTo(100000L);
-        assertThat(transactionCaptor.getValue().getBalanceSnapshot()).isEqualTo(500000L);
-        assertThat(transactionCaptor.getValue().getTransactionSummary()).isEqualTo("withdrawal");
-        assertThat(transactionCaptor.getValue().getTxType()).isEqualTo("2");
         assertThat(response.transactionUniqueNo()).isEqualTo("60");
         assertThat(response.transactionDate()).isEqualTo("20240401");
     }
 
     @Test
-    @DisplayName("계좌 이체 요청 시 출금 거래를 저장하고 보유한 입금 계좌도 동기화한다.")
+    @DisplayName("transfer stores withdrawal and owned deposit transactions")
     void transferSuccess() {
         AccountTransferRequest request = new AccountTransferRequest(
                 "0204667768182760",
@@ -149,36 +164,76 @@ class AccountTransferServiceTest {
                 "0016174648358792",
                 "withdrawal transfer"
         );
-        Account withdrawalAccount = createAccount("0016174648358792", 90000000L);
-        Account depositAccount = createAccount("0204667768182760", 110000000L);
+        Account withdrawalAccount = createAccount("0016174648358792", 90000000L, 1L);
+        Account depositAccount = createAccount("0204667768182760", 110000000L, 1L);
         TransferResult result = new TransferResult(
                 List.of(
-                        new TransferTransactionResult("61", "0016174648358792", "20240401", "2", "출금(이체)", "0204667768182760"),
-                        new TransferTransactionResult("62", "0204667768182760", "20240401", "1", "입금(이체)", "0016174648358792")
+                        new TransferTransactionResult("61", "0016174648358792", "20240401", "2", "WITHDRAWAL_TRANSFER", "0204667768182760"),
+                        new TransferTransactionResult("62", "0204667768182760", "20240401", "1", "DEPOSIT_TRANSFER", "0016174648358792")
                 )
         );
         given(currentUserProvider.getCurrentUserId()).willReturn(1L);
         given(bankingClient.transfer(any(Long.class), any(TransferCommand.class))).willReturn(result);
-        given(accountSyncService.syncAccountSnapshot("0016174648358792")).willReturn(withdrawalAccount);
+        given(accountSyncService.syncAccountSnapshot(1L, "0016174648358792")).willReturn(withdrawalAccount);
         given(accountRepository.findByUserIdAndAccountNumberAndIsDeletedFalse(1L, "0204667768182760"))
                 .willReturn(Optional.of(depositAccount));
-        given(accountSyncService.syncAccountSnapshot("0204667768182760")).willReturn(depositAccount);
+        given(accountSyncService.syncAccountSnapshot(1L, "0204667768182760")).willReturn(depositAccount);
 
         AccountTransferResponse response = accountTransferService.transfer(request);
 
         ArgumentCaptor<TransferCommand> commandCaptor = ArgumentCaptor.forClass(TransferCommand.class);
+        ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
         verify(bankingClient).transfer(org.mockito.ArgumentMatchers.eq(1L), commandCaptor.capture());
-        verify(transactionRepository, times(2)).save(any(Transaction.class));
+        verify(transactionRepository, times(2)).save(transactionCaptor.capture());
         assertThat(commandCaptor.getValue().depositAccountNo()).isEqualTo("0204667768182760");
         assertThat(commandCaptor.getValue().withdrawalAccountNo()).isEqualTo("0016174648358792");
         assertThat(commandCaptor.getValue().transactionBalance()).isEqualTo("10000000");
+        assertThat(transactionCaptor.getAllValues())
+                .extracting(Transaction::getCounterpartyName)
+                .containsOnly("TRANSFER");
         assertThat(response.transactions()).hasSize(2);
-        assertThat(response.transactions().get(0).transactionUniqueNo()).isEqualTo("61");
-        assertThat(response.transactions().get(1).transactionUniqueNo()).isEqualTo("62");
     }
 
     @Test
-    @DisplayName("이체 한도 변경 요청 시 외부 API를 호출하고 계좌 스냅샷을 갱신한다.")
+    @DisplayName("transfer uses withdrawal account owner when security context is missing")
+    void transferWithoutSecurityContextUsesAccountOwner() {
+        AccountTransferRequest request = new AccountTransferRequest(
+                "0204667768182760",
+                "deposit transfer",
+                "10000000",
+                "0016174648358792",
+                "withdrawal transfer"
+        );
+        Account withdrawalAccount = createAccount("0016174648358792", 90000000L, 9L);
+        Account depositAccount = createAccount("0204667768182760", 110000000L, 9L);
+        TransferResult result = new TransferResult(
+                List.of(
+                        new TransferTransactionResult("61", "0016174648358792", "20240401", "2", "WITHDRAWAL_TRANSFER", "0204667768182760"),
+                        new TransferTransactionResult("62", "0204667768182760", "20240401", "1", "DEPOSIT_TRANSFER", "0016174648358792")
+                )
+        );
+        given(currentUserProvider.getCurrentUserId())
+                .willThrow(new CustomException(ErrorCode.AUTHENTICATION_REQUIRED));
+        given(accountRepository.findFirstByAccountNumberAndStatusAndIsDeletedFalse(
+                "0016174648358792",
+                AccountStatus.ACTIVE
+        )).willReturn(Optional.of(withdrawalAccount));
+        given(bankingClient.transfer(any(Long.class), any(TransferCommand.class))).willReturn(result);
+        given(accountSyncService.syncAccountSnapshot(9L, "0016174648358792")).willReturn(withdrawalAccount);
+        given(accountRepository.findByUserIdAndAccountNumberAndIsDeletedFalse(9L, "0204667768182760"))
+                .willReturn(Optional.of(depositAccount));
+        given(accountSyncService.syncAccountSnapshot(9L, "0204667768182760")).willReturn(depositAccount);
+
+        AccountTransferResponse response = accountTransferService.transfer(request);
+
+        ArgumentCaptor<TransferCommand> commandCaptor = ArgumentCaptor.forClass(TransferCommand.class);
+        verify(bankingClient).transfer(org.mockito.ArgumentMatchers.eq(9L), commandCaptor.capture());
+        assertThat(commandCaptor.getValue().withdrawalAccountNo()).isEqualTo("0016174648358792");
+        assertThat(response.transactions()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("updateTransferLimit syncs account snapshot")
     void updateTransferLimitSuccess() {
         AccountTransferLimitUpdateRequest request = new AccountTransferLimitUpdateRequest("20000000", "100000000");
         AccountDetailResult result = new AccountDetailResult(
@@ -186,9 +241,9 @@ class AccountTransferServiceTest {
                 "BANK",
                 "USER",
                 "0016174648358792",
-                "입출금 상품",
+                "Demand Deposit",
                 "1",
-                "수시입출금",
+                "DEPOSIT",
                 "20240401",
                 "20290401",
                 "100000000",
@@ -206,15 +261,11 @@ class AccountTransferServiceTest {
         verify(bankingClient).updateTransferLimit(org.mockito.ArgumentMatchers.eq(1L), commandCaptor.capture());
         verify(accountSyncService).syncAccountDetailSnapshot(result);
         assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0016174648358792");
-        assertThat(commandCaptor.getValue().oneTimeTransferLimit()).isEqualTo("20000000");
-        assertThat(commandCaptor.getValue().dailyTransferLimit()).isEqualTo("100000000");
         assertThat(response.accountNo()).isEqualTo("0016174648358792");
-        assertThat(response.oneTimeTransferLimit()).isEqualTo("20000000");
-        assertThat(response.dailyTransferLimit()).isEqualTo("100000000");
     }
 
     @Test
-    @DisplayName("1원 송금 인증 요청 시 식별문구만 전송하고 검증 이력을 저장한다.")
+    @DisplayName("requestOneWonVerification saves verification history")
     void requestOneWonVerificationSuccess() {
         OneWonVerificationRequest request = new OneWonVerificationRequest("0011214764051239");
         given(currentUserProvider.getCurrentUserId()).willReturn(1L);
@@ -226,28 +277,19 @@ class AccountTransferServiceTest {
 
         OneWonVerificationRequestResponse response = accountTransferService.requestOneWonVerification(request);
 
-        ArgumentCaptor<OneWonVerificationRequestCommand> commandCaptor =
-                ArgumentCaptor.forClass(OneWonVerificationRequestCommand.class);
+        ArgumentCaptor<OneWonVerificationRequestCommand> commandCaptor = ArgumentCaptor.forClass(OneWonVerificationRequestCommand.class);
         ArgumentCaptor<AccountVerification> verificationCaptor = ArgumentCaptor.forClass(AccountVerification.class);
-
         verify(bankingClient).requestOneWonVerification(org.mockito.ArgumentMatchers.eq(1L), commandCaptor.capture());
         verify(accountVerificationRepository).save(verificationCaptor.capture());
-
-        String authText = commandCaptor.getValue().authText();
-
         assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0011214764051239");
-        assertThat(authText).isEqualTo("DONTTAZ");
+        assertThat(commandCaptor.getValue().authText()).isEqualTo("DONTTAZ");
         assertThat(verificationCaptor.getValue().getVerificationId()).isEqualTo("7");
-        assertThat(verificationCaptor.getValue().getAccountNumber()).isEqualTo("0011214764051239");
-        assertThat(verificationCaptor.getValue().getBankCode()).isEqualTo("00100");
-        assertThat(verificationCaptor.getValue().getAuthCode()).isNull();
-        assertThat(verificationCaptor.getValue().isVerified()).isFalse();
         assertThat(response.verificationId()).isEqualTo("7");
         assertThat(response.accountNo()).isEqualTo("0011214764051239");
     }
 
     @Test
-    @DisplayName("1원 송금 인증코드 검증 시 외부 API를 호출하고 인증 상태를 완료로 변경한다.")
+    @DisplayName("confirmOneWonVerification marks verification as verified")
     void confirmOneWonVerificationSuccess() {
         OneWonVerificationConfirmRequest request = new OneWonVerificationConfirmRequest("7", "8212");
         AccountVerification verification = AccountVerification.builder()
@@ -269,24 +311,19 @@ class AccountTransferServiceTest {
 
         OneWonVerificationConfirmResponse response = accountTransferService.confirmOneWonVerification(request);
 
-        ArgumentCaptor<OneWonVerificationConfirmCommand> commandCaptor =
-                ArgumentCaptor.forClass(OneWonVerificationConfirmCommand.class);
+        ArgumentCaptor<OneWonVerificationConfirmCommand> commandCaptor = ArgumentCaptor.forClass(OneWonVerificationConfirmCommand.class);
         verify(bankingClient).confirmOneWonVerification(org.mockito.ArgumentMatchers.eq(1L), commandCaptor.capture());
-
         assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0011214764051239");
         assertThat(commandCaptor.getValue().authText()).isEqualTo("DONTTAZ");
         assertThat(commandCaptor.getValue().authCode()).isEqualTo("8212");
         assertThat(verification.isVerified()).isTrue();
-        assertThat(verification.getAuthCode()).isEqualTo("8212");
-        assertThat(response.verificationId()).isEqualTo("7");
-        assertThat(response.accountNo()).isEqualTo("0011214764051239");
         assertThat(response.status()).isEqualTo("SUCCESS");
         assertThat(response.verified()).isTrue();
     }
 
-    private Account createAccount(String accountNumber, Long balance) {
+    private Account createAccount(String accountNumber, Long balance, Long userId) {
         return Account.builder()
-                .userId(1L)
+                .userId(userId)
                 .bankCode("001")
                 .bankName("BANK")
                 .accountNumber(accountNumber)

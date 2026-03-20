@@ -30,14 +30,15 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
                         AccountStatus status);
 
         Optional<Account> findByUserIdAndAccountNumberAndIsDeletedFalse(Long userId, String accountNumber);
-
         Optional<Account> findByAccountNumberAndIsDeletedFalse(String accountNumber); // 계좌 번호 기반 조회용
-
+        Optional<Account> findFirstByAccountNumberAndStatusAndIsDeletedFalse(String accountNumber, AccountStatus status);
         Optional<Account> findByUserIdAndBankCodeAndAccountNumber(Long userId, String bankCode, String accountNumber);
+        Optional<Account> findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(Long userId, AccountStatus status);
 
         @Modifying(clearAutomatically = true, flushAutomatically = true)
         @Query("update Account a set a.isPrimary = false where a.userId = :userId and a.isPrimary = true")
         void clearPrimaryByUserId(@Param("userId") Long userId);
 
-        Optional<Account> findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(Long userId, AccountStatus status);
+        
 }
+

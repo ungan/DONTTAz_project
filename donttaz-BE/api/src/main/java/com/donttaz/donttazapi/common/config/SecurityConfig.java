@@ -2,6 +2,8 @@ package com.donttaz.donttazapi.common.config;
 
 import com.donttaz.donttazapi.auth.filter.JwtAuthenticationFilter;
 import com.donttaz.donttazapi.auth.util.JwtProvider;
+import java.util.Collections;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,9 +18,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.Collections;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -49,6 +48,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/password/**",
                                 "/api/v1/users/signup",
                                 "/api/v1/accounts/**",
+                                "/api/v1/merchants/**",
+                                "/api/v1/payments/**",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
@@ -64,8 +65,6 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // 개발 초기 단계: 모든 출처 허용. AllowCredentials가 true이므로 AllowedOrigins("*") 대신
-        // AllowedOriginPatterns("*") 사용
         configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Collections.singletonList("*"));

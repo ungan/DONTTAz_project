@@ -50,20 +50,32 @@ public class AccountSyncService {
     }
 
     public void syncCreatedAccount(String accountTypeUniqueNo, String accountNo) {
-        syncAccountDetailSnapshot(bankingAccountQueryService.getAccountDetail(accountNo), accountTypeUniqueNo);
+        syncAccountDetailSnapshot(resolveCurrentUserId(), bankingAccountQueryService.getAccountDetail(accountNo), accountTypeUniqueNo);
     }
 
     public Account syncAccountSnapshot(String accountNo) {
-        return syncAccountDetailSnapshot(bankingAccountQueryService.getAccountDetail(accountNo), null);
+        return syncAccountSnapshot(resolveCurrentUserId(), accountNo);
+    }
+
+    public Account syncAccountSnapshot(Long userId, String accountNo) {
+        return syncAccountDetailSnapshot(userId, bankingAccountQueryService.getAccountDetail(userId, accountNo), null);
     }
 
     public void syncAccountDetailSnapshot(AccountDetailResult account) {
-        syncAccountDetailSnapshot(account, null);
+        syncAccountDetailSnapshot(resolveCurrentUserId(), account, null);
+    }
+
+    public Account syncAccountDetailSnapshot(Long userId, AccountDetailResult account) {
+        return syncAccountDetailSnapshot(userId, account, null);
     }
 
     public Account syncAccountDetailSnapshot(AccountDetailResult account, String accountTypeUniqueNo) {
+        return syncAccountDetailSnapshot(resolveCurrentUserId(), account, accountTypeUniqueNo);
+    }
+
+    private Account syncAccountDetailSnapshot(Long userId, AccountDetailResult account, String accountTypeUniqueNo) {
         return upsertAccount(
-                resolveCurrentUserId(),
+                userId,
                 account.bankCode(),
                 account.bankName(),
                 account.accountNo(),
@@ -95,7 +107,6 @@ public class AccountSyncService {
 
         if (existing.isPresent()) {
             Account account = existing.get();
-            // Keep closed accounts terminal until an explicit relink flow is introduced.
             if (account.getStatus() == AccountStatus.UNLINKED) {
                 return account;
             }

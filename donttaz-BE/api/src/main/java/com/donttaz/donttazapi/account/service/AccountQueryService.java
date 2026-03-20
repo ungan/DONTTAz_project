@@ -21,10 +21,12 @@ import com.donttaz.donttazapi.account.service.dto.TransactionSummaryResult;
 import com.donttaz.donttazapi.common.exception.CustomException;
 import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
+import com.donttaz.donttazapi.payment.domain.Payment;
+import com.donttaz.donttazapi.payment.repository.PaymentRepository;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,10 +35,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AccountQueryService {
 
+    private static final String PAYMENT_CATEGORY = "PAYMENT";
+
     private final AccountRepository accountRepository;
     private final DemandDepositService demandDepositService;
     private final AccountSyncService accountSyncService;
     private final BankingAccountQueryService bankingAccountQueryService;
+    private final PaymentRepository paymentRepository;
     private final CurrentUserProvider currentUserProvider;
 
     public AccountQueryService(
@@ -44,21 +49,24 @@ public class AccountQueryService {
             DemandDepositService demandDepositService,
             AccountSyncService accountSyncService,
             BankingAccountQueryService bankingAccountQueryService,
+            PaymentRepository paymentRepository,
             CurrentUserProvider currentUserProvider
     ) {
         this.accountRepository = accountRepository;
         this.demandDepositService = demandDepositService;
         this.accountSyncService = accountSyncService;
         this.bankingAccountQueryService = bankingAccountQueryService;
+        this.paymentRepository = paymentRepository;
         this.currentUserProvider = currentUserProvider;
     }
 
     @Transactional
     public AccountListResponse getAccounts() {
+        Long userId = resolveCurrentUserId();
         List<DemandDepositAccountResult> accounts = demandDepositService.getAccounts();
         accountSyncService.syncDemandDepositAccounts(accounts);
         Map<String, Account> accountMetadata = accountRepository
-                .findAllByUserIdAndStatusAndIsDeletedFalse(resolveCurrentUserId(), AccountStatus.ACTIVE)
+                .findAllByUserIdAndStatusAndIsDeletedFalse(userId, AccountStatus.ACTIVE)
                 .stream()
                 .collect(Collectors.toMap(this::accountKey, Function.identity(), (left, right) -> left));
 
@@ -124,7 +132,8 @@ public class AccountQueryService {
     }
 
     public TransactionListResponse getTransactions(Long accountId, LocalDate startDate, LocalDate endDate, String type, int page, int size) {
-        Account account = getActiveAccount(accountId);
+        Long userId = resolveCurrentUserId();
+        Account account = getActiveAccount(accountId, userId);
         TransactionQueryResult result = bankingAccountQueryService.getTransactions(
                 account.getAccountNumber(),
                 startDate,
@@ -133,8 +142,10 @@ public class AccountQueryService {
                 page,
                 size
         );
+        Map<String, Payment> paymentByTransactionId = mapPaymentsByTransactionId(userId, result.transactions());
 
         List<TransactionSummaryResponse> transactions = result.transactions().stream()
+                .map(transaction -> overlayTransaction(transaction, paymentByTransactionId.get(transaction.externalTransactionId())))
                 .map(this::toTransactionSummaryResponse)
                 .toList();
 
@@ -147,19 +158,24 @@ public class AccountQueryService {
     }
 
     public TransactionDetailResponse getTransactionDetail(Long accountId, String transactionId) {
-        Account account = getActiveAccount(accountId);
+        Long userId = resolveCurrentUserId();
+        Account account = getActiveAccount(accountId, userId);
         TransactionDetailResult transaction = bankingAccountQueryService.getTransactionDetail(
                 account.getAccountNumber(),
                 transactionId
         );
+        TransactionDetailResult overlaidTransaction = paymentRepository
+                .findByUserIdAndWithdrawalTransactionId(userId, transaction.externalTransactionId())
+                .map(payment -> overlayTransaction(transaction, payment))
+                .orElse(transaction);
 
-        return toTransactionDetailResponse(accountId, transaction);
+        return toTransactionDetailResponse(accountId, overlaidTransaction);
     }
 
-    private Account getActiveAccount(Long accountId) {
+    private Account getActiveAccount(Long accountId, Long userId) {
         return accountRepository.findByAccountIdAndUserIdAndStatusAndIsDeletedFalse(
                         accountId,
-                        resolveCurrentUserId(),
+                        userId,
                         AccountStatus.ACTIVE
                 )
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
@@ -191,6 +207,53 @@ public class AccountQueryService {
 
     private String accountKey(String bankCode, String accountNumber) {
         return bankCode + ":" + accountNumber;
+    }
+
+    private Map<String, Payment> mapPaymentsByTransactionId(Long userId, List<TransactionSummaryResult> transactions) {
+        List<String> transactionIds = transactions.stream()
+                .map(TransactionSummaryResult::externalTransactionId)
+                .filter(transactionId -> transactionId != null && !transactionId.isBlank())
+                .toList();
+
+        if (transactionIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return paymentRepository.findAllByUserIdAndWithdrawalTransactionIdIn(userId, transactionIds).stream()
+                .collect(Collectors.toMap(Payment::getWithdrawalTransactionId, Function.identity(), (left, right) -> left));
+    }
+
+    private TransactionSummaryResult overlayTransaction(TransactionSummaryResult transaction, Payment payment) {
+        if (payment == null) {
+            return transaction;
+        }
+
+        return new TransactionSummaryResult(
+                transaction.externalTransactionId(),
+                transaction.transactionDate(),
+                transaction.type(),
+                transaction.amount(),
+                transaction.balanceAfter(),
+                payment.getMerchantName(),
+                PAYMENT_CATEGORY
+        );
+    }
+
+    private TransactionDetailResult overlayTransaction(TransactionDetailResult transaction, Payment payment) {
+        return new TransactionDetailResult(
+                transaction.externalTransactionId(),
+                transaction.externalAccountId(),
+                transaction.transactionDate(),
+                transaction.type(),
+                transaction.amount(),
+                transaction.balanceAfter(),
+                payment.getMerchantName(),
+                transaction.counterpartyBank(),
+                payment.getSettlementAccountNo(),
+                transaction.fee(),
+                PAYMENT_CATEGORY,
+                payment.getMerchantName()
+        );
     }
 
     private TransactionSummaryResponse toTransactionSummaryResponse(TransactionSummaryResult transaction) {

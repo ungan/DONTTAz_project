@@ -15,9 +15,14 @@ import com.donttaz.donttazapi.account.service.dto.TransactionDetailResult;
 import com.donttaz.donttazapi.account.service.dto.TransactionQueryResult;
 import com.donttaz.donttazapi.account.service.dto.TransactionSummaryResult;
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
-import java.time.LocalDateTime;
+import com.donttaz.donttazapi.payment.domain.Merchant;
+import com.donttaz.donttazapi.payment.domain.Payment;
+import com.donttaz.donttazapi.payment.domain.PaymentStatus;
+import com.donttaz.donttazapi.payment.repository.PaymentRepository;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,13 +46,16 @@ class AccountQueryServiceTest {
     private BankingAccountQueryService bankingAccountQueryService;
 
     @Mock
+    private PaymentRepository paymentRepository;
+
+    @Mock
     private CurrentUserProvider currentUserProvider;
 
     @InjectMocks
     private AccountQueryService accountQueryService;
 
     @Test
-    @DisplayName("계좌 목록 조회 시 총액을 계산하고 내부 동기화를 수행한다.")
+    @DisplayName("getAccounts returns balances and primary metadata")
     void getAccountsSuccess() {
         List<DemandDepositAccountResult> results = List.of(
                 new DemandDepositAccountResult(
@@ -89,7 +97,7 @@ class AccountQueryServiceTest {
 
         AccountListResponse response = accountQueryService.getAccounts();
 
-        assertThat(response.totalBalance()).isEqualTo(8003477L);
+        assertThat(response.totalBalance()).isEqualTo(8_003_477L);
         assertThat(response.accountList()).hasSize(1);
         assertThat(response.accountList().get(0).bankCode()).isEqualTo("020");
         assertThat(response.accountList().get(0).accountNo()).isEqualTo("020-***-182760");
@@ -99,7 +107,7 @@ class AccountQueryServiceTest {
     }
 
     @Test
-    @DisplayName("거래내역 목록 조회 시 외부 API 결과를 응답으로 변환한다")
+    @DisplayName("getTransactions overlays merchant data for payment transactions")
     void getTransactionsSuccess() {
         Account account = Account.builder()
                 .userId(1L)
@@ -121,18 +129,22 @@ class AccountQueryServiceTest {
                                 "61",
                                 LocalDateTime.of(2024, 4, 1, 10, 32, 29),
                                 "WITHDRAWAL",
-                                10_000_000,
+                                10_000,
                                 89_900_000,
-                                "(수시입출금) : 출금(이체)",
-                                "출금(이체)"
+                                "TRANSFER",
+                                "WITHDRAWAL_TRANSFER"
                         )
                 )
         );
+        Payment payment = createPayment("61", "EMART", "0204667768182760");
+
         given(currentUserProvider.getCurrentUserId()).willReturn(1L);
         given(accountRepository.findByAccountIdAndUserIdAndStatusAndIsDeletedFalse(10L, 1L, AccountStatus.ACTIVE))
-                .willReturn(java.util.Optional.of(account));
+                .willReturn(Optional.of(account));
         given(bankingAccountQueryService.getTransactions("0016174648358792", LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31), "A", 0, 20))
                 .willReturn(result);
+        given(paymentRepository.findAllByUserIdAndWithdrawalTransactionIdIn(1L, List.of("61")))
+                .willReturn(List.of(payment));
 
         TransactionListResponse response = accountQueryService.getTransactions(
                 10L,
@@ -147,10 +159,12 @@ class AccountQueryServiceTest {
         assertThat(response.transactions()).hasSize(1);
         assertThat(response.transactions().get(0).transactionId()).isEqualTo("61");
         assertThat(response.transactions().get(0).type()).isEqualTo("WITHDRAWAL");
+        assertThat(response.transactions().get(0).counterpartyName()).isEqualTo("EMART");
+        assertThat(response.transactions().get(0).category()).isEqualTo("PAYMENT");
     }
 
     @Test
-    @DisplayName("거래내역 단건 조회 시 외부 API 결과를 응답으로 변환한다")
+    @DisplayName("getTransactionDetail overlays merchant data for payment transactions")
     void getTransactionDetailSuccess() {
         Account account = Account.builder()
                 .userId(1L)
@@ -168,25 +182,54 @@ class AccountQueryServiceTest {
                 "0016174648358792",
                 LocalDateTime.of(2024, 4, 1, 10, 32, 29),
                 "WITHDRAWAL",
-                10_000_000,
+                10_000,
                 89_900_000,
-                "(수시입출금) : 출금(이체)",
+                "TRANSFER",
                 null,
                 "0204667768182760",
                 0,
-                "출금(이체)",
+                "WITHDRAWAL_TRANSFER",
                 null
         );
+        Payment payment = createPayment("61", "EMART", "0204667768182760");
+
         given(currentUserProvider.getCurrentUserId()).willReturn(1L);
         given(accountRepository.findByAccountIdAndUserIdAndStatusAndIsDeletedFalse(10L, 1L, AccountStatus.ACTIVE))
-                .willReturn(java.util.Optional.of(account));
+                .willReturn(Optional.of(account));
         given(bankingAccountQueryService.getTransactionDetail("0016174648358792", "61"))
                 .willReturn(result);
+        given(paymentRepository.findByUserIdAndWithdrawalTransactionId(1L, "61"))
+                .willReturn(Optional.of(payment));
 
         TransactionDetailResponse response = accountQueryService.getTransactionDetail(10L, "61");
 
         assertThat(response.transactionId()).isEqualTo("61");
         assertThat(response.accountId()).isEqualTo(10L);
+        assertThat(response.counterpartyName()).isEqualTo("EMART");
         assertThat(response.counterpartyAccount()).isEqualTo("0204667768182760");
+        assertThat(response.category()).isEqualTo("PAYMENT");
+        assertThat(response.memo()).isEqualTo("EMART");
+    }
+
+    private Payment createPayment(String withdrawalTransactionId, String merchantName, String settlementAccountNo) {
+        Merchant merchant = Merchant.builder()
+                .name(merchantName)
+                .settlementAccountNo(settlementAccountNo)
+                .category("MART")
+                .active(Boolean.TRUE)
+                .build();
+
+        return Payment.builder()
+                .userId(1L)
+                .merchant(merchant)
+                .merchantName(merchantName)
+                .withdrawalAccountNo("0016174648358792")
+                .settlementAccountNo(settlementAccountNo)
+                .withdrawalTransactionId(withdrawalTransactionId)
+                .depositTransactionId("62")
+                .amount(10_000L)
+                .status(PaymentStatus.COMPLETED)
+                .paidAt(LocalDateTime.of(2024, 4, 1, 10, 32, 29))
+                .build();
     }
 }
