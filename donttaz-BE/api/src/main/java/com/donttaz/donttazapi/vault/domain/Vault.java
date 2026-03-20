@@ -58,6 +58,9 @@ public class Vault extends BaseEntity {
     @Column(name = "penalty_interest_rate", nullable = false)
     private Double penaltyInterestRate;
 
+    @Column(name = "withdrawal_count", nullable = false)
+    private Integer withdrawalCount;
+
     @Column(name = "last_withdrawal_at")
     private LocalDateTime lastWithdrawalAt;
 
@@ -77,6 +80,7 @@ public class Vault extends BaseEntity {
         this.lockedAmount = lockedAmount != null ? lockedAmount : 0L;
         this.baseInterestRate = 4.0; // 4% 고정
         this.penaltyInterestRate = penaltyInterestRate != null ? penaltyInterestRate : 0.0;
+        this.withdrawalCount = 0; // 초기값 0
         this.status = status != null ? status : VaultStatus.LOCKED;
         this.lastWithdrawalAt = LocalDateTime.now(); // 초기값은 생성 시점
     }
@@ -107,6 +111,9 @@ public class Vault extends BaseEntity {
     }
 
     public void breakVault() {
+        if (this.vaultKind == VaultKind.DEFAULT) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST, "기본 금고는 해지할 수 없습니다.");
+        }
         if (this.status != VaultStatus.LOCKED) {
             throw new CustomException(ErrorCode.INVALID_REQUEST, "이미 해지된 금고입니다.");
         }
@@ -124,18 +131,27 @@ public class Vault extends BaseEntity {
             throw new CustomException(ErrorCode.INVALID_REQUEST, "출금액이 올바르지 않거나 잔액이 부족합니다.");
         }
 
-        // 1. 복구 로직 먼저 적용 (연속 미출금 달 수만큼 패널티 차감)
+        // 위시리스트 출금 횟수 제한 체크 (최대 3회)
+        if (this.vaultKind == VaultKind.WISHLIST && this.withdrawalCount >= 3) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST,
+                    "위시리스트 금고는 최대 3회까지만 부분 출금이 가능합니다. 더 이상 출금이 필요하시면 금고를 해지해주세요.");
+        }
+
+        // 1. 복구/보상 로직 먼저 적용 (연속 미출금 달 수만큼 패널티 차감 또는 보상 증가)
         applyMonthlyRecovery();
 
         // 2. 출금 처리
         this.lockedAmount -= amount;
+        this.withdrawalCount++;
 
-        // 3. 패널티 누적 (0.1% 증가) 및 최종 출금 시간 업데이트
-        this.penaltyInterestRate += 0.1;
+        // 3. 패널티 누적 및 최종 출금 시간 업데이트
+        // DEFAULT는 0.1%p, WISHLIST는 0.3%p 패널티 부여
+        double penaltyWeight = (this.vaultKind == VaultKind.WISHLIST) ? 0.3 : 0.1;
+        this.penaltyInterestRate += penaltyWeight;
         this.lastWithdrawalAt = LocalDateTime.now();
 
-        // 잔액이 0원이 되면 자동으로 해지 상태로 변경 (선택 사항)
-        if (this.lockedAmount == 0) {
+        // 4. 잔액이 0원이 되면 해지 상태로 변경 (위시리스트만 해당)
+        if (this.lockedAmount == 0 && this.vaultKind == VaultKind.WISHLIST) {
             this.status = VaultStatus.BROKEN;
         }
     }
@@ -185,19 +201,33 @@ public class Vault extends BaseEntity {
 
         long months = ChronoUnit.MONTHS.between(lastWithdrawalAt, LocalDateTime.now());
         if (months > 0) {
+            // 패널티 감소 (음수까지 허용하여 보상 이자율 효과)
             this.penaltyInterestRate -= (months * 0.1);
-            if (this.penaltyInterestRate < 0) {
-                this.penaltyInterestRate = 0.0;
+
+            // 보상 이자율 한도 설정 (예: 최대 2.0%p 보상 = 실질 6.0%)
+            if (this.penaltyInterestRate < -2.0) {
+                this.penaltyInterestRate = -2.0;
             }
+
             // 복구된 개월수만큼 기준 시점을 뒤로 미룸
             this.lastWithdrawalAt = this.lastWithdrawalAt.plusMonths(months);
         }
     }
 
     public void matureVault() {
+        if (this.vaultKind == VaultKind.DEFAULT) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST, "기본 금고는 만기 해지가 불가능합니다.");
+        }
         if (this.status != VaultStatus.LOCKED) {
             throw new CustomException(ErrorCode.INVALID_REQUEST, "이미 해지된 금고입니다.");
         }
+
+        // 무출금 달성 보너스 (1.0%p 가산)
+        if (this.withdrawalCount == 0) {
+            Long bonus = (long) (this.lockedAmount * 0.01); // 원금의 1% 보너스
+            this.lockedAmount += bonus;
+        }
+
         this.status = VaultStatus.MATURED;
     }
 }

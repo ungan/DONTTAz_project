@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @SecurityRequirement(name = "bearerAuth")
 public interface VaultSwagger {
 
-        @Operation(summary = "금고 생성", description = "새로운 금고(기본적으로 LOCKED 상태)를 생성합니다. 기본 금고(DEFAULT)는 사용자당 1개만 가능하며, 목표 금고(WISHLIST)는 목표 정보를 필수로 입력해야 합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = CreateVaultRequest.class), examples = @ExampleObject(name = "목표 금고 생성 요청", value = "{\n  \"vaultKind\": \"WISHLIST\",\n  \"wishName\": \"제주도 여행\",\n  \"goalAmount\": 500000,\n  \"targetDate\": \"2026-12-31\"\n}"))))
+        @Operation(summary = "금고 생성", description = "새로운 금고(LOCKED 상태)를 생성합니다. 사용자는 '기본(DEFAULT)' 1개와 '위시리스트(WISHLIST)' 1개를 동시에 보유할 수 있습니다. 위시리스트 생성 시 목표 정보가 필수입니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = CreateVaultRequest.class), examples = @ExampleObject(name = "목표 금고 생성 요청", value = "{\n  \"vaultKind\": \"WISHLIST\",\n  \"wishName\": \"제주도 여행\",\n  \"goalAmount\": 500000,\n  \"targetDate\": \"2026-12-31\"\n}"))))
 
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "금고 생성 성공")
@@ -38,7 +38,7 @@ public interface VaultSwagger {
         })
         ResponseEntity<VaultListResponse> getMyVaults();
 
-        @Operation(summary = "금고 상세 조회", description = "특정 금고의 상세 정보를 조회합니다. 목표 금액, 달성 날짜, 현재 적용 중인 기본 이자율 및 패널티 이자율을 확인할 수 있습니다.")
+        @Operation(summary = "금고 상세 조회", description = "특정 금고의 상세 정보를 조회합니다. 목표 금액, 달성 날짜, 현재 적용 중인 이자율 및 중도 출금 횟수(withdrawalCount)를 확인할 수 있습니다.")
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "금고 상세 조회 성공"),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "금고를 찾을 수 없음")
@@ -55,7 +55,7 @@ public interface VaultSwagger {
                         @PathVariable Long vaultId,
                         @RequestBody VaultDepositRequest request);
 
-        @Operation(summary = "금고 긴급 출금", description = "금고에서 자금을 긴급(중도) 출금합니다. 출금 시점에 계산된 이자가 지급되지만, 패널티 이자율이 증가합니다. 'WITHDRAW_BROKEN' 타입의 거래 내역이 생성됩니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaultWithdrawRequest.class), examples = @ExampleObject(name = "금고 긴급 출금 요청", value = "{\n  \"accountNo\": \"10000000001\",\n  \"amount\": 50000\n}"))))
+        @Operation(summary = "금고 긴급 출금", description = "금고에서 자금을 긴급(중도) 출금합니다. 이자율 패널티(기본형 0.1%p, 위시리스트 0.3%p)가 발생하며, 위시리스트는 최대 3회로 출금이 제한됩니다. 출금 후 잔액이 0원이 되면 위시리스트 금고는 해지(BROKEN)됩니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaultWithdrawRequest.class), examples = @ExampleObject(name = "금고 긴급 출금 요청", value = "{\n  \"accountNo\": \"10000000001\",\n  \"amount\": 50000\n}"))))
 
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "금고 긴급 출금 성공"),
@@ -75,7 +75,7 @@ public interface VaultSwagger {
                         @PathVariable Long vaultId,
                         @RequestBody SetWishlistGoalRequest request);
 
-        @Operation(summary = "금고 목표 달성 (정상 해지) 처리", description = "금고를 정상적으로 해지(MATURED) 처리합니다. 누적된 이자와 원금이 합산되어 지급되며, 'WITHDRAW_MATURED' 타입의 거래 내역이 생성됩니다.")
+        @Operation(summary = "금고 목표 달성 (정상 해지) 처리", description = "금고를 정상적으로 해지(MATURED) 처리합니다. 누적된 이자와 원금이 합산 지급되며, 위시리스트의 경우 중도 출금 이력이 없으면 원금의 1%가 보너스로 지급됩니다.")
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "목표 달성 처리 성공"),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "금고를 찾을 수 없음")
