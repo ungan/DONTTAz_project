@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { SafeAreaView, ScrollView, ActivityIndicator, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, ActivityIndicator, Text } from 'react-native';
 import { PageHeader } from '@/shared/ui';
 import { BurndownChart } from '@/widgets/burndown-chart';
 import { BurndownDailyList } from '@/widgets/burndown-daily-list';

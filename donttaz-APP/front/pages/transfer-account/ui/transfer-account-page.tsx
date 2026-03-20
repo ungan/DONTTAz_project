@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { PageHeader, Button } from '@/shared/ui';
 import { TransferFormSection, useTransferForm, useTransferStore, BANK_CODE_MAP } from '@/features/transfer';

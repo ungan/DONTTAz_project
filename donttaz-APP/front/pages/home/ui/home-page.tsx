@@ -22,6 +22,9 @@ export function HomePage() {
     if (id === '3') {
       router.push('/(tabs)/plan');
     }
+    if (id === '4') {
+      router.push('/(tabs)/vault');
+    }
   };
 
   return (
