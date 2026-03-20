@@ -25,6 +25,11 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="pin-login" options={{ headerShown: false }} />
+          <Stack.Screen name="account-open-terms" options={{ headerShown: false }} />
+          <Stack.Screen name="account-open-profile" options={{ headerShown: false }} />
+          <Stack.Screen name="account-open-banking" options={{ headerShown: false }} />
+          <Stack.Screen name="account-open-verify" options={{ headerShown: false }} />
+          <Stack.Screen name="account-open-complete" options={{ headerShown: false }} />
           <Stack.Screen name="signup-start" options={{ headerShown: false }} />
           <Stack.Screen name="signup-account" options={{ headerShown: false }} />
           <Stack.Screen name="signup-pin" options={{ headerShown: false }} />
@@ -33,7 +38,7 @@ export default function RootLayout() {
           <Stack.Screen name="transfer-account" options={{ headerShown: false }} />
           <Stack.Screen name="transfer-amount" options={{ headerShown: false }} />
           <Stack.Screen name="transfer-memo" options={{ headerShown: false }} />
-        <Stack.Screen name="transfer-confirm" options={{ headerShown: false }} />
+          <Stack.Screen name="transfer-confirm" options={{ headerShown: false }} />
           <Stack.Screen name="report" options={{ headerShown: false }} />
           <Stack.Screen name="report-monthly" options={{ headerShown: false }} />
         </Stack>

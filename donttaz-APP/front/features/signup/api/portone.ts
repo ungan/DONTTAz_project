@@ -4,6 +4,10 @@ export interface PortOneVerificationResult {
   identityVerificationId: string;
 }
 
+export interface RequestPortOneIdentityVerificationOptions {
+  callbackPath?: string;
+}
+
 export interface PortOneVerificationQuery {
   identityVerificationId: string | null;
   errorCode: string | null;
@@ -11,7 +15,16 @@ export interface PortOneVerificationQuery {
 }
 
 export const PORTONE_CALLBACK_PATH = '/signup-start';
-export const PORTONE_CALLBACK_URL = `front://${PORTONE_CALLBACK_PATH}`;
+
+function normalizeCallbackPath(callbackPath: string) {
+  return callbackPath.startsWith('/') ? callbackPath : `/${callbackPath}`;
+}
+
+export function buildPortOneCallbackUrl(callbackPath: string = PORTONE_CALLBACK_PATH) {
+  return `front://${normalizeCallbackPath(callbackPath)}`;
+}
+
+export const PORTONE_CALLBACK_URL = buildPortOneCallbackUrl(PORTONE_CALLBACK_PATH);
 
 function getBackendOrigin() {
   const baseUrl = process.env.EXPO_PUBLIC_BASE_URL;
@@ -69,8 +82,32 @@ export function parsePortOneCallbackUrl(url: string): PortOneVerificationQuery {
   }
 }
 
-export async function requestPortOneIdentityVerification(): Promise<PortOneVerificationResult> {
-  const redirectUri = PORTONE_CALLBACK_URL;
+export function matchesPortOneCallbackPath(url: string, callbackPath: string) {
+  try {
+    const parsedUrl = new URL(url);
+    const normalizedCallbackPath = normalizeCallbackPath(callbackPath);
+    const candidatePath = parsedUrl.pathname || (parsedUrl.host ? `/${parsedUrl.host}` : '');
+
+    if (candidatePath === normalizedCallbackPath) {
+      return true;
+    }
+
+    const nestedUrl = parsedUrl.searchParams.get('url');
+
+    if (nestedUrl) {
+      return matchesPortOneCallbackPath(decodeURIComponent(nestedUrl), normalizedCallbackPath);
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+export async function requestPortOneIdentityVerification(
+  options: RequestPortOneIdentityVerificationOptions = {}
+): Promise<PortOneVerificationResult> {
+  const redirectUri = buildPortOneCallbackUrl(options.callbackPath ?? PORTONE_CALLBACK_PATH);
   const authUrl = buildPortOneTestPageUrl(redirectUri);
 
   const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);

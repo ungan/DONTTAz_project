@@ -55,6 +55,56 @@ export const mockHandlers: MockHandler[] = [
   },
   {
     method: 'GET',
+    url: '/users/me',
+    response: {
+      status: 'SUCCESS',
+      message: '사용자 정보 조회 성공',
+      data: {
+        userId: 105,
+        email: 'hong@example.com',
+        name: '홍길동',
+        phoneNumber: '01012345678',
+      },
+    },
+  },
+  {
+    method: 'GET',
+    url: '/accounts/demand-deposits/products',
+    response: {
+      status: 'SUCCESS',
+      message: '수시입출금 상품 목록 조회 성공',
+      data: {
+        products: [
+          {
+            accountTypeUniqueNo: 'mock-demand-deposit-001',
+            bankCode: '092',
+            bankName: 'DONTTAZ',
+            accountTypeCode: '01',
+            accountTypeName: '수시입출금',
+            accountName: 'DONTTAZ 입출금통장',
+            accountDescription: '생활비 관리를 위한 기본 입출금 통장',
+            accountType: 'DEMAND_DEPOSIT',
+          },
+        ],
+      },
+    },
+  },
+  {
+    method: 'POST',
+    url: '/accounts',
+    response: {
+      status: 'SUCCESS',
+      message: '계좌가 성공적으로 생성되었습니다.',
+      data: {
+        bankCode: '092',
+        accountNo: '0921234567890123',
+        currency: 'KRW',
+        currencyName: '원화',
+      },
+    },
+  },
+  {
+    method: 'GET',
     url: '/accounts/:accountId/transactions',
     response: paymentHistory,
   },

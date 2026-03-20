@@ -1,8 +1,13 @@
 import { useState } from 'react';
 import { isAxiosError } from 'axios';
 import { router } from 'expo-router';
-import { getStoredAccessToken, getStoredRefreshToken } from '@/shared/api/auth-storage';
+import {
+  getStoredAccessToken,
+  getStoredRefreshToken,
+  storeAuthTokens,
+} from '@/shared/api/auth-storage';
 import { logoutApi } from '../api/logout';
+import { refreshApi } from '../api/refresh';
 import { clearLocalAuthSession } from './clear-local-auth-session';
 
 function shouldClearSessionOnError(error: unknown) {
@@ -10,7 +15,11 @@ function shouldClearSessionOnError(error: unknown) {
     return false;
   }
 
-  return error.response?.status === 400 || error.response?.status === 401;
+  return (
+    error.response?.status === 400 ||
+    error.response?.status === 401 ||
+    error.response?.status === 403
+  );
 }
 
 function getLogoutErrorMessage(error: unknown) {
@@ -36,6 +45,18 @@ export function useLogout() {
       ]);
 
       if (!accessToken) {
+        if (refreshToken) {
+          const refreshResponse = await refreshApi({ refreshToken });
+          const refreshedAccessToken = refreshResponse.data.accessToken;
+          const refreshedRefreshToken = refreshResponse.data.refreshToken;
+
+          await storeAuthTokens(refreshedAccessToken, refreshedRefreshToken);
+          await logoutApi({ refreshToken: refreshedRefreshToken });
+          await clearLocalAuthSession();
+          router.replace('/login');
+          return true;
+        }
+
         await clearLocalAuthSession();
         router.replace('/login');
         return true;
