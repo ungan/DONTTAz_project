@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useBankAccountStore } from '@/entities/bank-account';
 import { getPaymentsApi } from '../api/get-payments';
 import type { Transaction, TransactionType } from '../types/payment';
@@ -18,16 +18,24 @@ export function usePayments(params?: UsePaymentsParams) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!accountId) return;
+    if (!accountId) {
+      setTransactions([]);
+      setError(null);
+      setIsPending(false);
+      return;
+    }
 
     setIsPending(true);
     setError(null);
 
     getPaymentsApi({ accountId, ...params })
       .then((res) => setTransactions(res.data.transactions))
-      .catch(() => setError('거래내역을 불러오지 못했습니다.'))
+      .catch(() => {
+        setTransactions([]);
+        setError('거래내역을 불러오지 못했습니다.');
+      })
       .finally(() => setIsPending(false));
-  }, [accountId]);
+  }, [accountId, params?.endDate, params?.page, params?.size, params?.startDate, params?.type]);
 
   return { transactions, isPending, error };
 }

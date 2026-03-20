@@ -1,0 +1,47 @@
+{
+  "status": "SUCCESS",
+  "message": "계좌 목록 조회에 성공했습니다.",
+  "data": {
+    "totalBalance": 1250000,
+    "accountList": [
+      {
+        "accountId": 42,
+        "bankCode": "092",
+        "bankName": "DONTTAZ",
+        "userName": "홍길동",
+        "accountNo": "092-***-890123",
+        "accountNumber": "0921234567890123",
+        "accountName": "생활비 통장",
+        "accountTypeCode": "01",
+        "accountTypeName": "수시입출금",
+        "accountCreatedDate": "20260320",
+        "accountExpiryDate": "20360320",
+        "dailyTransferLimit": "3000000",
+        "oneTimeTransferLimit": "1000000",
+        "accountBalance": "500000",
+        "lastTransactionDate": "20260320",
+        "currency": "KRW",
+        "isPrimary": true
+      },
+      {
+        "accountId": 43,
+        "bankCode": "092",
+        "bankName": "DONTTAZ",
+        "userName": "홍길동",
+        "accountNo": "092-***-567890",
+        "accountNumber": "0929876543217890",
+        "accountName": "비상금 통장",
+        "accountTypeCode": "01",
+        "accountTypeName": "수시입출금",
+        "accountCreatedDate": "20260318",
+        "accountExpiryDate": "20360318",
+        "dailyTransferLimit": "3000000",
+        "oneTimeTransferLimit": "1000000",
+        "accountBalance": "750000",
+        "lastTransactionDate": "20260319",
+        "currency": "KRW",
+        "isPrimary": false
+      }
+    ]
+  }
+}

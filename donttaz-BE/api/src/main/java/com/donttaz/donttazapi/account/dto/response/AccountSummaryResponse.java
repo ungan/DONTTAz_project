@@ -48,7 +48,7 @@ public record AccountSummaryResponse(
         @Schema(description = "통화 코드", example = "KRW")
         String currency,
 
-        @Schema(description = "대표계좌 여부", example = "true")
+        @Schema(description = "대표 계좌 여부", example = "true")
         Boolean isPrimary
 ) {
 }

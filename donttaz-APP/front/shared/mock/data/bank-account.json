@@ -3,7 +3,9 @@
   "message": "계좌가 성공적으로 등록되었습니다.",
   "data": {
     "accountId": 42,
-    "bankName": "돈땃쥐 은행",
-    "balance": 500000
+    "bankName": "신한은행",
+    "balance": 500000,
+    "accountNo": "110123456789",
+    "accountName": "생활비 통장"
   }
 }

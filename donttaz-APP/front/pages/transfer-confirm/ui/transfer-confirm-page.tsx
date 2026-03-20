@@ -6,15 +6,16 @@ import { styles } from './transfer-confirm-page.styles';
 
 export function TransferConfirmPage() {
   const router = useRouter();
-  const { depositAccountName, depositBankName, depositAccountNumber, amount } =
+  const { depositBankName, depositAccountNumber, amount, depositMemo } =
     useLocalSearchParams<{
-      depositAccountName: string;
       depositBankName: string;
       depositAccountNumber: string;
       amount: string;
+      depositMemo?: string;
     }>();
 
   const formattedAmount = Number(amount).toLocaleString('ko-KR');
+  const recipientLabel = depositMemo?.trim() || '받는 계좌';
 
   const handleExtra = () => {
     router.replace('/transfer-account');
@@ -33,8 +34,8 @@ export function TransferConfirmPage() {
       />
 
       <Text style={styles.amountText}>
-        <Text style={styles.amountNameText}>{depositAccountName}</Text>
-        {`에게 ${formattedAmount}원을\n보냈어요`}
+        <Text style={styles.amountNameText}>{recipientLabel}</Text>
+        {`으로 ${formattedAmount}원을\n보냈어요`}
       </Text>
 
       <View style={styles.accountSection}>
@@ -44,7 +45,7 @@ export function TransferConfirmPage() {
 
       <View style={styles.buttonRow}>
         <TouchableOpacity style={styles.extraButton} onPress={handleExtra} activeOpacity={0.8}>
-          <Text style={styles.extraButtonLabel}>추가이체</Text>
+          <Text style={styles.extraButtonLabel}>추가 이체</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm} activeOpacity={0.8}>
           <Text style={styles.confirmButtonLabel}>확인</Text>
