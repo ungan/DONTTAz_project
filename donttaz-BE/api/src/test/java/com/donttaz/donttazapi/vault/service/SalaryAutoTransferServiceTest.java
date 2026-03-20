@@ -98,6 +98,7 @@ class SalaryAutoTransferServiceTest {
 
         Account primaryAccount = Account.builder()
                 .userId(1L)
+                .accountNumber("123456789")
                 .isPrimary(true)
                 .status(AccountStatus.ACTIVE)
                 .build();
@@ -105,9 +106,9 @@ class SalaryAutoTransferServiceTest {
         TransactionQueryResult txResult = new TransactionQueryResult(0, 0, true, Collections.emptyList());
 
         given(userRepository.findAllBySalaryDay(todayDay)).willReturn(List.of(user));
-        given(accountRepository.findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(anyLong(), any()))
+        given(accountRepository.findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(eq(1L), any()))
                 .willReturn(Optional.of(primaryAccount));
-        given(bankingClient.getTransactions(anyLong(), anyString(), any(), any(), anyString(), anyInt(), anyInt()))
+        given(bankingClient.getTransactions(eq(1L), eq("123456789"), any(), any(), eq("DEPOSIT"), anyInt(), anyInt()))
                 .willReturn(txResult);
 
         // when

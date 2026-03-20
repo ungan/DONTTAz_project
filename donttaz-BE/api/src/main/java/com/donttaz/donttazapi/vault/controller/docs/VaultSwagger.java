@@ -1,5 +1,6 @@
 package com.donttaz.donttazapi.vault.controller.docs;
 
+import com.donttaz.donttazapi.vault.domain.VaultKind;
 import com.donttaz.donttazapi.vault.dto.request.CreateVaultRequest;
 import com.donttaz.donttazapi.vault.dto.request.SetWishlistGoalRequest;
 import com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest;
@@ -12,7 +13,6 @@ import com.donttaz.donttazapi.vault.dto.response.VaultSummaryResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultWithdrawResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -21,72 +21,53 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.List;
+
 @Tag(name = "금고", description = "가상 금고 관리 API")
 @SecurityRequirement(name = "bearerAuth")
 public interface VaultSwagger {
 
-        @Operation(summary = "금고 생성", description = "새로운 금고(LOCKED 상태)를 생성합니다. 사용자는 '기본(DEFAULT)' 1개와 '위시리스트(WISHLIST)' 1개를 동시에 보유할 수 있습니다. 위시리스트 생성 시 목표 정보가 필수입니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = CreateVaultRequest.class), examples = @ExampleObject(name = "목표 금고 생성 요청", value = "{\n  \"vaultKind\": \"WISHLIST\",\n  \"wishName\": \"제주도 여행\",\n  \"goalAmount\": 500000,\n  \"targetDate\": \"2026-12-31\"\n}"))))
-
+        @Operation(summary = "금고 생성", description = "새로운 금고를 생성합니다. 사용자는 '기본(DEFAULT)' 1개와 '위시리스트(WISHLIST)' 1개를 동시에 보유할 수 있습니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = CreateVaultRequest.class))))
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "금고 생성 성공")
         })
         ResponseEntity<CreateVaultResponse> createVault(@RequestBody CreateVaultRequest request);
 
-        @Operation(summary = "내 금고 목록 조회", description = "사용자의 활성화된(LOCKED) 금고 목록을 조회합니다. 각 금고의 현재 잔액과 적용 이자율 정보가 포함됩니다.")
+        @Operation(summary = "내 금고 목록 조회", description = "사용자의 활성화된 금고 목록(기본 + 위시리스트)을 통합 조회합니다.")
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "금고 목록 조회 성공")
         })
         ResponseEntity<VaultListResponse> getMyVaults();
 
-        @Operation(summary = "금고 상세 조회", description = "특정 금고의 상세 정보를 조회합니다. 목표 금액, 달성 날짜, 현재 적용 중인 이자율 및 중도 출금 횟수(withdrawalCount)를 확인할 수 있습니다.")
+        @Operation(summary = "금고 상세 조회", description = "특정 유형(DEFAULT/WISHLIST)의 금고 상세 정보를 조회합니다.")
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "금고 상세 조회 성공"),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "금고를 찾을 수 없음")
         })
-        ResponseEntity<VaultSummaryResponse> getVaultDetail(@PathVariable Long vaultId);
+        ResponseEntity<VaultSummaryResponse> getVaultDetail(@PathVariable VaultKind kind, @PathVariable Long vaultId);
 
-        @Operation(summary = "금고 입금", description = "금고로 자금을 입금합니다. 입금 시 'DEPOSIT' 타입의 거래 내역이 생성됩니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaultDepositRequest.class), examples = @ExampleObject(name = "금고 입금 요청", value = "{\n  \"accountNo\": \"10000000001\",\n  \"amount\": 100000\n}"))))
-
+        @Operation(summary = "금고 입금", description = "특정 유형의 금고로 자금을 입금합니다.")
         @ApiResponses({
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "금고 입금 성공"),
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "금고를 찾을 수 없음")
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "금고 입금 성공")
         })
-        ResponseEntity<VaultDepositResponse> deposit(
-                        @PathVariable Long vaultId,
+        ResponseEntity<VaultDepositResponse> deposit(@PathVariable VaultKind kind, @PathVariable Long vaultId,
                         @RequestBody VaultDepositRequest request);
 
-        @Operation(summary = "금고 긴급 출금", description = "금고에서 자금을 긴급(중도) 출금합니다. 이자율 패널티(기본형 0.1%p, 위시리스트 0.3%p)가 발생하며, 위시리스트는 최대 3회로 출금이 제한됩니다. 출금 후 잔액이 0원이 되면 위시리스트 금고는 해지(BROKEN)됩니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = VaultWithdrawRequest.class), examples = @ExampleObject(name = "금고 긴급 출금 요청", value = "{\n  \"accountNo\": \"10000000001\",\n  \"amount\": 50000\n}"))))
-
+        @Operation(summary = "금고 긴급 출금", description = "특정 유형의 금고에서 자금을 긴급 출금합니다. 위시리스트는 최대 3회 제한이 적용됩니다.")
         @ApiResponses({
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "금고 긴급 출금 성공"),
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "금고를 찾을 수 없음"),
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "금고 잔액 부족 또는 잘못된 상태")
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "금고 긴급 출금 성공")
         })
-        ResponseEntity<VaultWithdrawResponse> withdraw(
-                        @PathVariable Long vaultId,
+        ResponseEntity<VaultWithdrawResponse> withdraw(@PathVariable VaultKind kind, @PathVariable Long vaultId,
                         @RequestBody VaultWithdrawRequest request);
 
-        @Operation(summary = "위시리스트 목표 설정/수정", description = "금고의 위시리스트 목표 이름, 금액, 날짜를 설정하거나 수정합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = SetWishlistGoalRequest.class), examples = @ExampleObject(name = "위시리스트 목표 설정 요청", value = "{\n  \"wishName\": \"노트북 구매\",\n  \"goalAmount\": 1500000,\n  \"targetDate\": \"2026-12-31\"\n}"))))
-        @ApiResponses({
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "위시리스트 목표 설정 성공"),
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "금고를 찾을 수 없음")
-        })
-        ResponseEntity<VaultSummaryResponse> setWishlistGoal(
-                        @PathVariable Long vaultId,
+        @Operation(summary = "위시리스트 목표 설정/수정", description = "위시리스트 금고의 이름과 금액을 설정/수정합니다.")
+        ResponseEntity<VaultSummaryResponse> setWishlistGoal(@PathVariable Long vaultId,
                         @RequestBody SetWishlistGoalRequest request);
 
-        @Operation(summary = "금고 목표 달성 (정상 해지) 처리", description = "금고를 정상적으로 해지(MATURED) 처리합니다. 누적된 이자와 원금이 합산 지급되며, 위시리스트의 경우 중도 출금 이력이 없으면 원금의 1%가 보너스로 지급됩니다.")
-        @ApiResponses({
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "목표 달성 처리 성공"),
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "금고를 찾을 수 없음")
-        })
+        @Operation(summary = "위시리스트 목표 달성 (정상 해지) 처리", description = "위시리스트 금고를 정상적으로 해지 처리합니다. 무출금 시 1% 보너스가 지급됩니다.")
         ResponseEntity<VaultSummaryResponse> achieveWishlist(@PathVariable Long vaultId);
 
-        @Operation(summary = "금고 거래 내역 조회", description = "특정 금고의 모든 입/출금 및 해지 내역을 최신순으로 조회합니다. 거래 타입은 DEPOSIT(입금), WITHDRAW_BROKEN(긴급 출금), WITHDRAW_MATURED(정상 해지) 중 하나입니다.")
-        @ApiResponses({
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "거래 내역 조회 성공"),
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "금고를 찾을 수 없음")
-        })
-        ResponseEntity<com.donttaz.donttazapi.common.response.ApiResponse<java.util.List<VaultHistoryResponse>>> getVaultHistory(
-                        @PathVariable Long vaultId);
+        @Operation(summary = "금고 거래 내역 조회", description = "특정 유형의 금고 거래 내역을 조회합니다.")
+        ResponseEntity<com.donttaz.donttazapi.common.response.ApiResponse<List<VaultHistoryResponse>>> getVaultHistory(
+                        @PathVariable VaultKind kind, @PathVariable Long vaultId);
 }

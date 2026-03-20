@@ -1,6 +1,7 @@
 package com.donttaz.donttazapi.vault.controller;
 
 import com.donttaz.donttazapi.vault.controller.docs.VaultSwagger;
+import com.donttaz.donttazapi.vault.domain.VaultKind;
 import com.donttaz.donttazapi.vault.dto.request.CreateVaultRequest;
 import com.donttaz.donttazapi.vault.dto.request.SetWishlistGoalRequest;
 import com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest;
@@ -16,13 +17,7 @@ import com.donttaz.donttazapi.vault.service.VaultQueryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -49,62 +44,59 @@ public class VaultController implements VaultSwagger {
         @Override
         @GetMapping
         public ResponseEntity<VaultListResponse> getMyVaults() {
-                return ResponseEntity.ok(
-                                vaultQueryService.getMyVaults());
+                return ResponseEntity.ok(vaultQueryService.getMyVaults());
         }
 
         @Override
-        @GetMapping("/{vaultId}")
+        @GetMapping("/{kind}/{vaultId}")
         public ResponseEntity<VaultSummaryResponse> getVaultDetail(
+                        @PathVariable VaultKind kind,
                         @PathVariable Long vaultId) {
-                return ResponseEntity.ok(
-                                vaultQueryService.getVaultDetail(vaultId));
+                return ResponseEntity.ok(vaultQueryService.getVaultDetail(vaultId, kind));
         }
 
         @Override
-        @PostMapping("/{vaultId}/deposit")
+        @PostMapping("/{kind}/{vaultId}/deposit")
         public ResponseEntity<VaultDepositResponse> deposit(
+                        @PathVariable VaultKind kind,
                         @PathVariable Long vaultId,
                         @Valid @RequestBody VaultDepositRequest request) {
-                return ResponseEntity.ok(
-                                vaultCommandService.deposit(vaultId, request));
+                return ResponseEntity.ok(vaultCommandService.deposit(vaultId, kind, request));
         }
 
         @Override
-        @PostMapping("/{vaultId}/withdraw")
+        @PostMapping("/{kind}/{vaultId}/withdraw")
         public ResponseEntity<VaultWithdrawResponse> withdraw(
+                        @PathVariable VaultKind kind,
                         @PathVariable Long vaultId,
                         @Valid @RequestBody VaultWithdrawRequest request) {
-                return ResponseEntity.ok(
-                                vaultCommandService.withdraw(vaultId, request));
+                return ResponseEntity.ok(vaultCommandService.withdraw(vaultId, kind, request));
         }
 
         @Override
-        @PatchMapping("/{vaultId}/wishlist")
+        @PatchMapping("/wishlist/{vaultId}")
         public ResponseEntity<VaultSummaryResponse> setWishlistGoal(
                         @PathVariable Long vaultId,
                         @Valid @RequestBody SetWishlistGoalRequest request) {
                 vaultCommandService.setWishlistGoal(vaultId, request);
-                return ResponseEntity.ok(
-                                vaultQueryService.getVaultDetail(vaultId));
+                return ResponseEntity.ok(vaultQueryService.getVaultDetail(vaultId, VaultKind.WISHLIST));
         }
 
         @Override
-        @PostMapping("/{vaultId}/achieve")
+        @PostMapping("/wishlist/{vaultId}/achieve")
         public ResponseEntity<VaultSummaryResponse> achieveWishlist(
                         @PathVariable Long vaultId) {
                 vaultCommandService.achieveWishlist(vaultId);
-                return ResponseEntity.ok(
-                                vaultQueryService.getVaultDetail(vaultId));
+                return ResponseEntity.ok(vaultQueryService.getVaultDetail(vaultId, VaultKind.WISHLIST));
         }
 
         @Override
-        @GetMapping("/{vaultId}/history")
+        @GetMapping("/{kind}/{vaultId}/history")
         public ResponseEntity<com.donttaz.donttazapi.common.response.ApiResponse<List<VaultHistoryResponse>>> getVaultHistory(
+                        @PathVariable VaultKind kind,
                         @PathVariable Long vaultId) {
                 return ResponseEntity.ok(
                                 com.donttaz.donttazapi.common.response.ApiResponse.success("거래 내역 조회 성공",
-                                                vaultQueryService.getVaultHistory(vaultId)));
+                                                vaultQueryService.getVaultHistory(vaultId, kind)));
         }
-
 }

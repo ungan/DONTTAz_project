@@ -1,7 +1,6 @@
 package com.donttaz.donttazapi.vault.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.LocalDate;
 import lombok.Builder;
 
 @Builder
@@ -17,9 +16,8 @@ public record VaultSummaryResponse(
 
         @Schema(description = "목표 금액", example = "500000") Long goalAmount,
 
-        @Schema(description = "목표 날짜", example = "2026-12-31") LocalDate targetDate,
-
         @Schema(description = "기본 연 이자율", example = "5.0") Double baseInterestRate,
+
         @Schema(description = "페널티 연 이자율", example = "0.1") Double penaltyInterestRate,
         @Schema(description = "중도 출금 횟수", example = "1") Integer withdrawalCount) {
 }

@@ -29,6 +29,10 @@ public class VaultHistory extends BaseEntity {
     private Long vaultId;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "vault_kind", nullable = false, length = 20)
+    private VaultKind vaultKind;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "transaction_type", nullable = false, length = 20)
     private TransactionType transactionType;
 
@@ -39,8 +43,10 @@ public class VaultHistory extends BaseEntity {
     private Long interestPaid;
 
     @Builder
-    private VaultHistory(Long vaultId, TransactionType transactionType, Long amount, Long interestPaid) {
+    private VaultHistory(Long vaultId, VaultKind vaultKind, TransactionType transactionType, Long amount,
+            Long interestPaid) {
         this.vaultId = vaultId;
+        this.vaultKind = vaultKind;
         this.transactionType = transactionType;
         this.amount = amount;
         this.interestPaid = interestPaid != null ? interestPaid : 0L;
