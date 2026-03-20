@@ -7,6 +7,8 @@ import com.donttaz.donttazapi.account.dto.request.AccountTransferRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountTransferLimitUpdateRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountWithdrawalRequest;
 import com.donttaz.donttazapi.account.dto.request.CreateAccountRequest;
+import com.donttaz.donttazapi.account.dto.request.OneWonVerificationConfirmRequest;
+import com.donttaz.donttazapi.account.dto.request.OneWonVerificationRequest;
 import com.donttaz.donttazapi.account.dto.response.AccountBalanceResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountCloseResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountDepositResponse;
@@ -17,13 +19,14 @@ import com.donttaz.donttazapi.account.dto.response.AccountTransferLimitUpdateRes
 import com.donttaz.donttazapi.account.dto.response.AccountTransferResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountWithdrawalResponse;
 import com.donttaz.donttazapi.account.dto.response.CreateAccountResponse;
+import com.donttaz.donttazapi.account.dto.response.OneWonVerificationConfirmResponse;
+import com.donttaz.donttazapi.account.dto.response.OneWonVerificationRequestResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionListResponse;
 import com.donttaz.donttazapi.account.service.AccountCreationService;
 import com.donttaz.donttazapi.account.service.AccountManagementService;
 import com.donttaz.donttazapi.account.service.AccountQueryService;
 import com.donttaz.donttazapi.account.service.AccountTransferService;
-import com.donttaz.donttazapi.common.response.ApiResponse;
 
 import jakarta.validation.Valid;
 import java.time.LocalDate;
@@ -122,6 +125,22 @@ public class AccountController implements AccountSwagger {
                         @Valid @RequestBody AccountTransferRequest request) {
                 return ResponseEntity.ok(
                                 accountTransferService.transfer(request));
+        }
+
+        @PostMapping("/verification/one-won")
+        @Override
+        public ResponseEntity<OneWonVerificationRequestResponse> requestOneWonVerification(
+                        @Valid @RequestBody OneWonVerificationRequest request) {
+                return ResponseEntity.ok(
+                                accountTransferService.requestOneWonVerification(request));
+        }
+
+        @PostMapping("/verification/one-won/confirm")
+        @Override
+        public ResponseEntity<OneWonVerificationConfirmResponse> confirmOneWonVerification(
+                        @Valid @RequestBody OneWonVerificationConfirmRequest request) {
+                return ResponseEntity.ok(
+                                accountTransferService.confirmOneWonVerification(request));
         }
 
         @PatchMapping("/{accountNo}/transfer-limit")

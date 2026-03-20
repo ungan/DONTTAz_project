@@ -1,9 +1,11 @@
 package com.donttaz.donttazapi.infra.banking.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public record FinApiOneWonConfirmResponse(
-        String responseCode,
-        String responseMessage,
-        boolean verified,
-        String consentToken
+        @JsonProperty("Header")
+        FinApiResponseHeader header,
+        @JsonProperty("REC")
+        FinApiOneWonConfirmRec rec
 ) {
 }

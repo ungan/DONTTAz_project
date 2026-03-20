@@ -8,28 +8,39 @@ import static org.mockito.Mockito.verify;
 
 import com.donttaz.donttazapi.account.domain.Account;
 import com.donttaz.donttazapi.account.domain.AccountStatus;
+import com.donttaz.donttazapi.account.domain.AccountVerification;
 import com.donttaz.donttazapi.account.domain.Transaction;
 import com.donttaz.donttazapi.account.dto.request.AccountDepositRequest;
-import com.donttaz.donttazapi.account.dto.request.AccountTransferRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountTransferLimitUpdateRequest;
+import com.donttaz.donttazapi.account.dto.request.AccountTransferRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountWithdrawalRequest;
+import com.donttaz.donttazapi.account.dto.request.OneWonVerificationConfirmRequest;
+import com.donttaz.donttazapi.account.dto.request.OneWonVerificationRequest;
 import com.donttaz.donttazapi.account.dto.response.AccountDepositResponse;
-import com.donttaz.donttazapi.account.dto.response.AccountTransferResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountTransferLimitUpdateResponse;
+import com.donttaz.donttazapi.account.dto.response.AccountTransferResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountWithdrawalResponse;
+import com.donttaz.donttazapi.account.dto.response.OneWonVerificationConfirmResponse;
+import com.donttaz.donttazapi.account.dto.response.OneWonVerificationRequestResponse;
 import com.donttaz.donttazapi.account.repository.AccountRepository;
+import com.donttaz.donttazapi.account.repository.AccountVerificationRepository;
 import com.donttaz.donttazapi.account.repository.TransactionRepository;
 import com.donttaz.donttazapi.account.service.dto.AccountDepositCommand;
 import com.donttaz.donttazapi.account.service.dto.AccountDepositResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
 import com.donttaz.donttazapi.account.service.dto.AccountWithdrawalCommand;
 import com.donttaz.donttazapi.account.service.dto.AccountWithdrawalResult;
+import com.donttaz.donttazapi.account.service.dto.OneWonVerificationConfirmCommand;
+import com.donttaz.donttazapi.account.service.dto.OneWonVerificationConfirmResult;
+import com.donttaz.donttazapi.account.service.dto.OneWonVerificationRequestCommand;
+import com.donttaz.donttazapi.account.service.dto.OneWonVerificationRequestResult;
 import com.donttaz.donttazapi.account.service.dto.TransferCommand;
 import com.donttaz.donttazapi.account.service.dto.TransferLimitCommand;
 import com.donttaz.donttazapi.account.service.dto.TransferResult;
 import com.donttaz.donttazapi.account.service.dto.TransferTransactionResult;
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
 import com.donttaz.donttazapi.infra.banking.client.BankingClient;
+import com.donttaz.donttazapi.infra.banking.config.FinApiProperties;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -44,26 +55,32 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class AccountTransferServiceTest {
 
-        @Mock
-        private BankingClient bankingClient;
+    @Mock
+    private BankingClient bankingClient;
 
-        @Mock
-        private AccountSyncService accountSyncService;
+    @Mock
+    private AccountSyncService accountSyncService;
 
     @Mock
     private AccountRepository accountRepository;
 
     @Mock
+    private AccountVerificationRepository accountVerificationRepository;
+
+    @Mock
     private TransactionRepository transactionRepository;
 
-        @Mock
-        private CurrentUserProvider currentUserProvider;
+    @Mock
+    private CurrentUserProvider currentUserProvider;
 
-        @InjectMocks
-        private AccountTransferService accountTransferService;
+    @Mock
+    private FinApiProperties finApiProperties;
+
+    @InjectMocks
+    private AccountTransferService accountTransferService;
 
     @Test
-    @DisplayName("입금 요청 시 외부 호출 후 내부 거래 이력을 저장한다.")
+    @DisplayName("입금 요청 시 외부 API를 호출하고 거래 이력을 저장한다.")
     void depositSuccess() {
         AccountDepositRequest request = new AccountDepositRequest("100000000", "deposit");
         Account account = createAccount("0016174648358792", 100000000L);
@@ -72,7 +89,7 @@ class AccountTransferServiceTest {
                 .willReturn(new AccountDepositResult("59", "20240401"));
         given(accountSyncService.syncAccountSnapshot("0016174648358792")).willReturn(account);
 
-                AccountDepositResponse response = accountTransferService.deposit("0016174648358792", request);
+        AccountDepositResponse response = accountTransferService.deposit("0016174648358792", request);
 
         ArgumentCaptor<AccountDepositCommand> commandCaptor = ArgumentCaptor.forClass(AccountDepositCommand.class);
         ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
@@ -93,7 +110,7 @@ class AccountTransferServiceTest {
     }
 
     @Test
-    @DisplayName("출금 요청 시 외부 호출 후 내부 거래 이력을 저장한다.")
+    @DisplayName("출금 요청 시 외부 API를 호출하고 거래 이력을 저장한다.")
     void withdrawalSuccess() {
         AccountWithdrawalRequest request = new AccountWithdrawalRequest("100000", "withdrawal");
         Account account = createAccount("0016174648358792", 500000L);
@@ -102,7 +119,7 @@ class AccountTransferServiceTest {
                 .willReturn(new AccountWithdrawalResult("60", "20240401"));
         given(accountSyncService.syncAccountSnapshot("0016174648358792")).willReturn(account);
 
-                AccountWithdrawalResponse response = accountTransferService.withdrawal("0016174648358792", request);
+        AccountWithdrawalResponse response = accountTransferService.withdrawal("0016174648358792", request);
 
         ArgumentCaptor<AccountWithdrawalCommand> commandCaptor = ArgumentCaptor.forClass(AccountWithdrawalCommand.class);
         ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
@@ -123,7 +140,7 @@ class AccountTransferServiceTest {
     }
 
     @Test
-    @DisplayName("계좌 이체 요청 시 외부 호출 후 출금/입금 거래를 저장한다.")
+    @DisplayName("계좌 이체 요청 시 출금 거래를 저장하고 보유한 입금 계좌도 동기화한다.")
     void transferSuccess() {
         AccountTransferRequest request = new AccountTransferRequest(
                 "0204667768182760",
@@ -161,7 +178,7 @@ class AccountTransferServiceTest {
     }
 
     @Test
-    @DisplayName("이체 한도 변경 요청 시 외부 API 호출 후 계좌 스냅샷을 동기화한다")
+    @DisplayName("이체 한도 변경 요청 시 외부 API를 호출하고 계좌 스냅샷을 갱신한다.")
     void updateTransferLimitSuccess() {
         AccountTransferLimitUpdateRequest request = new AccountTransferLimitUpdateRequest("20000000", "100000000");
         AccountDetailResult result = new AccountDetailResult(
@@ -194,6 +211,77 @@ class AccountTransferServiceTest {
         assertThat(response.accountNo()).isEqualTo("0016174648358792");
         assertThat(response.oneTimeTransferLimit()).isEqualTo("20000000");
         assertThat(response.dailyTransferLimit()).isEqualTo("100000000");
+    }
+
+    @Test
+    @DisplayName("1원 송금 인증 요청 시 식별문구만 전송하고 검증 이력을 저장한다.")
+    void requestOneWonVerificationSuccess() {
+        OneWonVerificationRequest request = new OneWonVerificationRequest("0011214764051239");
+        given(currentUserProvider.getCurrentUserId()).willReturn(1L);
+        given(finApiProperties.getOneWonAuthText()).willReturn("DONTTAZ");
+        given(finApiProperties.getInstitutionCode()).willReturn("00100");
+        given(finApiProperties.getOneWonExpirationSeconds()).willReturn(300);
+        given(bankingClient.requestOneWonVerification(any(Long.class), any(OneWonVerificationRequestCommand.class)))
+                .willReturn(new OneWonVerificationRequestResult("7", "0011214764051239"));
+
+        OneWonVerificationRequestResponse response = accountTransferService.requestOneWonVerification(request);
+
+        ArgumentCaptor<OneWonVerificationRequestCommand> commandCaptor =
+                ArgumentCaptor.forClass(OneWonVerificationRequestCommand.class);
+        ArgumentCaptor<AccountVerification> verificationCaptor = ArgumentCaptor.forClass(AccountVerification.class);
+
+        verify(bankingClient).requestOneWonVerification(org.mockito.ArgumentMatchers.eq(1L), commandCaptor.capture());
+        verify(accountVerificationRepository).save(verificationCaptor.capture());
+
+        String authText = commandCaptor.getValue().authText();
+
+        assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0011214764051239");
+        assertThat(authText).isEqualTo("DONTTAZ");
+        assertThat(verificationCaptor.getValue().getVerificationId()).isEqualTo("7");
+        assertThat(verificationCaptor.getValue().getAccountNumber()).isEqualTo("0011214764051239");
+        assertThat(verificationCaptor.getValue().getBankCode()).isEqualTo("00100");
+        assertThat(verificationCaptor.getValue().getAuthCode()).isNull();
+        assertThat(verificationCaptor.getValue().isVerified()).isFalse();
+        assertThat(response.verificationId()).isEqualTo("7");
+        assertThat(response.accountNo()).isEqualTo("0011214764051239");
+    }
+
+    @Test
+    @DisplayName("1원 송금 인증코드 검증 시 외부 API를 호출하고 인증 상태를 완료로 변경한다.")
+    void confirmOneWonVerificationSuccess() {
+        OneWonVerificationConfirmRequest request = new OneWonVerificationConfirmRequest("7", "8212");
+        AccountVerification verification = AccountVerification.builder()
+                .verificationId("7")
+                .userId(1L)
+                .bankCode("00100")
+                .accountNumber("0011214764051239")
+                .authCode(null)
+                .expiredAt(LocalDateTime.now().plusMinutes(5))
+                .verified(false)
+                .consentToken(null)
+                .build();
+        given(currentUserProvider.getCurrentUserId()).willReturn(1L);
+        given(finApiProperties.getOneWonAuthText()).willReturn("DONTTAZ");
+        given(accountVerificationRepository.findByVerificationIdAndUserId("7", 1L))
+                .willReturn(Optional.of(verification));
+        given(bankingClient.confirmOneWonVerification(any(Long.class), any(OneWonVerificationConfirmCommand.class)))
+                .willReturn(new OneWonVerificationConfirmResult("SUCCESS", true, "7", "0011214764051239"));
+
+        OneWonVerificationConfirmResponse response = accountTransferService.confirmOneWonVerification(request);
+
+        ArgumentCaptor<OneWonVerificationConfirmCommand> commandCaptor =
+                ArgumentCaptor.forClass(OneWonVerificationConfirmCommand.class);
+        verify(bankingClient).confirmOneWonVerification(org.mockito.ArgumentMatchers.eq(1L), commandCaptor.capture());
+
+        assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0011214764051239");
+        assertThat(commandCaptor.getValue().authText()).isEqualTo("DONTTAZ");
+        assertThat(commandCaptor.getValue().authCode()).isEqualTo("8212");
+        assertThat(verification.isVerified()).isTrue();
+        assertThat(verification.getAuthCode()).isEqualTo("8212");
+        assertThat(response.verificationId()).isEqualTo("7");
+        assertThat(response.accountNo()).isEqualTo("0011214764051239");
+        assertThat(response.status()).isEqualTo("SUCCESS");
+        assertThat(response.verified()).isTrue();
     }
 
     private Account createAccount(String accountNumber, Long balance) {

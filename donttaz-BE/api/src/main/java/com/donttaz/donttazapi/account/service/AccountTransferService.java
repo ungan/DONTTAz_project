@@ -1,24 +1,34 @@
 package com.donttaz.donttazapi.account.service;
 
 import com.donttaz.donttazapi.account.domain.Account;
+import com.donttaz.donttazapi.account.domain.AccountVerification;
 import com.donttaz.donttazapi.account.domain.Transaction;
 import com.donttaz.donttazapi.account.domain.TransactionType;
 import com.donttaz.donttazapi.account.dto.request.AccountDepositRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountTransferLimitUpdateRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountTransferRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountWithdrawalRequest;
+import com.donttaz.donttazapi.account.dto.request.OneWonVerificationConfirmRequest;
+import com.donttaz.donttazapi.account.dto.request.OneWonVerificationRequest;
+import com.donttaz.donttazapi.account.dto.response.OneWonVerificationConfirmResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountDepositResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountTransferItemResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountTransferLimitUpdateResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountTransferResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountWithdrawalResponse;
+import com.donttaz.donttazapi.account.dto.response.OneWonVerificationRequestResponse;
 import com.donttaz.donttazapi.account.repository.AccountRepository;
+import com.donttaz.donttazapi.account.repository.AccountVerificationRepository;
 import com.donttaz.donttazapi.account.repository.TransactionRepository;
 import com.donttaz.donttazapi.account.service.dto.AccountDepositCommand;
 import com.donttaz.donttazapi.account.service.dto.AccountDepositResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
 import com.donttaz.donttazapi.account.service.dto.AccountWithdrawalCommand;
 import com.donttaz.donttazapi.account.service.dto.AccountWithdrawalResult;
+import com.donttaz.donttazapi.account.service.dto.OneWonVerificationRequestCommand;
+import com.donttaz.donttazapi.account.service.dto.OneWonVerificationConfirmCommand;
+import com.donttaz.donttazapi.account.service.dto.OneWonVerificationConfirmResult;
+import com.donttaz.donttazapi.account.service.dto.OneWonVerificationRequestResult;
 import com.donttaz.donttazapi.account.service.dto.TransferCommand;
 import com.donttaz.donttazapi.account.service.dto.TransferLimitCommand;
 import com.donttaz.donttazapi.account.service.dto.TransferResult;
@@ -27,6 +37,7 @@ import com.donttaz.donttazapi.common.exception.CustomException;
 import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
 import com.donttaz.donttazapi.infra.banking.client.BankingClient;
+import com.donttaz.donttazapi.infra.banking.config.FinApiProperties;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -48,21 +59,87 @@ public class AccountTransferService {
     private final BankingClient bankingClient;
     private final AccountSyncService accountSyncService;
     private final AccountRepository accountRepository;
+    private final AccountVerificationRepository accountVerificationRepository;
     private final TransactionRepository transactionRepository;
     private final CurrentUserProvider currentUserProvider;
+    private final FinApiProperties finApiProperties;
 
     public AccountTransferService(
             BankingClient bankingClient,
             AccountSyncService accountSyncService,
             AccountRepository accountRepository,
+            AccountVerificationRepository accountVerificationRepository,
             TransactionRepository transactionRepository,
-            CurrentUserProvider currentUserProvider
+            CurrentUserProvider currentUserProvider,
+            FinApiProperties finApiProperties
     ) {
         this.bankingClient = bankingClient;
         this.accountSyncService = accountSyncService;
         this.accountRepository = accountRepository;
+        this.accountVerificationRepository = accountVerificationRepository;
         this.transactionRepository = transactionRepository;
         this.currentUserProvider = currentUserProvider;
+        this.finApiProperties = finApiProperties;
+    }
+
+    public OneWonVerificationRequestResponse requestOneWonVerification(OneWonVerificationRequest request) {
+        Long userId = resolveCurrentUserId();
+        String authText = buildAuthText();
+        OneWonVerificationRequestResult result = bankingClient.requestOneWonVerification(
+                userId,
+                new OneWonVerificationRequestCommand(request.accountNo(), authText)
+        );
+
+        accountVerificationRepository.save(
+                AccountVerification.builder()
+                        .verificationId(result.transactionUniqueNo())
+                        .userId(userId)
+                        .bankCode(finApiProperties.getInstitutionCode())
+                        .accountNumber(result.accountNo())
+                        .authCode(null)
+                        .expiredAt(LocalDateTime.now().plusSeconds(finApiProperties.getOneWonExpirationSeconds()))
+                        .verified(false)
+                        .consentToken(null)
+                        .build()
+        );
+
+        return OneWonVerificationRequestResponse.builder()
+                .verificationId(result.transactionUniqueNo())
+                .accountNo(result.accountNo())
+                .build();
+    }
+
+    public OneWonVerificationConfirmResponse confirmOneWonVerification(OneWonVerificationConfirmRequest request) {
+        Long userId = resolveCurrentUserId();
+        AccountVerification verification = accountVerificationRepository
+                .findByVerificationIdAndUserId(request.verificationId(), userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_VERIFICATION_NOT_FOUND));
+
+        if (verification.isExpired(LocalDateTime.now())) {
+            throw new CustomException(ErrorCode.ACCOUNT_VERIFICATION_EXPIRED);
+        }
+
+        OneWonVerificationConfirmResult result = bankingClient.confirmOneWonVerification(
+                userId,
+                new OneWonVerificationConfirmCommand(
+                        verification.getAccountNumber(),
+                        buildAuthText(),
+                        request.authCode()
+                )
+        );
+
+        if (!result.verified()) {
+            throw new CustomException(ErrorCode.ACCOUNT_VERIFICATION_FAILED);
+        }
+
+        verification.markVerified(request.authCode());
+
+        return OneWonVerificationConfirmResponse.builder()
+                .verificationId(result.transactionUniqueNo())
+                .accountNo(result.accountNo())
+                .status(result.status())
+                .verified(true)
+                .build();
     }
 
     public AccountDepositResponse deposit(String accountNo, AccountDepositRequest request) {
@@ -261,6 +338,18 @@ public class AccountTransferService {
         return transactions.stream()
                 .filter(transaction -> accountNo.equals(transaction.accountNo()))
                 .findFirst();
+    }
+
+    private String buildAuthText() {
+        String prefix = finApiProperties.getOneWonAuthText() == null ? "" : finApiProperties.getOneWonAuthText().trim();
+        if (prefix.isBlank()) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST, "one-won auth text is not configured.");
+        }
+
+        if (prefix.length() > 20) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST, "one-won auth text must be 20 characters or fewer.");
+        }
+        return prefix;
     }
 
     private Long resolveCurrentUserId() {
