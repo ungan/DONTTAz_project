@@ -1,36 +1,55 @@
 import { create } from 'zustand';
 
 interface TransferState {
+  withdrawalBankName: string;
+  withdrawalAccountName: string;
+  withdrawalAccountLabel: string;
+  withdrawalAccountNo: string;
   bankName: string;
-  depositBankCode: string;
   depositAccountNumber: string;
   amount: number;
   withdrawalMemo: string;
   depositMemo: string;
-  pinToken: string;
-  setAccountInfo: (bankName: string, depositBankCode: string, depositAccountNumber: string) => void;
+  setWithdrawalAccount: (
+    withdrawalBankName: string,
+    withdrawalAccountName: string,
+    withdrawalAccountLabel: string,
+    withdrawalAccountNo: string
+  ) => void;
+  setAccountInfo: (bankName: string, depositAccountNumber: string) => void;
   setAmount: (amount: number) => void;
   setMemo: (withdrawalMemo: string, depositMemo: string) => void;
-  setPinToken: (pinToken: string) => void;
   clear: () => void;
 }
 
 const initialState = {
+  withdrawalBankName: '',
+  withdrawalAccountName: '',
+  withdrawalAccountLabel: '',
+  withdrawalAccountNo: '',
   bankName: '',
-  depositBankCode: '',
   depositAccountNumber: '',
   amount: 0,
   withdrawalMemo: '',
   depositMemo: '',
-  pinToken: '',
 };
 
 export const useTransferStore = create<TransferState>((set) => ({
   ...initialState,
-  setAccountInfo: (bankName, depositBankCode, depositAccountNumber) =>
-    set({ bankName, depositBankCode, depositAccountNumber }),
+  setWithdrawalAccount: (
+    withdrawalBankName,
+    withdrawalAccountName,
+    withdrawalAccountLabel,
+    withdrawalAccountNo
+  ) =>
+    set({
+      withdrawalBankName,
+      withdrawalAccountName,
+      withdrawalAccountLabel,
+      withdrawalAccountNo,
+    }),
+  setAccountInfo: (bankName, depositAccountNumber) => set({ bankName, depositAccountNumber }),
   setAmount: (amount) => set({ amount }),
   setMemo: (withdrawalMemo, depositMemo) => set({ withdrawalMemo, depositMemo }),
-  setPinToken: (pinToken) => set({ pinToken }),
   clear: () => set(initialState),
 }));

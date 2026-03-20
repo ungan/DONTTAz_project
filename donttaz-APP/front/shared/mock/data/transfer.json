@@ -2,11 +2,15 @@
   "status": "SUCCESS",
   "message": "이체가 성공적으로 완료되었습니다.",
   "data": {
-    "transactionId": 2048,
-    "depositAccountName": "김싸피",
-    "depositBankName": "신한은행",
-    "amount": 50000,
-    "fee": 0,
-    "withdrawalBalance": 450000
+    "transactions": [
+      {
+        "transactionUniqueNo": "2048",
+        "accountNo": "0016174648358792",
+        "transactionDate": "20260320",
+        "transactionType": "2",
+        "transactionTypeName": "출금(이체)",
+        "transactionAccountNo": "110123456789"
+      }
+    ]
   }
 }

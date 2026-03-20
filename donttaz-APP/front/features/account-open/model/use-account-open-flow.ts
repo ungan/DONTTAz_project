@@ -1,5 +1,6 @@
 import { isAxiosError } from 'axios';
 import { router } from 'expo-router';
+import { useBankAccountStore } from '@/entities/bank-account';
 import { createAccountApi } from '../api/create-account';
 import { getCurrentUserSummaryApi } from '../api/get-current-user-summary';
 import { getDemandDepositProductsApi } from '../api/get-demand-deposit-products';
@@ -317,11 +318,22 @@ export function useAccountOpenFlow() {
       const response = await createAccountApi({
         accountTypeUniqueNo: accountOpenState.selectedAccountTypeUniqueNo,
       });
+      const currentAccount = useBankAccountStore.getState();
+      const createdBankName = accountOpenState.selectedBankName || 'DONTTAZ';
+      const createdAccountAlias = buildAccountAlias(accountOpenState.customerName);
+
+      useBankAccountStore.getState().setAccount(
+        currentAccount.accountId,
+        createdBankName,
+        currentAccount.balance ?? 0,
+        response.data.accountNo,
+        accountOpenState.selectedProductName || createdAccountAlias
+      );
 
       accountOpenState.setCreatedAccountResult(
-        accountOpenState.selectedProductName || accountOpenState.selectedBankName || 'DONTTAZ 예금',
+        accountOpenState.selectedProductName || createdBankName || 'DONTTAZ 예금',
         response.data.accountNo,
-        buildAccountAlias(accountOpenState.customerName)
+        createdAccountAlias
       );
       accountOpenState.setCurrentStep('complete');
       router.push('/account-open-complete' as never);

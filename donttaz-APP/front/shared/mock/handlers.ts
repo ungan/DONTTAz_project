@@ -2,6 +2,7 @@ import paymentHistory from './data/payment-history.json';
 import transfer from './data/transfer.json';
 import monthlyReport from './data/monthly-report.json';
 import yearlyReport from './data/yearly-report.json';
+import accounts from './data/accounts.json';
 // import burndown from './data/burndown.json';
 import burndown from './data/burndown-surviving.json'
 
@@ -102,6 +103,11 @@ export const mockHandlers: MockHandler[] = [
         currencyName: '원화',
       },
     },
+  },
+  {
+    method: 'GET',
+    url: '/accounts',
+    response: accounts,
   },
   {
     method: 'GET',

@@ -5,14 +5,15 @@ import { usePayments } from '@/entities/payment';
 import { useBankAccountStore } from '@/entities/bank-account';
 import { styles } from './payment-history.styles';
 
-const CATEGORY_ICON_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }> = {
-  '식비/카페': { icon: 'cafe-outline', color: '#F59E0B' },
-  '식비': { icon: 'restaurant-outline', color: '#F97316' },
-  '편의점/마트': { icon: 'storefront-outline', color: '#10B981' },
-  '교통': { icon: 'bus-outline', color: '#3B82F6' },
-  '쇼핑': { icon: 'bag-outline', color: '#EC4899' },
-  '기타/이벤트': { icon: 'gift-outline', color: '#8B5CF6' },
-};
+const CATEGORY_ICON_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }> =
+  {
+    '식비/카페': { icon: 'cafe-outline', color: '#F59E0B' },
+    식비: { icon: 'restaurant-outline', color: '#F97316' },
+    '편의점/마트': { icon: 'storefront-outline', color: '#10B981' },
+    교통: { icon: 'bus-outline', color: '#3B82F6' },
+    쇼핑: { icon: 'bag-outline', color: '#EC4899' },
+    '기타/이벤트': { icon: 'gift-outline', color: '#8B5CF6' },
+  };
 
 const DEFAULT_ICON = { icon: 'card-outline' as keyof typeof Ionicons.glyphMap, color: '#6B7280' };
 
@@ -22,7 +23,7 @@ interface PaymentHistoryProps {
 
 export function PaymentHistory({ onViewAllPress }: PaymentHistoryProps) {
   const { accountId } = useBankAccountStore();
-  const { transactions, isPending } = usePayments();
+  const { transactions, isPending, error } = usePayments();
 
   if (!accountId) {
     return (
@@ -46,11 +47,16 @@ export function PaymentHistory({ onViewAllPress }: PaymentHistoryProps) {
       </View>
 
       <View style={styles.list}>
-        {isPending ? (
-          <Text style={styles.emptyText}>불러오는 중...</Text>
-        ) : (
+        {isPending ? <Text style={styles.emptyText}>불러오는 중...</Text> : null}
+        {!isPending && error ? <Text style={styles.emptyText}>{error}</Text> : null}
+        {!isPending && !error && transactions.length === 0 ? (
+          <Text style={styles.emptyText}>표시할 거래내역이 없습니다.</Text>
+        ) : null}
+        {!isPending &&
+          !error &&
           transactions.slice(0, 3).map((item) => {
             const { icon, color } = CATEGORY_ICON_MAP[item.category] ?? DEFAULT_ICON;
+
             return (
               <View key={item.transactionId} style={styles.item}>
                 <View style={[styles.iconBox, { backgroundColor: `${color}1A` }]}>
@@ -63,8 +69,7 @@ export function PaymentHistory({ onViewAllPress }: PaymentHistoryProps) {
                 </Text>
               </View>
             );
-          })
-        )}
+          })}
       </View>
     </View>
   );

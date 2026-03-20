@@ -6,7 +6,15 @@ interface BankAccountState {
   accountId: number | null;
   bankName: string | null;
   balance: number | null;
-  setAccount: (accountId: number, bankName: string, balance: number) => void;
+  accountNo: string | null;
+  accountName: string | null;
+  setAccount: (
+    accountId: number | null,
+    bankName: string,
+    balance: number,
+    accountNo?: string | null,
+    accountName?: string | null
+  ) => void;
   clearAccount: () => void;
 }
 
@@ -16,10 +24,18 @@ export const useBankAccountStore = create<BankAccountState>()(
       accountId: null,
       bankName: null,
       balance: null,
-      setAccount: (accountId, bankName, balance) =>
-        set({ accountId, bankName, balance }),
+      accountNo: null,
+      accountName: null,
+      setAccount: (accountId, bankName, balance, accountNo = null, accountName = null) =>
+        set({ accountId, bankName, balance, accountNo, accountName }),
       clearAccount: () =>
-        set({ accountId: null, bankName: null, balance: null }),
+        set({
+          accountId: null,
+          bankName: null,
+          balance: null,
+          accountNo: null,
+          accountName: null,
+        }),
     }),
     {
       name: 'bank-account-store',
