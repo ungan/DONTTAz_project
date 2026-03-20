@@ -5,7 +5,7 @@ import java.util.List;
 import lombok.Builder;
 
 @Builder
-@Schema(description = "금고 목록 응답")
+@Schema(description = "금고 목록 통합 응답")
 public record VaultListResponse(
-                @Schema(description = "금고 목록") List<VaultSummaryResponse> vaults) {
+        @Schema(description = "활성화된 금고 목록 (기본 + 위시리스트)") List<VaultSummaryResponse> vaults) {
 }

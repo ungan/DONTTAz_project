@@ -63,6 +63,7 @@ public class VaultCommandService {
                                         .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
                         return CreateVaultResponse.builder()
                                         .vaultId(vault.getId())
+                                        .vaultKind(VaultKind.DEFAULT.name())
                                         .lockedAmount(vault.getLockedAmount())
                                         .status(vault.getStatus().name())
                                         .build();
@@ -83,6 +84,7 @@ public class VaultCommandService {
 
                 return CreateVaultResponse.builder()
                                 .vaultId(savedVault.getId())
+                                .vaultKind(VaultKind.WISHLIST.name())
                                 .lockedAmount(savedVault.getLockedAmount())
                                 .status(savedVault.getStatus().name())
                                 .build();
