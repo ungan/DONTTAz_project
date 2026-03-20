@@ -112,6 +112,6 @@ public class CompanySalaryService {
                                 withdrawalSummary);
 
                 // 시스템 이체 실행
-                accountTransferService.transferBySystem(companyAccount.getUserId(), transferRequest);
+                accountTransferService.transfer(companyAccount.getUserId(), transferRequest);
         }
 }
