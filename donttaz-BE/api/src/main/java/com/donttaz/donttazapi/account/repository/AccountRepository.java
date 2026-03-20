@@ -31,6 +31,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
         Optional<Account> findByUserIdAndAccountNumberAndIsDeletedFalse(Long userId, String accountNumber);
 
+        Optional<Account> findByAccountNumberAndIsDeletedFalse(String accountNumber); // 계좌 번호 기반 조회용
+
         Optional<Account> findByUserIdAndBankCodeAndAccountNumber(Long userId, String bankCode, String accountNumber);
 
         @Modifying(clearAutomatically = true, flushAutomatically = true)
