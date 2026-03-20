@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
+        List<Account> findByUserId(Long userId);
+
         List<Account> findAllByUserIdAndStatusAndIsDeletedFalse(Long userId, AccountStatus status);
 
         Optional<Account> findByAccountIdAndUserIdAndStatusAndIsDeletedFalse(Long accountId, Long userId,
