@@ -1,0 +1,63 @@
+import { StyleSheet } from 'react-native';
+
+export const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#F9F9F9',
+    width: '100%',
+    height: 339,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  labelLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  wishlistLink: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  amount: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 16,
+  },
+  imageContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  vaultImage: {
+    width: 219,
+    height: 132,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'center',
+  },
+  button: {
+    paddingVertical: 10,
+    paddingHorizontal: 28,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+  buttonText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#111827',
+  },
+});

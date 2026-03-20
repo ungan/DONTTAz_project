@@ -4,7 +4,10 @@ import monthlyReport from './data/monthly-report.json';
 import yearlyReport from './data/yearly-report.json';
 import accounts from './data/accounts.json';
 // import burndown from './data/burndown.json';
-import burndown from './data/burndown-surviving.json'
+import burndown from './data/burndown-surviving.json';
+import vault from './data/vault.json';
+import vaultTransactions from './data/vault-transactions.json';
+import vaultWishlist from './data/vault-wishlist.json';
 
 type MockHandler = {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -133,5 +136,30 @@ export const mockHandlers: MockHandler[] = [
     method: 'GET',
     url: '/control/burndown',
     response: burndown,
+  },
+  {
+    method: 'GET',
+    url: '/api/v1/vaults',
+    response: vault,
+  },
+  {
+    method: 'GET',
+    url: '/api/v1/vaults/:vaultId/history',
+    response: vaultTransactions,
+  },
+  {
+    method: 'GET',
+    url: '/api/v1/vaults/:vaultId/wishlist',
+    response: vaultWishlist,
+  },
+  {
+    method: 'POST',
+    url: '/api/v1/vaults/:vaultId/wishlist',
+    response: {},
+  },
+  {
+    method: 'PATCH',
+    url: '/api/v1/vaults/:vaultId/wishlist/:wishId',
+    response: {},
   },
 ];

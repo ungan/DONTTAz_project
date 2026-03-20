@@ -1,14 +1,19 @@
 {
   "expo": {
-    "name": "front",
-    "slug": "front",
+    "name": "DONTTAz",
+    "slug": "DONTTAz",
+    "owner": "cnchoo25",
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "front",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hoein.front",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "edgeToEdgeEnabled": true,
@@ -20,7 +25,8 @@
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -29,8 +35,14 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "7d1241cc-34cb-4f14-b25f-1ff46516f0e8"
+        "projectId": "8cb413da-2c46-4b3c-9e77-d1969ceeb594"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/8cb413da-2c46-4b3c-9e77-d1969ceeb594"
     }
   }
 }
