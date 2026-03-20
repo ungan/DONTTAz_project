@@ -73,6 +73,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -121,8 +122,13 @@ public class FinApiBankingClient implements BankingClient {
         this.finApiBankingMapper = finApiBankingMapper;
         this.userKeyProvider = userKeyProvider;
         this.objectMapper = objectMapper;
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(finApiProperties.getConnectTimeoutMillis());
+        requestFactory.setReadTimeout(finApiProperties.getReadTimeoutMillis());
+
         this.restClient = RestClient.builder()
                 .baseUrl(finApiProperties.getBaseUrl())
+                .requestFactory(requestFactory)
                 .build();
     }
 

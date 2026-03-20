@@ -1,6 +1,7 @@
 package com.donttaz.donttazapi.account.service;
 
 import com.donttaz.donttazapi.account.domain.Account;
+import com.donttaz.donttazapi.account.domain.AccountStatus;
 import com.donttaz.donttazapi.account.domain.AccountVerification;
 import com.donttaz.donttazapi.account.domain.Transaction;
 import com.donttaz.donttazapi.account.domain.TransactionType;
@@ -10,12 +11,12 @@ import com.donttaz.donttazapi.account.dto.request.AccountTransferRequest;
 import com.donttaz.donttazapi.account.dto.request.AccountWithdrawalRequest;
 import com.donttaz.donttazapi.account.dto.request.OneWonVerificationConfirmRequest;
 import com.donttaz.donttazapi.account.dto.request.OneWonVerificationRequest;
-import com.donttaz.donttazapi.account.dto.response.OneWonVerificationConfirmResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountDepositResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountTransferItemResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountTransferLimitUpdateResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountTransferResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountWithdrawalResponse;
+import com.donttaz.donttazapi.account.dto.response.OneWonVerificationConfirmResponse;
 import com.donttaz.donttazapi.account.dto.response.OneWonVerificationRequestResponse;
 import com.donttaz.donttazapi.account.repository.AccountRepository;
 import com.donttaz.donttazapi.account.repository.AccountVerificationRepository;
@@ -25,9 +26,9 @@ import com.donttaz.donttazapi.account.service.dto.AccountDepositResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
 import com.donttaz.donttazapi.account.service.dto.AccountWithdrawalCommand;
 import com.donttaz.donttazapi.account.service.dto.AccountWithdrawalResult;
-import com.donttaz.donttazapi.account.service.dto.OneWonVerificationRequestCommand;
 import com.donttaz.donttazapi.account.service.dto.OneWonVerificationConfirmCommand;
 import com.donttaz.donttazapi.account.service.dto.OneWonVerificationConfirmResult;
+import com.donttaz.donttazapi.account.service.dto.OneWonVerificationRequestCommand;
 import com.donttaz.donttazapi.account.service.dto.OneWonVerificationRequestResult;
 import com.donttaz.donttazapi.account.service.dto.TransferCommand;
 import com.donttaz.donttazapi.account.service.dto.TransferLimitCommand;
@@ -55,6 +56,8 @@ public class AccountTransferService {
 
     private static final Logger log = LoggerFactory.getLogger(AccountTransferService.class);
     private static final String TRANSACTION_SOURCE_FIN_API = "FIN_API";
+    private static final String TRANSFER_COUNTERPARTY_NAME = "TRANSFER";
+    private static final String PAYMENT_SETTLEMENT_SUMMARY = "PAYMENT_SETTLEMENT";
 
     private final BankingClient bankingClient;
     private final AccountSyncService accountSyncService;
@@ -138,10 +141,16 @@ public class AccountTransferService {
     }
 
     public AccountDepositResponse deposit(String accountNo, AccountDepositRequest request) {
+        return deposit(resolveUserIdForAccountOperation(accountNo), accountNo, request);
+    }
+
+    public AccountDepositResponse deposit(Long userId, String accountNo, AccountDepositRequest request) {
         AccountDepositResult result = bankingClient.deposit(
-                resolveCurrentUserId(),
-                new AccountDepositCommand(accountNo, request.transactionBalance(), request.transactionSummary()));
+                userId,
+                new AccountDepositCommand(accountNo, request.transactionBalance(), request.transactionSummary())
+        );
         persistTransaction(
+                userId,
                 accountNo,
                 result.transactionUniqueNo(),
                 TransactionType.DEPOSIT,
@@ -156,10 +165,10 @@ public class AccountTransferService {
     }
 
     public AccountTransferResponse transfer(AccountTransferRequest request) {
-        return transferBySystem(resolveCurrentUserId(), request);
+        return transfer(resolveUserIdForAccountOperation(request.withdrawalAccountNo()), request);
     }
 
-    public AccountTransferResponse transferBySystem(Long userId, AccountTransferRequest request) {
+    public AccountTransferResponse transfer(Long userId, AccountTransferRequest request) {
         TransferResult result = bankingClient.transfer(
                 userId,
                 new TransferCommand(
@@ -167,7 +176,9 @@ public class AccountTransferService {
                         request.depositTransactionSummary(),
                         request.transactionBalance(),
                         request.withdrawalAccountNo(),
-                        request.withdrawalTransactionSummary()));
+                        request.withdrawalTransactionSummary()
+                )
+        );
         persistTransferTransactions(userId, request, result);
 
         return AccountTransferResponse.builder()
@@ -203,10 +214,16 @@ public class AccountTransferService {
     }
 
     public AccountWithdrawalResponse withdrawal(String accountNo, AccountWithdrawalRequest request) {
+        return withdrawal(resolveUserIdForAccountOperation(accountNo), accountNo, request);
+    }
+
+    public AccountWithdrawalResponse withdrawal(Long userId, String accountNo, AccountWithdrawalRequest request) {
         AccountWithdrawalResult result = bankingClient.withdrawal(
-                resolveCurrentUserId(),
-                new AccountWithdrawalCommand(accountNo, request.transactionBalance(), request.transactionSummary()));
+                userId,
+                new AccountWithdrawalCommand(accountNo, request.transactionBalance(), request.transactionSummary())
+        );
         persistTransaction(
+                userId,
                 accountNo,
                 result.transactionUniqueNo(),
                 TransactionType.WITHDRAWAL,
@@ -221,13 +238,15 @@ public class AccountTransferService {
     }
 
     private void persistTransaction(
+            Long userId,
             String accountNo,
             String externalTransactionId,
             TransactionType type,
             String amount,
             String summary,
-            String transactionDate) {
-        Account account = accountSyncService.syncAccountSnapshot(accountNo);
+            String transactionDate
+    ) {
+        Account account = accountSyncService.syncAccountSnapshot(userId, accountNo);
         transactionRepository.save(
                 Transaction.builder()
                         .account(account)
@@ -247,14 +266,16 @@ public class AccountTransferService {
 
     private void persistTransferTransactions(Long userId, AccountTransferRequest request, TransferResult result) {
         try {
-            Account withdrawalAccount = accountSyncService.syncAccountSnapshot(request.withdrawalAccountNo());
+            Account withdrawalAccount = accountSyncService.syncAccountSnapshot(userId, request.withdrawalAccountNo());
             saveTransferTransaction(
                     withdrawalAccount,
                     findTransactionByAccountNo(result.transactions(), request.withdrawalAccountNo()).orElse(null),
                     TransactionType.WITHDRAWAL,
                     request.transactionBalance(),
                     request.withdrawalTransactionSummary(),
-                    request.depositAccountNo());
+                    request.depositAccountNo(),
+                    resolveTransferCounterpartyName(TransactionType.WITHDRAWAL, request)
+            );
 
             syncOwnedDepositAccount(userId, request.depositAccountNo())
                     .ifPresent(account -> saveTransferTransaction(
@@ -263,7 +284,9 @@ public class AccountTransferService {
                             TransactionType.DEPOSIT,
                             request.transactionBalance(),
                             request.depositTransactionSummary(),
-                            request.withdrawalAccountNo()));
+                            request.withdrawalAccountNo(),
+                            resolveTransferCounterpartyName(TransactionType.DEPOSIT, request)
+                    ));
         } catch (RuntimeException exception) {
             log.warn(
                     "transfer persistence failed withdrawalAccountNo={} depositAccountNo={} message={}",
@@ -279,7 +302,7 @@ public class AccountTransferService {
         }
 
         try {
-            return Optional.of(accountSyncService.syncAccountSnapshot(accountNo));
+            return Optional.of(accountSyncService.syncAccountSnapshot(userId, accountNo));
         } catch (RuntimeException exception) {
             log.warn("deposit account snapshot sync skipped accountNo={} message={}", accountNo,
                     exception.getMessage());
@@ -293,7 +316,9 @@ public class AccountTransferService {
             TransactionType type,
             String amount,
             String summary,
-            String counterpartyAccountNo) {
+            String counterpartyAccountNo,
+            String counterpartyName
+    ) {
         if (transactionResult == null) {
             log.warn("transfer transaction result missing accountNo={} direction={}", account.getAccountNumber(), type);
             return;
@@ -309,7 +334,7 @@ public class AccountTransferService {
                         .txTypeName(resolveSourceTransactionTypeName(type, transactionResult.transactionTypeName()))
                         .amount(toLong(amount))
                         .balanceSnapshot(toLong(account.getBalance()))
-                        .counterpartyName("TRANSFER")
+                        .counterpartyName(counterpartyName)
                         .counterpartyAccountNo(counterpartyAccountNo)
                         .transactionSummary(summary)
                         .transactionAt(toTransactionAt(transactionResult.transactionDate()))
@@ -317,8 +342,17 @@ public class AccountTransferService {
                         .build());
     }
 
-    private Optional<TransferTransactionResult> findTransactionByAccountNo(List<TransferTransactionResult> transactions,
-            String accountNo) {
+    private String resolveTransferCounterpartyName(TransactionType type, AccountTransferRequest request) {
+        if (type == TransactionType.WITHDRAWAL
+                && PAYMENT_SETTLEMENT_SUMMARY.equals(request.depositTransactionSummary())
+                && request.withdrawalTransactionSummary() != null
+                && !request.withdrawalTransactionSummary().isBlank()) {
+            return request.withdrawalTransactionSummary();
+        }
+        return TRANSFER_COUNTERPARTY_NAME;
+    }
+
+    private Optional<TransferTransactionResult> findTransactionByAccountNo(List<TransferTransactionResult> transactions, String accountNo) {
         return transactions.stream()
                 .filter(transaction -> accountNo.equals(transaction.accountNo()))
                 .findFirst();
@@ -338,6 +372,20 @@ public class AccountTransferService {
 
     private Long resolveCurrentUserId() {
         return currentUserProvider.getCurrentUserId();
+    }
+
+    private Long resolveUserIdForAccountOperation(String accountNo) {
+        try {
+            return resolveCurrentUserId();
+        } catch (CustomException exception) {
+            if (exception.getErrorCode() != ErrorCode.AUTHENTICATION_REQUIRED) {
+                throw exception;
+            }
+
+            return accountRepository.findFirstByAccountNumberAndStatusAndIsDeletedFalse(accountNo, AccountStatus.ACTIVE)
+                    .map(Account::getUserId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
+        }
     }
 
     private Long toLong(String value) {

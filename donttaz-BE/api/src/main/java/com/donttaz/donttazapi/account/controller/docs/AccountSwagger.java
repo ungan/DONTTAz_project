@@ -86,23 +86,41 @@ public interface AccountSwagger {
 
         @Operation(
                         summary = "계좌 입금",
-                        description = "계좌번호(accountNo)로 입금 API를 호출합니다.",
+                        description = "지정한 계좌번호(accountNo)로 입금을 수행합니다. Swagger Execute에서 바로 테스트할 수 있는 계좌 입금 API입니다.",
+                        security = {},
                         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                                         required = true,
                                         content = @Content(
                                                         mediaType = "application/json",
                                                         schema = @Schema(implementation = AccountDepositRequest.class),
+                                                        examples = {
+                                                                        @ExampleObject(
+                                                                                        name = "계좌 입금 요청",
+                                                                                        description = "기본 입금 요청 예시",
+                                                                                        value = """
+                                                                                                        {
+                                                                                                          "transactionBalance": "1000",
+                                                                                                          "transactionSummary": "입금"
+                                                                                                        }
+                                                                                                        """)
+                                                        })))
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                                        responseCode = "200",
+                                        description = "계좌 입금 성공",
+                                        content = @Content(
+                                                        mediaType = "application/json",
+                                                        schema = @Schema(implementation = AccountDepositResponse.class),
                                                         examples = @ExampleObject(
-                                                                        name = "계좌 입금 요청",
+                                                                        name = "계좌 입금 성공 응답",
                                                                         value = """
                                                                                         {
-                                                                                          "transactionBalance": "100000000",
-                                                                                          "transactionSummary": "입금"
+                                                                                          "transactionUniqueNo": "152308",
+                                                                                          "transactionDate": "20260320"
                                                                                         }
-                                                                                        """))))
-        @ApiResponses({
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 입금 성공"),
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
+                                                                                        """))),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "계좌를 찾을 수 없음")
         })
         ResponseEntity<AccountDepositResponse> deposit(
                         @PathVariable("accountNo") String accountNo,

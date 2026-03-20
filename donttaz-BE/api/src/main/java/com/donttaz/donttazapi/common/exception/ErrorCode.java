@@ -28,6 +28,8 @@ public enum ErrorCode {
     VAULT_ALREADY_ACHIEVED(HttpStatus.CONFLICT, "VAULT_ALREADY_ACHIEVED", "이미 목표가 달성된 금고입니다."),
     VAULT_INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "VAULT_INSUFFICIENT_BALANCE", "금고 잔액이 부족합니다."),
     VAULT_GOAL_NOT_MET(HttpStatus.BAD_REQUEST, "VAULT_GOAL_NOT_MET", "목표 금액에 도달하지 않았습니다."),
+    MERCHANT_NOT_FOUND(HttpStatus.NOT_FOUND, "MERCHANT_NOT_FOUND", "가맹점을 찾을 수 없습니다."),
+    MERCHANT_ALREADY_EXISTS(HttpStatus.CONFLICT, "MERCHANT_ALREADY_EXISTS", "이미 등록된 가맹점입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.");
 
     private final HttpStatus httpStatus;

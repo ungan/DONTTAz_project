@@ -25,9 +25,6 @@ public class FinApiProperties {
     @NotBlank
     private String fintechAppNo;
 
-    /**
-     * App-wide finAPI key. This is expected to be injected from environment or secret storage.
-     */
     private String apiKey;
 
     @NotBlank
@@ -36,4 +33,10 @@ public class FinApiProperties {
 
     @Positive
     private int oneWonExpirationSeconds;
+
+    @Positive
+    private int connectTimeoutMillis = 3000;
+
+    @Positive
+    private int readTimeoutMillis = 10000;
 }

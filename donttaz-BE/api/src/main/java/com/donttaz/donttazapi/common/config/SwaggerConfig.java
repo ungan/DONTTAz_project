@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
-import io.swagger.v3.oas.annotations.servers.Server;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.responses.ApiResponse;
@@ -32,19 +31,19 @@ public class SwaggerConfig {
                     ApiResponses apiResponses = operation.getResponses();
 
                     if (!apiResponses.containsKey("400")) {
-                        apiResponses.addApiResponse("400", createApiResponse("잘못된 요청 (Bad Request)"));
+                        apiResponses.addApiResponse("400", createApiResponse("Bad Request"));
                     }
                     if (!apiResponses.containsKey("401")) {
-                        apiResponses.addApiResponse("401", createApiResponse("인증 실패 (Unauthorized)"));
+                        apiResponses.addApiResponse("401", createApiResponse("Unauthorized"));
                     }
                     if (!apiResponses.containsKey("403")) {
-                        apiResponses.addApiResponse("403", createApiResponse("권한 없음 (Forbidden)"));
+                        apiResponses.addApiResponse("403", createApiResponse("Forbidden"));
                     }
                     if (!apiResponses.containsKey("404")) {
-                        apiResponses.addApiResponse("404", createApiResponse("리소스를 찾을 수 없음 (Not Found)"));
+                        apiResponses.addApiResponse("404", createApiResponse("Not Found"));
                     }
                     if (!apiResponses.containsKey("500")) {
-                        apiResponses.addApiResponse("500", createApiResponse("서버 내부 오류 (Internal Server Error)"));
+                        apiResponses.addApiResponse("500", createApiResponse("Internal Server Error"));
                     }
                 }));
     }
