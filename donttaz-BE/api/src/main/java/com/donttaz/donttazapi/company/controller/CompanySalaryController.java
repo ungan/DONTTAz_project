@@ -27,7 +27,7 @@ public class CompanySalaryController {
     private final CompanySalaryService companySalaryService;
 
     /**
-     * 신규 기업 정보를 시스템에 등록함.
+     * 기업 정보 생성
      */
     @Operation(summary = "기업 등록", description = "새로운 기업 정보를 시스템에 등록함.")
     @PostMapping("/company")
@@ -36,16 +36,16 @@ public class CompanySalaryController {
     }
 
     /**
-     * 기업의 실제 금융 계좌를 연동함.
+     * 기업 계좌 생성
      */
-    @Operation(summary = "기업 계좌 등록", description = "기업 아이디에 실제 금융 계좌 연동함.")
+    @Operation(summary = "기업 계좌 생성", description = "금융 API를 통해 기업 명의의 계좌를 직접 생성 및 등록함.")
     @PostMapping("/account")
-    public void registerCompanyAccount(@Valid @RequestBody RegisterCompanyAccountRequest request) {
-        companySalaryService.registerCompanyAccount(request.companyId(), request.userId(), request.accountNumber());
+    public void createCompanyAccount(@Valid @RequestBody RegisterCompanyAccountRequest request) {
+        companySalaryService.createCompanyAccount(request.companyId(), request.userId());
     }
 
     /**
-     * 등록된 전체 기업 목록 조회함.
+     * 전체 기업 목록 조회
      */
     @Operation(summary = "기업 목록 조회", description = "시스템에 등록된 전체 기업 리스트 반환함.")
     @GetMapping("/companies")
@@ -54,7 +54,7 @@ public class CompanySalaryController {
     }
 
     /**
-     * 특정 기업의 계좌 목록 조회함.
+     * 특정 기업 계좌 목록 조회
      */
     @Operation(summary = "기업 계좌 조회", description = "특정 기업 아이디에 연동된 계좌 리스트 반환함.")
     @GetMapping("/companies/{companyId}/accounts")
@@ -63,8 +63,7 @@ public class CompanySalaryController {
     }
 
     /**
-     * 급여 이체를 실행함.
-     * 적요는 서비스 레이어에서 자동 생성함.
+     * 급여 이체 실행
      */
     @Operation(summary = "급여 지급", description = "기업 계좌에서 사용자 계좌로 월급 이체함.")
     @PostMapping("/pay")
