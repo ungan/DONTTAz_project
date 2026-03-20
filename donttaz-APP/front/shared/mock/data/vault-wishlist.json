@@ -1,0 +1,7 @@
+{
+  "data": [
+    { "id": 1, "wishName": "갤럭시북 구매", "goalAmount": 1500000, "targetDate": "2026-12-31" },
+    { "id": 2, "wishName": "에어팟 프로", "goalAmount": 350000, "targetDate": "2026-06-30" },
+    { "id": 3, "wishName": "여행 적금", "goalAmount": 2000000, "targetDate": "2026-09-30" }
+  ]
+}

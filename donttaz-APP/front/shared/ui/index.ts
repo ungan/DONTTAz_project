@@ -9,3 +9,4 @@ export { NumericKeypad } from './numeric-keypad';
 export { ConfirmModal } from './confirm-modal';
 export { InlineInput } from './inline-input';
 export { PinIndicator } from './pin-indicator';
+export { BottomSheetBase } from './bottom-sheet-base';

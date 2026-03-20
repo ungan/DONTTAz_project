@@ -1,0 +1,15 @@
+{
+  "vaults": [
+    {
+      "vaultId": 1,
+      "vaultKind": "DEFAULT",
+      "lockedAmount": 800000,
+      "status": "LOCKED",
+      "wishName": "갤럭시북 구매",
+      "goalAmount": 1500000,
+      "targetDate": "2026-12-31",
+      "baseInterestRate": 5,
+      "penaltyInterestRate": 0.1
+    }
+  ]
+}
