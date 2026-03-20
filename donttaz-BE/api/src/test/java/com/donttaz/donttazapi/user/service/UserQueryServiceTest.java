@@ -24,6 +24,7 @@ class UserQueryServiceTest {
     private static final Long TEST_USER_ID = 1L;
     private static final String TEST_EMAIL = "test@ssafy.com";
     private static final String TEST_NAME = "김싸피";
+    private static final String TEST_PHONE = "01012345678";
 
     @Mock
     private UserRepository userRepository;
@@ -45,6 +46,7 @@ class UserQueryServiceTest {
         assertThat(response.getUserId()).isEqualTo(TEST_USER_ID);
         assertThat(response.getEmail()).isEqualTo(TEST_EMAIL);
         assertThat(response.getName()).isEqualTo(TEST_NAME);
+        assertThat(response.getPhoneNumber()).isEqualTo(TEST_PHONE);
     }
 
     @Test
@@ -65,6 +67,7 @@ class UserQueryServiceTest {
         User user = User.builder()
                 .email(TEST_EMAIL)
                 .name(TEST_NAME)
+                .phoneNumber(TEST_PHONE)
                 .build();
         ReflectionTestUtils.setField(user, "userId", TEST_USER_ID);
         return user;

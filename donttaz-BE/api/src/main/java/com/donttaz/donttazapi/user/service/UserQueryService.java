@@ -24,6 +24,7 @@ public class UserQueryService {
                 .userId(user.getUserId())
                 .email(user.getEmail())
                 .name(user.getName())
+                .phoneNumber(user.getPhoneNumber())
                 .build();
     }
 }

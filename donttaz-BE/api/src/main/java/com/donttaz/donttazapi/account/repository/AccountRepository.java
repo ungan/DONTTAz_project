@@ -32,6 +32,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     Optional<Account> findByUserIdAndBankCodeAndAccountNumber(Long userId, String bankCode, String accountNumber);
 
+    List<Account> findByUserId(Long userId);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update Account a set a.isPrimary = false where a.userId = :userId and a.isPrimary = true")
     void clearPrimaryByUserId(@Param("userId") Long userId);
