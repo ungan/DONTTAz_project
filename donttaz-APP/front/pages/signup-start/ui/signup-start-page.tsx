@@ -3,6 +3,7 @@ import { ScrollView, View, Text } from 'react-native';
 import { useURL } from 'expo-linking';
 import { Button, PageHeader } from '@/shared/ui';
 import {
+  matchesPortOneCallbackPath,
   PORTONE_CALLBACK_PATH,
   SignupProgress,
   useSignupFlow,
@@ -30,12 +31,7 @@ export function SignupStartPage() {
       return;
     }
 
-    const normalizedCallbackPath = PORTONE_CALLBACK_PATH.replace(/^\//, '');
-    const isSignupCallback =
-      callbackUrl.includes(`front://${PORTONE_CALLBACK_PATH}`) ||
-      callbackUrl.includes(`front:///${normalizedCallbackPath}`);
-
-    if (!isSignupCallback) {
+    if (!matchesPortOneCallbackPath(callbackUrl, PORTONE_CALLBACK_PATH)) {
       return;
     }
 

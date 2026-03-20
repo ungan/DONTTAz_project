@@ -1,5 +1,7 @@
 export { useSignupFlow } from './model/use-signup-flow';
 export {
+  buildPortOneCallbackUrl,
+  matchesPortOneCallbackPath,
   PORTONE_CALLBACK_PATH,
   PORTONE_CALLBACK_URL,
   parsePortOneCallbackUrl,
