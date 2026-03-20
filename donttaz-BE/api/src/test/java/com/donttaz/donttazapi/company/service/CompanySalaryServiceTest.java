@@ -1,6 +1,7 @@
 package com.donttaz.donttazapi.company.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -108,22 +109,23 @@ class CompanySalaryServiceTest {
                 String expectedDepositSummary = companyName + " 월급";
 
                 // 시스템 이체 메서드 호출 여부 검토
-                verify(accountTransferService).transferBySystem(eq(adminUserId), any(AccountTransferRequest.class));
+                verify(accountTransferService).transfer(eq(adminUserId), any(AccountTransferRequest.class));
 
                 // 전달된 요청 데이터의 정확성 검증
-                verify(accountTransferService).transferBySystem(eq(adminUserId),
-                                argThat(request -> request.withdrawalTransactionSummary()
-                                                .equals(expectedWithdrawalSummary) &&
-                                                request.depositTransactionSummary().equals(expectedDepositSummary) &&
-                                                request.transactionBalance().equals(amount.toString()) &&
-                                                request.withdrawalAccountNo().equals(companyAccountNo) &&
-                                                request.depositAccountNo().equals(userAccountNo)));
+        verify(accountTransferService).transfer(eq(adminUserId),
+                        argThat((AccountTransferRequest request) -> request.withdrawalTransactionSummary()
+                                        .equals(expectedWithdrawalSummary) &&
+                                        request.depositTransactionSummary().equals(expectedDepositSummary) &&
+                                        request.transactionBalance().equals(amount.toString()) &&
+                                        request.withdrawalAccountNo().equals(companyAccountNo) &&
+                                        request.depositAccountNo().equals(userAccountNo)));
         }
 
-        /**
+        /*
          * ArgumentMatchers 헬퍼 메서드임.
+         *
+         * private <T> T argThat(java.util.function.Predicate<T> predicate) {
+         *         return org.mockito.ArgumentMatchers.argThat(argument -> predicate.test(argument));
+         * }
          */
-        private <T> T argThat(java.util.function.Predicate<T> predicate) {
-                return org.mockito.ArgumentMatchers.argThat(argument -> predicate.test(argument));
-        }
 }
