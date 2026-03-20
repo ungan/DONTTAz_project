@@ -101,6 +101,7 @@ public class FinApiBankingMapper {
                 .toList();
     }
 
+    @SuppressWarnings("unused")
     public List<AccountSummaryResult> toAccountSummaryResults(List<FinApiAccountItemResponse> responses) {
         return responses.stream()
                 .map(this::toAccountSummaryResult)
@@ -252,16 +253,19 @@ public class FinApiBankingMapper {
 
     public OneWonVerificationRequestResult toOneWonVerificationRequestResult(FinApiOneWonRequestResponse response) {
         return new OneWonVerificationRequestResult(
-                response.verificationId(),
-                response.bankName(),
-                response.expiredIn()
+                response.rec().transactionUniqueNo(),
+                response.rec().accountNo()
         );
     }
 
+    @SuppressWarnings("unused")
     public OneWonVerificationConfirmResult toOneWonVerificationConfirmResult(FinApiOneWonConfirmResponse response) {
+        String status = response.rec() == null ? null : response.rec().status();
         return new OneWonVerificationConfirmResult(
-                response.verified(),
-                response.consentToken()
+                status,
+                "SUCCESS".equalsIgnoreCase(status),
+                response.rec() == null ? null : response.rec().transactionUniqueNo(),
+                response.rec() == null ? null : response.rec().accountNo()
         );
     }
 

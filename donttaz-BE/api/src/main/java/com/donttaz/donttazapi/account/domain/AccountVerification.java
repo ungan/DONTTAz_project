@@ -14,6 +14,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Getter
+//noinspection SqlNoDataSourceInspection,SqlResolve,JpaDataSourceORMInspection
 @Entity
 @SQLDelete(sql = "UPDATE account_verifications SET is_deleted = true WHERE verification_id = ?")
 @SQLRestriction("is_deleted = false")
@@ -34,7 +35,7 @@ public class AccountVerification extends BaseEntity {
     @Column(nullable = false, length = 30)
     private String accountNumber;
 
-    @Column(nullable = false, length = 10)
+    @Column(length = 10)
     private String authCode;
 
     @Column(nullable = false)
@@ -46,6 +47,7 @@ public class AccountVerification extends BaseEntity {
     @Column(length = 255)
     private String consentToken;
 
+    @SuppressWarnings("unused")
     @Builder
     private AccountVerification(String verificationId, Long userId, String bankCode, String accountNumber,
             String authCode, LocalDateTime expiredAt, boolean verified, String consentToken) {
@@ -57,5 +59,14 @@ public class AccountVerification extends BaseEntity {
         this.expiredAt = expiredAt;
         this.verified = verified;
         this.consentToken = consentToken;
+    }
+
+    public boolean isExpired(LocalDateTime now) {
+        return expiredAt != null && expiredAt.isBefore(now);
+    }
+
+    public void markVerified(String authCode) {
+        this.authCode = authCode;
+        this.verified = true;
     }
 }

@@ -1,8 +1,11 @@
 package com.donttaz.donttazapi.infra.banking.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public record FinApiOneWonRequest(
-        Long userId,
-        String bankCode,
-        String accountNumber
+        @JsonProperty("Header")
+        FinApiRequestHeader header,
+        String accountNo,
+        String authText
 ) {
 }

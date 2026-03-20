@@ -36,6 +36,8 @@ import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepos
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositAccountRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiInquireDemandDepositListRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiMemberRequest;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiOneWonConfirmRequest;
+import com.donttaz.donttazapi.infra.banking.dto.request.FinApiOneWonRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiRequestHeader;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiTransferRequest;
 import com.donttaz.donttazapi.infra.banking.dto.request.FinApiTransferLimitUpdateRequest;
@@ -52,6 +54,8 @@ import com.donttaz.donttazapi.infra.banking.dto.response.FinApiDeleteDemandDepos
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiInquireDemandDepositAccountListResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiInquireDemandDepositListResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiMemberResponse;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiOneWonConfirmResponse;
+import com.donttaz.donttazapi.infra.banking.dto.response.FinApiOneWonRequestResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiResponseHeader;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiTransactionDetailResponse;
 import com.donttaz.donttazapi.infra.banking.dto.response.FinApiTransactionListResponse;
@@ -93,6 +97,8 @@ public class FinApiBankingClient implements BankingClient {
     private static final String DEMAND_DEPOSIT_TRANSFER_LIMIT_URI = "/demandDeposit/updateTransferLimit";
     private static final String DEMAND_DEPOSIT_TRANSACTION_LIST_URI = "/demandDeposit/inquireTransactionHistoryList";
     private static final String DEMAND_DEPOSIT_TRANSACTION_DETAIL_URI = "/demandDeposit/inquireTransactionHistory";
+    private static final String OPEN_ACCOUNT_AUTH_URI = "/accountAuth/openAccountAuth";
+    private static final String CHECK_AUTH_CODE_URI = "/accountAuth/checkAuthCode";
     private static final String SUCCESS_CODE = "H0000";
     private static final ZoneId KOREA_ZONE_ID = ZoneId.of("Asia/Seoul");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -361,12 +367,35 @@ public class FinApiBankingClient implements BankingClient {
 
     @Override
     public OneWonVerificationRequestResult requestOneWonVerification(Long userId, OneWonVerificationRequestCommand command) {
-        throw new UnsupportedOperationException("finAPI one-won request integration is not implemented yet.");
+        FinApiOneWonRequestResponse response = post(
+                resolveUri(OPEN_ACCOUNT_AUTH_URI),
+                new FinApiOneWonRequest(
+                        buildHeader("openAccountAuth", userId),
+                        command.accountNo(),
+                        command.authText()
+                ),
+                FinApiOneWonRequestResponse.class
+        );
+
+        validateSuccess(response.header());
+        return finApiBankingMapper.toOneWonVerificationRequestResult(response);
     }
 
     @Override
     public OneWonVerificationConfirmResult confirmOneWonVerification(Long userId, OneWonVerificationConfirmCommand command) {
-        throw new UnsupportedOperationException("finAPI one-won confirm integration is not implemented yet.");
+        FinApiOneWonConfirmResponse response = post(
+                resolveUri(CHECK_AUTH_CODE_URI),
+                new FinApiOneWonConfirmRequest(
+                        buildHeader("checkAuthCode", userId),
+                        command.accountNo(),
+                        command.authText(),
+                        command.authCode()
+                ),
+                FinApiOneWonConfirmResponse.class
+        );
+
+        validateSuccess(response.header());
+        return finApiBankingMapper.toOneWonVerificationConfirmResult(response);
     }
 
     @Override
