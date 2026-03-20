@@ -6,15 +6,16 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
-import com.donttaz.donttazapi.vault.domain.Vault;
+import com.donttaz.donttazapi.vault.domain.WishlistVault;
 import com.donttaz.donttazapi.vault.domain.VaultKind;
 import com.donttaz.donttazapi.vault.domain.VaultStatus;
 import com.donttaz.donttazapi.vault.dto.request.CreateVaultRequest;
 import com.donttaz.donttazapi.vault.dto.response.CreateVaultResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultDepositResponse;
-import com.donttaz.donttazapi.vault.repository.VaultRepository;
+import com.donttaz.donttazapi.vault.repository.DefaultVaultRepository;
+import com.donttaz.donttazapi.vault.repository.WishlistVaultRepository;
+import com.donttaz.donttazapi.vault.repository.VaultHistoryRepository;
 import com.donttaz.donttazapi.infra.banking.client.BankingClient;
-import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,10 +28,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class VaultCommandServiceTest {
 
         @Mock
-        private VaultRepository vaultRepository;
+        private DefaultVaultRepository defaultVaultRepository;
 
         @Mock
-        private com.donttaz.donttazapi.vault.repository.VaultHistoryRepository vaultHistoryRepository;
+        private WishlistVaultRepository wishlistVaultRepository;
+
+        @Mock
+        private VaultHistoryRepository vaultHistoryRepository;
 
         @Mock
         private CurrentUserProvider currentUserProvider;
@@ -45,50 +49,44 @@ class VaultCommandServiceTest {
         private static final Long VAULT_ID = 10L;
 
         @Test
-        @DisplayName("금고를 성공적으로 생성한다.")
-        void createVault_success() {
+        @DisplayName("위시리스트 금고를 성공적으로 생성한다.")
+        void createVault_wishlist_success() {
                 given(currentUserProvider.getCurrentUserId()).willReturn(USER_ID);
-                given(vaultRepository.findAllByUserIdAndStatus(USER_ID, VaultStatus.LOCKED))
-                                .willReturn(java.util.Collections.emptyList());
+                given(wishlistVaultRepository.existsByUserIdAndStatus(USER_ID, VaultStatus.LOCKED)).willReturn(false);
 
-                Vault saved = Vault.builder()
+                WishlistVault saved = WishlistVault.builder()
                                 .userId(USER_ID)
-                                .vaultKind(VaultKind.WISHLIST)
                                 .wishName("애플워치")
                                 .goalAmount(500000L)
-                                .targetDate(LocalDate.now().plusDays(30))
                                 .lockedAmount(0L)
-
+                                .status(VaultStatus.LOCKED)
                                 .build();
 
-                given(vaultRepository.save(any(Vault.class))).willReturn(saved);
+                given(wishlistVaultRepository.save(any(WishlistVault.class))).willReturn(saved);
 
-                CreateVaultRequest request = new CreateVaultRequest(VaultKind.WISHLIST, "애플워치", 500000L,
-                                LocalDate.now().plusDays(30));
+                CreateVaultRequest request = new CreateVaultRequest(VaultKind.WISHLIST, "애플워치", 500000L);
                 CreateVaultResponse response = vaultCommandService.createVault(request);
 
                 assertThat(response.lockedAmount()).isEqualTo(0L);
                 assertThat(response.status()).isEqualTo("LOCKED");
-                verify(vaultRepository).save(any(Vault.class));
+                verify(wishlistVaultRepository).save(any(WishlistVault.class));
         }
 
         @Test
-        @DisplayName("금고 입금 시 lockedAmount가 증가한다.")
-        void deposit_success() {
+        @DisplayName("위시리스트 금고 입금 시 lockedAmount가 증가한다.")
+        void deposit_wishlist_success() {
                 given(currentUserProvider.getCurrentUserId()).willReturn(USER_ID);
 
-                Vault vault = Vault.builder()
+                WishlistVault vault = WishlistVault.builder()
                                 .userId(USER_ID)
-                                .vaultKind(VaultKind.WISHLIST)
                                 .wishName("애플워치")
                                 .goalAmount(500000L)
-                                .targetDate(LocalDate.now().plusDays(30))
                                 .lockedAmount(0L)
                                 .status(VaultStatus.LOCKED)
                                 .build();
-                given(vaultRepository.findByVaultIdAndUserId(VAULT_ID, USER_ID)).willReturn(Optional.of(vault));
+                given(wishlistVaultRepository.findByIdAndUserId(VAULT_ID, USER_ID)).willReturn(Optional.of(vault));
 
-                VaultDepositResponse response = vaultCommandService.deposit(VAULT_ID,
+                VaultDepositResponse response = vaultCommandService.deposit(VAULT_ID, VaultKind.WISHLIST,
                                 new com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest("1000000000",
                                                 100000L));
 

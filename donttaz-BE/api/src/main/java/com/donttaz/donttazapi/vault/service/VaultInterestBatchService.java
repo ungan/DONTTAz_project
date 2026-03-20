@@ -1,11 +1,14 @@
 package com.donttaz.donttazapi.vault.service;
 
 import com.donttaz.donttazapi.vault.domain.TransactionType;
-import com.donttaz.donttazapi.vault.domain.Vault;
+import com.donttaz.donttazapi.vault.domain.DefaultVault;
+import com.donttaz.donttazapi.vault.domain.WishlistVault;
+import com.donttaz.donttazapi.vault.domain.VaultKind;
 import com.donttaz.donttazapi.vault.domain.VaultHistory;
 import com.donttaz.donttazapi.vault.domain.VaultStatus;
 import com.donttaz.donttazapi.vault.repository.VaultHistoryRepository;
-import com.donttaz.donttazapi.vault.repository.VaultRepository;
+import com.donttaz.donttazapi.vault.repository.DefaultVaultRepository;
+import com.donttaz.donttazapi.vault.repository.WishlistVaultRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,7 +22,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class VaultInterestBatchService {
 
-    private final VaultRepository vaultRepository;
+    private final DefaultVaultRepository defaultVaultRepository;
+    private final WishlistVaultRepository wishlistVaultRepository;
     private final VaultHistoryRepository vaultHistoryRepository;
 
     /**
@@ -29,27 +33,40 @@ public class VaultInterestBatchService {
     @Transactional
     public void executeDailyInterestBatch() {
         log.info("금고 일일 이자 지급 배치 시작");
-
-        List<Vault> activeVaults = vaultRepository.findAllByStatus(VaultStatus.LOCKED);
         int count = 0;
 
-        for (Vault vault : activeVaults) {
+        // 1. 기본 금고 처리
+        List<DefaultVault> defaultVaults = defaultVaultRepository.findAllByStatus(VaultStatus.LOCKED);
+        for (DefaultVault vault : defaultVaults) {
             Long dailyInterest = vault.calculateDailyInterest();
-
             if (dailyInterest > 0) {
                 vault.addInterest(dailyInterest);
+                saveInterestHistory(vault.getId(), VaultKind.DEFAULT, dailyInterest);
+                count++;
+            }
+        }
 
-                vaultHistoryRepository.save(VaultHistory.builder()
-                        .vaultId(vault.getVaultId())
-                        .transactionType(TransactionType.DEPOSIT) // 또는 전용 타입 INTEREST 있으면 변경 가능
-                        .amount(dailyInterest)
-                        .interestPaid(dailyInterest)
-                        .build());
-
+        // 2. 위시리스트 금고 처리
+        List<WishlistVault> wishlistVaults = wishlistVaultRepository.findAllByStatus(VaultStatus.LOCKED);
+        for (WishlistVault vault : wishlistVaults) {
+            Long dailyInterest = vault.calculateDailyInterest();
+            if (dailyInterest > 0) {
+                vault.addInterest(dailyInterest);
+                saveInterestHistory(vault.getId(), VaultKind.WISHLIST, dailyInterest);
                 count++;
             }
         }
 
         log.info("금고 일일 이자 지급 완료 (총 {}개 금고 처리됨)", count);
+    }
+
+    private void saveInterestHistory(Long vaultId, VaultKind kind, Long amount) {
+        vaultHistoryRepository.save(VaultHistory.builder()
+                .vaultId(vaultId)
+                .vaultKind(kind)
+                .transactionType(TransactionType.DEPOSIT)
+                .amount(amount)
+                .interestPaid(amount)
+                .build());
     }
 }
