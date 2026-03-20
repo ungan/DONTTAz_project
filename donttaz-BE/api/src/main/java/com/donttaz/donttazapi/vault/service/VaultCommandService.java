@@ -152,6 +152,34 @@ public class VaultCommandService {
                 .build();
     }
 
+    /**
+     * 시스템(배치 등)에 의해 호출되는 내부 입금 메서드입니다.
+     * CurrentUserProvider가 아닌 명시적인 userId를 기반으로 처리합니다.
+     */
+    @Transactional
+    public void depositInternal(Long userId, String accountNo, Long amount) {
+        Vault vault = vaultRepository.findAllByUserIdAndStatus(userId, VaultStatus.LOCKED)
+                .stream().findFirst()
+                .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
+
+        // 사용자 계좌 -> 관리자 모계좌 이체
+        bankingClient.transfer(userId, new TransferCommand(
+                adminAccountNo,
+                "금고 자동 입금(배치)",
+                String.valueOf(amount),
+                accountNo,
+                "금고 자동 입금"));
+
+        vault.deposit(amount);
+
+        vaultHistoryRepository.save(VaultHistory.builder()
+                .vaultId(vault.getVaultId())
+                .transactionType(TransactionType.DEPOSIT)
+                .amount(amount)
+                .interestPaid(0L)
+                .build());
+    }
+
     @Transactional
     public VaultWithdrawResponse withdraw(Long vaultId,
             com.donttaz.donttazapi.vault.dto.request.VaultWithdrawRequest request) {

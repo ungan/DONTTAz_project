@@ -57,6 +57,12 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private UserStatus status;
 
+    @Column
+    private Integer salaryDay; // 급여일 (1~31)
+
+    @Column
+    private String salaryName; // 급여명 (식별용)
+
     public void updatePassword(String encryptedPassword) {
         this.password = encryptedPassword;
     }
@@ -65,14 +71,20 @@ public class User extends BaseEntity {
         this.nickname = nickname;
     }
 
+    public void updateSalaryInfo(Integer salaryDay, String salaryName) {
+        this.salaryDay = salaryDay;
+        this.salaryName = salaryName;
+    }
+
     public void withdraw(String reason) {
         this.status = UserStatus.WITHDRAWN;
         this.withdrawReason = reason;
     }
 
     @Builder
-    public User(Long userId, String email, String password, String pinCode, String name, String phoneNumber, 
-                String ci, String nickname, String deviceId, String ssafyUserKey, UserStatus status) {
+    public User(Long userId, String email, String password, String pinCode, String name, String phoneNumber,
+            String ci, String nickname, String deviceId, String ssafyUserKey, UserStatus status,
+            Integer salaryDay, String salaryName) {
         this.userId = userId;
         this.email = email;
         this.password = password;
@@ -84,5 +96,7 @@ public class User extends BaseEntity {
         this.deviceId = deviceId;
         this.ssafyUserKey = ssafyUserKey;
         this.status = status != null ? status : UserStatus.ACTIVE;
+        this.salaryDay = salaryDay;
+        this.salaryName = salaryName;
     }
 }

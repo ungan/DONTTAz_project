@@ -11,30 +11,29 @@ import org.springframework.data.repository.query.Param;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
-    List<Account> findAllByUserIdAndStatusAndIsDeletedFalse(Long userId, AccountStatus status);
+        List<Account> findAllByUserIdAndStatusAndIsDeletedFalse(Long userId, AccountStatus status);
 
-    Optional<Account> findByAccountIdAndUserIdAndStatusAndIsDeletedFalse(Long accountId, Long userId, AccountStatus status);
+        Optional<Account> findByAccountIdAndUserIdAndStatusAndIsDeletedFalse(Long accountId, Long userId,
+                        AccountStatus status);
 
-    List<Account> findAllByUserIdAndAccountNumberAndStatusAndIsDeletedFalse(
-            Long userId,
-            String accountNumber,
-            AccountStatus status
-    );
+        List<Account> findAllByUserIdAndAccountNumberAndStatusAndIsDeletedFalse(
+                        Long userId,
+                        String accountNumber,
+                        AccountStatus status);
 
-    Optional<Account> findByUserIdAndBankCodeAndAccountNumberAndStatusAndIsDeletedFalse(
-            Long userId,
-            String bankCode,
-            String accountNumber,
-            AccountStatus status
-    );
+        Optional<Account> findByUserIdAndBankCodeAndAccountNumberAndStatusAndIsDeletedFalse(
+                        Long userId,
+                        String bankCode,
+                        String accountNumber,
+                        AccountStatus status);
 
-    Optional<Account> findByUserIdAndAccountNumberAndIsDeletedFalse(Long userId, String accountNumber);
+        Optional<Account> findByUserIdAndAccountNumberAndIsDeletedFalse(Long userId, String accountNumber);
 
-    Optional<Account> findByUserIdAndBankCodeAndAccountNumber(Long userId, String bankCode, String accountNumber);
+        Optional<Account> findByUserIdAndBankCodeAndAccountNumber(Long userId, String bankCode, String accountNumber);
 
-    List<Account> findByUserId(Long userId);
+        @Modifying(clearAutomatically = true, flushAutomatically = true)
+        @Query("update Account a set a.isPrimary = false where a.userId = :userId and a.isPrimary = true")
+        void clearPrimaryByUserId(@Param("userId") Long userId);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("update Account a set a.isPrimary = false where a.userId = :userId and a.isPrimary = true")
-    void clearPrimaryByUserId(@Param("userId") Long userId);
+        Optional<Account> findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(Long userId, AccountStatus status);
 }
