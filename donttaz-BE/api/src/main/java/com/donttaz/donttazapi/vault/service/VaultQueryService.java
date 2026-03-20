@@ -70,7 +70,8 @@ public class VaultQueryService {
                                                 vault.getGoalAmount(),
                                                 vault.getTargetDate(),
                                                 vault.getBaseInterestRate(),
-                                                vault.getPenaltyInterestRate()))
+                                                vault.getPenaltyInterestRate(),
+                                                vault.getWithdrawalCount()))
                                 .toList();
         }
 
@@ -96,7 +97,8 @@ public class VaultQueryService {
                                 vault.getGoalAmount(),
                                 vault.getTargetDate(),
                                 vault.getBaseInterestRate(),
-                                vault.getPenaltyInterestRate());
+                                vault.getPenaltyInterestRate(),
+                                vault.getWithdrawalCount());
         }
 
         /**
