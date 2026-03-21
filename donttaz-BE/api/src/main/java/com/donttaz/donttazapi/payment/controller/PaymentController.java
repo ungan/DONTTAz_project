@@ -3,6 +3,7 @@ package com.donttaz.donttazapi.payment.controller;
 import com.donttaz.donttazapi.payment.controller.docs.PaymentSwagger;
 import com.donttaz.donttazapi.payment.dto.request.CreatePaymentRequest;
 import com.donttaz.donttazapi.payment.dto.response.PaymentResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import com.donttaz.donttazapi.payment.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/payments")
+@SecurityRequirements({})
 @RequiredArgsConstructor
 public class PaymentController implements PaymentSwagger {
 
