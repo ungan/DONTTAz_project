@@ -1,19 +1,17 @@
 package com.donttaz.donttazapi.auth.controller;
 
-import com.donttaz.donttazapi.auth.dto.request.RefreshRequest;
 import com.donttaz.donttazapi.auth.dto.request.FindIdRequest;
 import com.donttaz.donttazapi.auth.dto.request.IdentityVerificationRequest;
 import com.donttaz.donttazapi.auth.dto.request.LoginRequest;
 import com.donttaz.donttazapi.auth.dto.request.LogoutRequest;
 import com.donttaz.donttazapi.auth.dto.request.PasswordResetRequest;
 import com.donttaz.donttazapi.auth.dto.request.PasswordVerifyIdentityRequest;
+import com.donttaz.donttazapi.auth.dto.request.RefreshRequest;
 import com.donttaz.donttazapi.auth.dto.response.FindIdResponse;
 import com.donttaz.donttazapi.auth.dto.response.IdentityVerificationResponse;
 import com.donttaz.donttazapi.auth.dto.response.LoginResponse;
 import com.donttaz.donttazapi.auth.dto.response.PasswordResetTokenResponse;
 import com.donttaz.donttazapi.auth.service.AuthService;
-import com.donttaz.donttazapi.common.response.ApiResponse;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -68,8 +66,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ApiResponse<LoginResponse> refresh(@Valid @RequestBody RefreshRequest request) {
-        LoginResponse response = authService.refresh(request);
-        return ApiResponse.success("토큰이 성공적으로 재발급되었습니다.", response);
+    public LoginResponse refresh(@Valid @RequestBody RefreshRequest request) {
+        return authService.refresh(request);
     }
 }

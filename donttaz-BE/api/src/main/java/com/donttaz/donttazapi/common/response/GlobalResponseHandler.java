@@ -32,9 +32,10 @@ public class GlobalResponseHandler implements ResponseBodyAdvice<Object> {
             return body;
         }
 
-        // 2xx 범위의 상태 코드가 아닐 경우(예외 상황) 이미 예외 핸들러에서 리턴했거나 기타 상황이므로 굳이 Success로 덮어쓰지 않음
-        // (보통 GlobalExceptionHandler 에서 ApiResponse.fail 을 리턴하므로 여기에 도달하지 않음, 단
-        // supports 에서 필터링됨)
+        if (body instanceof ApiResponse<?>) {
+            return body;
+        }
+
         return ApiResponse.success("요청이 성공적으로 처리되었습니다.", body);
     }
 }
