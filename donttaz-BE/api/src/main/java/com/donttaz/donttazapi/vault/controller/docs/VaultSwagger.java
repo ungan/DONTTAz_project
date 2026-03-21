@@ -87,20 +87,12 @@ public interface VaultSwagger {
                         @Parameter(description = "금고 ID", example = "10") @PathVariable Long vaultId,
                         @RequestBody VaultWithdrawRequest request);
 
-        @ApiResponses({
-                        @ApiResponse(responseCode = "200", description = "목표 수정 성공", content = @Content(mediaType = "application/json", examples = {
-                                        @ExampleObject(name = "위시리스트 목표 수정 결과", value = "{\"vaultId\": 10, \"vaultKind\": \"WISHLIST\", \"lockedAmount\": 500000, \"status\": \"LOCKED\", \"wishName\": \"갤럭시북 구매\", \"goalAmount\": 2500000, \"baseInterestRate\": 6.0, \"penaltyInterestRate\": 0.3, \"withdrawalCount\": 1}")
-                        }))
-        })
+        @Operation(summary = "위시리스트 목표 설정/수정", description = "위시리스트 금고의 이름과 금액을 설정/수정합니다.")
         ResponseEntity<VaultSummaryResponse> setWishlistGoal(
                         @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId,
                         @RequestBody SetWishlistGoalRequest request);
 
-        @ApiResponses({
-                        @ApiResponse(responseCode = "200", description = "목표 달성 처리 성공", content = @Content(mediaType = "application/json", examples = {
-                                        @ExampleObject(name = "위시리스트 목표 달성 결과", value = "{\"vaultId\": 10, \"vaultKind\": \"WISHLIST\", \"lockedAmount\": 909000, \"status\": \"MATURED\", \"wishName\": \"애플워치 구매\", \"goalAmount\": 900000, \"baseInterestRate\": 6.0, \"penaltyInterestRate\": 0.0, \"withdrawalCount\": 0}")
-                        }))
-        })
+        @Operation(summary = "위시리스트 목표 달성 (정상 해지) 처리", description = "위시리스트 금고를 정상적으로 해지 처리합니다. 무출금 시 1% 보너스가 지급됩니다.")
         ResponseEntity<VaultSummaryResponse> achieveWishlist(
                         @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId);
 
@@ -117,7 +109,7 @@ public interface VaultSwagger {
                                                         + "]}")
                         }))
         })
-        ResponseEntity<com.donttaz.donttazapi.common.response.ApiResponse<List<VaultHistoryResponse>>> getVaultHistory(
+        List<VaultHistoryResponse> getVaultHistory(
                         @Parameter(description = "금고 종류", example = "DEFAULT") @PathVariable VaultKind kind,
                         @Parameter(description = "금고 ID", example = "1") @PathVariable Long vaultId);
 }

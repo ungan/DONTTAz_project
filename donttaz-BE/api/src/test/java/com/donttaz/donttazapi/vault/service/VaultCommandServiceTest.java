@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
+import com.donttaz.donttazapi.memorandum.service.MemorandumService;
 import com.donttaz.donttazapi.vault.domain.WishlistVault;
 import com.donttaz.donttazapi.vault.domain.VaultKind;
 import com.donttaz.donttazapi.vault.domain.VaultStatus;
@@ -42,6 +43,9 @@ class VaultCommandServiceTest {
         @Mock
         private BankingClient bankingClient;
 
+        @Mock
+        private MemorandumService memorandumService;
+
         @InjectMocks
         private VaultCommandService vaultCommandService;
 
@@ -63,8 +67,13 @@ class VaultCommandServiceTest {
                                 .build();
 
                 given(wishlistVaultRepository.save(any(WishlistVault.class))).willReturn(saved);
+                given(memorandumService.getMemorandumByVaultId(any())).willReturn(
+                                com.donttaz.donttazapi.memorandum.dto.response.MemorandumResponse.builder()
+                                                .build());
 
-                CreateVaultRequest request = new CreateVaultRequest(VaultKind.WISHLIST, "애플워치", 500000L);
+                CreateVaultRequest request = new CreateVaultRequest(VaultKind.WISHLIST, "애플워치", 500000L,
+                                new com.donttaz.donttazapi.memorandum.dto.request.MemorandumRequest("사인", "공표",
+                                                "다짐"));
                 CreateVaultResponse response = vaultCommandService.createVault(request);
 
                 assertThat(response.lockedAmount()).isEqualTo(0L);

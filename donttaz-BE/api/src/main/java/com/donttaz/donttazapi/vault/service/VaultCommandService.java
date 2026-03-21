@@ -12,6 +12,8 @@ import com.donttaz.donttazapi.vault.dto.request.SetWishlistGoalRequest;
 import com.donttaz.donttazapi.vault.dto.response.CreateVaultResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultDepositResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultWithdrawResponse;
+import com.donttaz.donttazapi.memorandum.dto.response.MemorandumResponse;
+import com.donttaz.donttazapi.memorandum.service.MemorandumService;
 import com.donttaz.donttazapi.vault.domain.TransactionType;
 import com.donttaz.donttazapi.vault.domain.VaultHistory;
 import com.donttaz.donttazapi.vault.repository.VaultHistoryRepository;
@@ -33,6 +35,7 @@ public class VaultCommandService {
         private final VaultHistoryRepository vaultHistoryRepository;
         private final BankingClient bankingClient;
         private final CurrentUserProvider currentUserProvider;
+        private final MemorandumService memorandumService;
 
         @Value("${vault.admin-user-id}")
         private Long adminUserId;
@@ -45,12 +48,14 @@ public class VaultCommandService {
                         WishlistVaultRepository wishlistVaultRepository,
                         VaultHistoryRepository vaultHistoryRepository,
                         BankingClient bankingClient,
-                        CurrentUserProvider currentUserProvider) {
+                        CurrentUserProvider currentUserProvider,
+                        MemorandumService memorandumService) {
                 this.defaultVaultRepository = defaultVaultRepository;
                 this.wishlistVaultRepository = wishlistVaultRepository;
                 this.vaultHistoryRepository = vaultHistoryRepository;
                 this.bankingClient = bankingClient;
                 this.currentUserProvider = currentUserProvider;
+                this.memorandumService = memorandumService;
         }
 
         @Transactional
@@ -72,22 +77,29 @@ public class VaultCommandService {
                 validateWishlistUniqueness(userId);
                 validateWishlistRequirement(request);
 
-                WishlistVault vault = WishlistVault.builder()
+                WishlistVault wishlistVault = WishlistVault.builder()
                                 .userId(userId)
                                 .wishName(request.wishName())
                                 .goalAmount(request.goalAmount())
-                                .lockedAmount(0L)
                                 .status(VaultStatus.LOCKED)
                                 .build();
 
-                WishlistVault savedVault = wishlistVaultRepository.save(vault);
+                WishlistVault saved = wishlistVaultRepository.save(wishlistVault);
 
-                return CreateVaultResponse.builder()
-                                .vaultId(savedVault.getId())
-                                .vaultKind(VaultKind.WISHLIST.name())
-                                .lockedAmount(savedVault.getLockedAmount())
-                                .status(savedVault.getStatus().name())
-                                .build();
+                // 각서 동시 생성 (필수)
+                if (request.memorandum() == null) {
+                        throw new CustomException(ErrorCode.INVALID_REQUEST, "위시리스트 금고 생성 시 각서 작성은 필수입니다.");
+                }
+
+                memorandumService.createInitialMemorandum(
+                                userId,
+                                saved.getId(),
+                                request.memorandum().content1(),
+                                request.memorandum().content2(),
+                                request.memorandum().content3());
+
+                MemorandumResponse memoResponse = memorandumService.getMemorandumByVaultId(saved.getId());
+                return CreateVaultResponse.fromWishlist(saved, memoResponse);
         }
 
         @Transactional
@@ -236,6 +248,13 @@ public class VaultCommandService {
 
                 saveHistory(vault.getId(), VaultKind.WISHLIST, TransactionType.WITHDRAW_BROKEN, request.amount(),
                                 interest);
+
+                // 각서 노출 로직 (일부 인출 vs 전체 해지)
+                if (vault.getStatus() == VaultStatus.BROKEN || (vault.getLockedAmount() == 0)) {
+                        memorandumService.exposeByTerminate(vault.getId());
+                } else {
+                        memorandumService.exposeByWithdraw(vault.getId());
+                }
 
                 return VaultWithdrawResponse.builder()
                                 .vaultId(vault.getId())
