@@ -92,11 +92,9 @@ public class VaultController implements VaultSwagger {
 
         @Override
         @GetMapping("/{kind}/{vaultId}/history")
-        public ResponseEntity<com.donttaz.donttazapi.common.response.ApiResponse<List<VaultHistoryResponse>>> getVaultHistory(
+        public List<VaultHistoryResponse> getVaultHistory(
                         @PathVariable VaultKind kind,
                         @PathVariable Long vaultId) {
-                return ResponseEntity.ok(
-                                com.donttaz.donttazapi.common.response.ApiResponse.success("거래 내역 조회 성공",
-                                                vaultQueryService.getVaultHistory(vaultId, kind)));
+                return vaultQueryService.getVaultHistory(vaultId, kind);
         }
 }
