@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface AccountSwagger {
 
         @Operation(
+                        operationId = "createAccount",
                         summary = "수시입출금 계좌 생성",
                         description = "상품 조회 API에서 받은 accountTypeUniqueNo로 수시입출금 계좌를 생성합니다.",
                         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -60,31 +61,32 @@ public interface AccountSwagger {
         })
         ResponseEntity<CreateAccountResponse> createAccount(@RequestBody CreateAccountRequest request);
 
-        @Operation(summary = "계좌 목록 조회", description = "현재 사용자의 수시입출금 계좌 목록을 조회합니다.")
+        @Operation(operationId = "getAccounts", summary = "계좌 목록 조회", description = "현재 사용자의 수시입출금 계좌 목록을 조회합니다.")
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 목록 조회 성공")
         })
         ResponseEntity<AccountListResponse> getAccounts();
 
-        @Operation(summary = "계좌 상세 조회", description = "계좌번호(accountNo)로 계좌 상세 정보를 조회합니다.")
+        @Operation(operationId = "getAccountDetail", summary = "계좌 상세 조회", description = "계좌번호(accountNo)로 계좌 상세 정보를 조회합니다.")
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 상세 조회 성공")
         })
         ResponseEntity<AccountDetailResponse> getAccountDetail(@PathVariable("accountNo") String accountNo);
 
-        @Operation(summary = "계좌 잔액 조회", description = "계좌번호(accountNo)로 계좌 잔액 정보를 조회합니다.")
+        @Operation(operationId = "getAccountBalance", summary = "계좌 잔액 조회", description = "계좌번호(accountNo)로 계좌 잔액 정보를 조회합니다.")
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 잔액 조회 성공")
         })
         ResponseEntity<AccountBalanceResponse> getAccountBalance(@PathVariable("accountNo") String accountNo);
 
-        @Operation(summary = "예금주 조회", description = "계좌번호(accountNo)로 예금주 정보를 조회합니다.")
+        @Operation(operationId = "getAccountHolderName", summary = "예금주 조회", description = "계좌번호(accountNo)로 예금주 정보를 조회합니다.")
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "예금주 조회 성공")
         })
         ResponseEntity<AccountHolderNameResponse> getAccountHolderName(@PathVariable("accountNo") String accountNo);
 
         @Operation(
+                        operationId = "accountDeposit",
                         summary = "계좌 입금",
                         description = "지정한 계좌번호(accountNo)로 입금을 수행합니다. Swagger Execute에서 바로 테스트할 수 있는 계좌 입금 API입니다.",
                         security = {},
@@ -127,6 +129,7 @@ public interface AccountSwagger {
                         @RequestBody AccountDepositRequest request);
 
         @Operation(
+                        operationId = "accountWithdrawal",
                         summary = "계좌 출금",
                         description = "계좌번호(accountNo)로 출금 API를 호출합니다.",
                         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -151,6 +154,7 @@ public interface AccountSwagger {
                         @RequestBody AccountWithdrawalRequest request);
 
         @Operation(
+                        operationId = "accountTransfer",
                         summary = "계좌 이체",
                         description = "출금 계좌에서 입금 계좌로 이체를 수행합니다.",
                         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -176,6 +180,7 @@ public interface AccountSwagger {
         ResponseEntity<AccountTransferResponse> transfer(@RequestBody AccountTransferRequest request);
 
         @Operation(
+                        operationId = "requestOneWonVerification",
                         summary = "1원 송금 인증 요청",
                         description = "입력한 계좌번호로 1원 송금 인증을 요청합니다.",
                         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -198,6 +203,7 @@ public interface AccountSwagger {
                         @RequestBody OneWonVerificationRequest request);
 
         @Operation(
+                        operationId = "confirmOneWonVerification",
                         summary = "1원 송금 인증코드 검증",
                         description = "1원 송금 거래내역에서 확인한 4자리 인증코드를 검증합니다.",
                         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -221,6 +227,7 @@ public interface AccountSwagger {
                         @RequestBody OneWonVerificationConfirmRequest request);
 
         @Operation(
+                        operationId = "updateTransferLimit",
                         summary = "계좌 이체 한도 변경",
                         description = "계좌번호(accountNo)의 1회 및 1일 이체 한도를 변경합니다.",
                         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -244,7 +251,7 @@ public interface AccountSwagger {
                         @PathVariable("accountNo") String accountNo,
                         @RequestBody AccountTransferLimitUpdateRequest request);
 
-        @Operation(summary = "대표 계좌 설정", description = "현재 사용자의 대표 계좌를 설정합니다.")
+        @Operation(operationId = "setPrimaryAccount", summary = "대표 계좌 설정", description = "현재 사용자의 대표 계좌를 설정합니다.")
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "대표 계좌 설정 성공"),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "계좌를 찾을 수 없음")
@@ -252,6 +259,7 @@ public interface AccountSwagger {
         ResponseEntity<Void> setPrimaryAccount(@PathVariable("accountNo") String accountNo);
 
         @Operation(
+                        operationId = "closeAccount",
                         summary = "계좌 해지",
                         description = "은행 코드와 계좌번호로 해지 대상을 지정하고 환급 계좌 정보로 계좌 해지 API를 호출합니다.",
                         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -277,7 +285,7 @@ public interface AccountSwagger {
                         @PathVariable("accountNo") String accountNo,
                         @RequestBody AccountCloseRequest request);
 
-        @Operation(summary = "거래내역 목록 조회", description = "계좌 거래내역 목록을 조회합니다.")
+        @Operation(operationId = "getTransactions", summary = "거래내역 목록 조회", description = "계좌 거래내역 목록을 조회합니다.")
         ResponseEntity<TransactionListResponse> getTransactions(
                         @PathVariable("accountId") Long accountId,
                         @RequestParam(required = false, name = "startDate") LocalDate startDate,
@@ -286,7 +294,7 @@ public interface AccountSwagger {
                         @RequestParam(defaultValue = "0", name = "page") int page,
                         @RequestParam(defaultValue = "20", name = "size") int size);
 
-        @Operation(summary = "거래내역 상세 조회", description = "계좌 거래내역 상세를 조회합니다.")
+        @Operation(operationId = "getTransactionDetail", summary = "거래내역 상세 조회", description = "계좌 거래내역 상세를 조회합니다.")
         ResponseEntity<TransactionDetailResponse> getTransactionDetail(
                         @PathVariable("accountId") Long accountId,
                         @PathVariable("transactionId") String transactionId);

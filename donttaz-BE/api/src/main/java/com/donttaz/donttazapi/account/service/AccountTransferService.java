@@ -141,27 +141,58 @@ public class AccountTransferService {
     }
 
     public AccountDepositResponse deposit(String accountNo, AccountDepositRequest request) {
-        return deposit(resolveUserIdForAccountOperation(accountNo), accountNo, request);
+        log.info(
+                "deposit requested accountNo={} amount={} summary={}",
+                accountNo,
+                request.transactionBalance(),
+                request.transactionSummary());
+        Long userId = resolveUserIdForAccountOperation(accountNo);
+        log.info("deposit resolved userId={} accountNo={}", userId, accountNo);
+        return deposit(userId, accountNo, request);
     }
 
     public AccountDepositResponse deposit(Long userId, String accountNo, AccountDepositRequest request) {
-        AccountDepositResult result = bankingClient.deposit(
-                userId,
-                new AccountDepositCommand(accountNo, request.transactionBalance(), request.transactionSummary())
-        );
-        persistTransaction(
-                userId,
-                accountNo,
-                result.transactionUniqueNo(),
-                TransactionType.DEPOSIT,
-                request.transactionBalance(),
-                request.transactionSummary(),
-                result.transactionDate());
+        try {
+            log.info(
+                    "deposit calling banking client userId={} accountNo={} amount={} summary={}",
+                    userId,
+                    accountNo,
+                    request.transactionBalance(),
+                    request.transactionSummary());
+            AccountDepositResult result = bankingClient.deposit(
+                    userId,
+                    new AccountDepositCommand(accountNo, request.transactionBalance(), request.transactionSummary())
+            );
+            persistTransaction(
+                    userId,
+                    accountNo,
+                    result.transactionUniqueNo(),
+                    TransactionType.DEPOSIT,
+                    request.transactionBalance(),
+                    request.transactionSummary(),
+                    result.transactionDate());
+            log.info(
+                    "deposit completed userId={} accountNo={} transactionUniqueNo={} transactionDate={}",
+                    userId,
+                    accountNo,
+                    result.transactionUniqueNo(),
+                    result.transactionDate());
 
-        return AccountDepositResponse.builder()
-                .transactionUniqueNo(result.transactionUniqueNo())
-                .transactionDate(result.transactionDate())
-                .build();
+            return AccountDepositResponse.builder()
+                    .transactionUniqueNo(result.transactionUniqueNo())
+                    .transactionDate(result.transactionDate())
+                    .build();
+        } catch (RuntimeException exception) {
+            log.error(
+                    "deposit failed userId={} accountNo={} amount={} summary={} message={}",
+                    userId,
+                    accountNo,
+                    request.transactionBalance(),
+                    request.transactionSummary(),
+                    exception.getMessage(),
+                    exception);
+            throw exception;
+        }
     }
 
     public AccountTransferResponse transfer(AccountTransferRequest request) {
