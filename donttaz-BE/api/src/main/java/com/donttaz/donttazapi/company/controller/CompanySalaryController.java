@@ -7,6 +7,7 @@ import com.donttaz.donttazapi.company.dto.response.CompanyAccountResponse;
 import com.donttaz.donttazapi.company.dto.response.CompanyResponse;
 import com.donttaz.donttazapi.company.service.CompanySalaryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Company Salary API", description = "기업 급여 지급 및 관리용 API (Swagger 전용)")
+@SecurityRequirements({}) // Swagger 글로벌 인증 요구 사항 제거함
 @RestController
 @RequestMapping("/api/v1/company/salary")
 @RequiredArgsConstructor
