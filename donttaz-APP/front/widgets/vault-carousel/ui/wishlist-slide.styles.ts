@@ -20,6 +20,8 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#111827',
   },
+
+  // 없을 때
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
@@ -28,9 +30,10 @@ export const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: '#111827',
+    textAlign: 'center',
   },
   emptyDesc: {
     fontSize: 13,
@@ -51,43 +54,54 @@ export const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#111827',
   },
-  listContent: {
-    gap: 12,
-    paddingRight: 24,
+
+  // 있을 때
+  wishlistContent: {
+    flex: 1,
   },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+  editIconButton: {
+    alignSelf: 'flex-end',
+    padding: 4,
   },
   wishName: {
-    fontSize: 16,
+    fontSize: 24,
     fontWeight: '700',
     color: '#111827',
+    marginBottom: 4,
+    lineHeight: 32,
   },
-  goalAmount: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: Primary,
-  },
-  targetDate: {
-    fontSize: 13,
+  amountText: {
+    fontSize: 15,
     color: '#9CA3AF',
+    marginBottom: 32,
   },
-  editButton: {
-    marginTop: 8,
-    alignSelf: 'flex-end',
-    paddingVertical: 6,
-    paddingHorizontal: 16,
+
+  // 프로그레스
+  progressWrapper: {
+    gap: 10,
+  },
+  progressTrack: {
+    height: 26,
     borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    backgroundColor: '#E5E7EB',
+    overflow: 'hidden',
   },
-  editButtonText: {
-    fontSize: 13,
-    color: '#6B7280',
+  progressFill: {
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: '#FBB800',
+  },
+  progressLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  progressPercent: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FBB800',
+  },
+  progressMax: {
+    fontSize: 14,
+    color: '#D1D5DB',
   },
 });

@@ -49,3 +49,32 @@ export interface WishlistRequest {
 export interface GetWishlistResponse {
   data: Wishlist[];
 }
+
+export type VaultMemorandumStatus = 'WRITING' | 'SIGNED' | 'EXPOSED_WITHDRAW' | 'EXPOSED_TERMINATE';
+
+export interface VaultMemorandum {
+  id: number;
+  wishlistVaultId: number;
+  content1: string;
+  content2: string;
+  content3: string;
+  status: VaultMemorandumStatus;
+  signedAt: string | null;
+}
+
+export interface MemorandumRequest {
+  content1: string;
+  content2: string;
+  content3: string;
+}
+
+export interface GetMemorandumResponse {
+  data: VaultMemorandum;
+}
+
+export type WebhookPlatform = 'MATTERMOST' | 'KAKAO_TALK';
+
+export interface WebhookConfig {
+  platform: WebhookPlatform;
+  message: string;
+}

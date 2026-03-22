@@ -12,4 +12,10 @@ export type {
   Wishlist,
   WishlistRequest,
   GetWishlistResponse,
+  VaultMemorandumStatus,
+  VaultMemorandum,
+  MemorandumRequest,
+  GetMemorandumResponse,
+  WebhookPlatform,
+  WebhookConfig,
 } from './types/vault';

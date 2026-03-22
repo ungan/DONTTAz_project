@@ -9,10 +9,9 @@ interface VaultBalanceProps {
   lockedAmount: number;
   onDeposit: () => void;
   onWithdraw: () => void;
-  onWishlistPress: () => void;
 }
 
-export function VaultBalance({ lockedAmount, onDeposit, onWithdraw, onWishlistPress }: VaultBalanceProps) {
+export function VaultBalance({ lockedAmount, onDeposit, onWithdraw }: VaultBalanceProps) {
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>
@@ -20,9 +19,6 @@ export function VaultBalance({ lockedAmount, onDeposit, onWithdraw, onWishlistPr
           <Ionicons name="lock-closed" size={18} color="#111827" />
           <Text style={styles.label}>지켜낸 돈</Text>
         </View>
-        <TouchableOpacity onPress={onWishlistPress} activeOpacity={0.7}>
-          <Text style={styles.wishlistLink}>위시리스트 ›</Text>
-        </TouchableOpacity>
       </View>
 
       <Text style={styles.amount}>{lockedAmount.toLocaleString('ko-KR')}원</Text>
