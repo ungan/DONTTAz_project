@@ -1,5 +1,6 @@
 package com.donttaz.donttazapi.account.service;
 
+import com.donttaz.donttazapi.account.domain.Account;
 import com.donttaz.donttazapi.account.dto.request.CreateAccountRequest;
 import com.donttaz.donttazapi.account.dto.response.CreateAccountResponse;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountCreateResult;
@@ -26,9 +27,10 @@ public class AccountCreationService {
 
     public CreateAccountResponse createAccount(CreateAccountRequest request) {
         DemandDepositAccountCreateResult result = demandDepositService.createAccount(request.accountTypeUniqueNo());
-        syncCreatedAccount(request, result);
+        Long accountId = syncCreatedAccount(request, result);
 
         return CreateAccountResponse.builder()
+                .accountId(accountId)
                 .bankCode(result.bankCode())
                 .accountNo(result.accountNo())
                 .currency(result.currency())
@@ -36,14 +38,16 @@ public class AccountCreationService {
                 .build();
     }
 
-    private void syncCreatedAccount(CreateAccountRequest request, DemandDepositAccountCreateResult result) {
+    private Long syncCreatedAccount(CreateAccountRequest request, DemandDepositAccountCreateResult result) {
         try {
-            accountSyncService.syncCreatedAccount(request.accountTypeUniqueNo(), result.accountNo());
+            Account account = accountSyncService.syncCreatedAccount(request.accountTypeUniqueNo(), result.accountNo());
+            return account.getAccountId();
         } catch (RuntimeException exception) {
             log.warn(
                     "account sync failed after external account creation accountNo={} message={}",
                     result.accountNo(),
                     exception.getMessage());
+            return null;
         }
     }
 }

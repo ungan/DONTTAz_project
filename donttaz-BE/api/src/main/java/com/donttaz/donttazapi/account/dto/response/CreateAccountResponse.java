@@ -6,6 +6,9 @@ import lombok.Builder;
 @Builder
 @Schema(description = "수시입출금 계좌 생성 결과")
 public record CreateAccountResponse(
+        @Schema(description = "내부 계좌 ID", example = "42")
+        Long accountId,
+
         @Schema(description = "은행 코드", example = "001")
         String bankCode,
 

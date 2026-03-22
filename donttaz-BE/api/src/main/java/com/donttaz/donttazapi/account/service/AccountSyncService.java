@@ -49,8 +49,11 @@ public class AccountSyncService {
         }
     }
 
-    public void syncCreatedAccount(String accountTypeUniqueNo, String accountNo) {
-        syncAccountDetailSnapshot(resolveCurrentUserId(), bankingAccountQueryService.getAccountDetail(accountNo), accountTypeUniqueNo);
+    public Account syncCreatedAccount(String accountTypeUniqueNo, String accountNo) {
+        return syncAccountDetailSnapshot(
+                resolveCurrentUserId(),
+                bankingAccountQueryService.getAccountDetail(accountNo),
+                accountTypeUniqueNo);
     }
 
     public Account syncAccountSnapshot(String accountNo) {
