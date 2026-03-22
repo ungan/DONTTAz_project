@@ -56,7 +56,7 @@ echo "================================================="
 # ==============================================================================
 echo "📦 [$TARGET_ENV] 환경 도커 이미지 빌드 및 실행 중..."
 # 프로젝트 이름(-p)을 명시하여 Blue/Green 환경이 서로 간섭(down 시 다른 색상 삭제)하지 않도록 격리함
-docker-compose -p donttaz-${TARGET_ENV} -f docker-compose.${TARGET_ENV}.yml up -d --build
+docker compose -p donttaz-${TARGET_ENV} -f docker-compose.${TARGET_ENV}.yml up -d --build
 
 # ==============================================================================
 # Health Check (API & AI)
@@ -81,7 +81,7 @@ if [ "$API_IS_READY" = false ] || [ "$AI_IS_READY" = false ]; then
     echo "❌ [$TARGET_ENV] 헬스 체크 실패. 배포를 중단하고 새로 띄운 컨테이너를 종료합니다."
     echo "🔍 에러 원인 파악을 위해 멈춘 컨테이너의 로그(최근 100줄)를 확인합니다."
     docker logs donttaz-api-${TARGET_ENV} --tail 100
-    docker-compose -p donttaz-${TARGET_ENV} -f docker-compose.${TARGET_ENV}.yml down
+    docker compose -p donttaz-${TARGET_ENV} -f docker-compose.${TARGET_ENV}.yml down
     exit 1
 fi
 
@@ -106,7 +106,7 @@ else
     echo "💥 Nginx 리로드 실패! 설정을 롤백합니다."
     docker exec $NGINX_CONTAINER sh -c "echo 'include /etc/nginx/conf.d/api-${CURRENT_ENV}.inc;' > /etc/nginx/conf.d/service-env.inc"
     docker exec $NGINX_CONTAINER nginx -s reload
-    docker-compose -p donttaz-${TARGET_ENV} -f docker-compose.${TARGET_ENV}.yml down
+    docker compose -p donttaz-${TARGET_ENV} -f docker-compose.${TARGET_ENV}.yml down
     exit 1
 fi
 
@@ -116,6 +116,6 @@ fi
 # 배포 완료 후 5초 대기 (안정화)
 sleep 5
 echo "🛑 이전 [$CURRENT_ENV] 환경 컨테이너 종료..."
-docker-compose -p donttaz-${CURRENT_ENV} -f docker-compose.${CURRENT_ENV}.yml down
+docker compose -p donttaz-${CURRENT_ENV} -f docker-compose.${CURRENT_ENV}.yml down
 
 echo "✨ 모든 배포 파이프라인이 성공적으로 종료되었습니다."
