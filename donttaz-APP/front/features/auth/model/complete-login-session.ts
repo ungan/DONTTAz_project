@@ -32,6 +32,16 @@ export async function completeLoginSession(data: LoginResponseData) {
     if (isLegacyMockAccount(currentAccount.accountId, currentAccount.accountNo)) {
       currentAccount.clearAccount();
     }
+
+    // TODO: 백엔드 accountId 반환 fix 후 제거
+    if (!useBankAccountStore.getState().accountId) {
+      const fallbackId = process.env.EXPO_PUBLIC_ACCOUNT_ID
+        ? Number(process.env.EXPO_PUBLIC_ACCOUNT_ID)
+        : null;
+      if (fallbackId) {
+        useBankAccountStore.getState().setAccount(fallbackId, 'DONTTAZ', 0, null, null);
+      }
+    }
   }
 
   router.replace('/(tabs)/home');

@@ -24,6 +24,7 @@ export interface CreateAccountRequest {
 }
 
 export interface CreateAccountResponseData {
+  accountId: number | null;
   bankCode: string;
   accountNo: string;
   currency: string;
