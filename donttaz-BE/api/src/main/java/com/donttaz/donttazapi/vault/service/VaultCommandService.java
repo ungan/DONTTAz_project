@@ -17,6 +17,9 @@ import com.donttaz.donttazapi.memorandum.service.MemorandumService;
 import com.donttaz.donttazapi.vault.domain.TransactionType;
 import com.donttaz.donttazapi.vault.domain.VaultHistory;
 import com.donttaz.donttazapi.vault.repository.VaultHistoryRepository;
+import com.donttaz.donttazapi.webhook.event.VaultPenaltyEvent;
+import com.donttaz.donttazapi.common.config.RabbitMQConfig;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import com.donttaz.donttazapi.vault.repository.DefaultVaultRepository;
 import com.donttaz.donttazapi.vault.repository.WishlistVaultRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +39,7 @@ public class VaultCommandService {
         private final BankingClient bankingClient;
         private final CurrentUserProvider currentUserProvider;
         private final MemorandumService memorandumService;
+        private final RabbitTemplate rabbitTemplate;
 
         @Value("${vault.admin-user-id}")
         private Long adminUserId;
@@ -49,13 +53,15 @@ public class VaultCommandService {
                         VaultHistoryRepository vaultHistoryRepository,
                         BankingClient bankingClient,
                         CurrentUserProvider currentUserProvider,
-                        MemorandumService memorandumService) {
+                        MemorandumService memorandumService,
+                        RabbitTemplate rabbitTemplate) {
                 this.defaultVaultRepository = defaultVaultRepository;
                 this.wishlistVaultRepository = wishlistVaultRepository;
                 this.vaultHistoryRepository = vaultHistoryRepository;
                 this.bankingClient = bankingClient;
                 this.currentUserProvider = currentUserProvider;
                 this.memorandumService = memorandumService;
+                this.rabbitTemplate = rabbitTemplate;
         }
 
         @Transactional
@@ -255,6 +261,10 @@ public class VaultCommandService {
                 } else {
                         memorandumService.exposeByWithdraw(vault.getId());
                 }
+
+                // RabbitMQ 팬아웃 (수치심 메시지 비동기 처리)
+                rabbitTemplate.convertAndSend(RabbitMQConfig.PENALTY_EXCHANGE, RabbitMQConfig.PENALTY_ROUTING_KEY,
+                                new VaultPenaltyEvent(vault.getId()));
 
                 return VaultWithdrawResponse.builder()
                                 .vaultId(vault.getId())
