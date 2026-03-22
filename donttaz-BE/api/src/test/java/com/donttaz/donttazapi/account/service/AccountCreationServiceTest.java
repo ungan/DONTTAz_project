@@ -2,9 +2,10 @@ package com.donttaz.donttazapi.account.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import com.donttaz.donttazapi.account.domain.Account;
 import com.donttaz.donttazapi.account.dto.request.CreateAccountRequest;
 import com.donttaz.donttazapi.account.dto.response.CreateAccountResponse;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountCreateResult;
@@ -36,10 +37,15 @@ class AccountCreationServiceTest {
                 "0011234567890123",
                 "KRW",
                 "Korean Won");
+        Account syncedAccount = mock(Account.class);
+        given(syncedAccount.getAccountId()).willReturn(10L);
         given(demandDepositService.createAccount("001-1-abc")).willReturn(result);
+        given(accountSyncService.syncCreatedAccount("001-1-abc", "0011234567890123"))
+                .willReturn(syncedAccount);
 
         CreateAccountResponse response = accountCreationService.createAccount(request);
 
+        assertThat(response.accountId()).isEqualTo(10L);
         assertThat(response.bankCode()).isEqualTo("001");
         assertThat(response.accountNo()).isEqualTo("0011234567890123");
         assertThat(response.currency()).isEqualTo("KRW");
@@ -60,12 +66,12 @@ class AccountCreationServiceTest {
                 "Korean Won");
         given(demandDepositService.createAccount("001-1-abc")).willReturn(result);
 
-        doThrow(new IllegalStateException("sync failed"))
-                .when(accountSyncService)
-                .syncCreatedAccount("001-1-abc", "0011234567890123");
+        given(accountSyncService.syncCreatedAccount("001-1-abc", "0011234567890123"))
+                .willThrow(new IllegalStateException("sync failed"));
 
         CreateAccountResponse response = accountCreationService.createAccount(request);
 
+        assertThat(response.accountId()).isNull();
         assertThat(response.bankCode()).isEqualTo("001");
         assertThat(response.accountNo()).isEqualTo("0011234567890123");
         verify(accountSyncService).syncCreatedAccount("001-1-abc", "0011234567890123");
