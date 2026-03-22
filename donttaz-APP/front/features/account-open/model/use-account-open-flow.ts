@@ -5,6 +5,7 @@ import { createAccountApi } from '../api/create-account';
 import { getCurrentUserSummaryApi } from '../api/get-current-user-summary';
 import { getDemandDepositProductsApi } from '../api/get-demand-deposit-products';
 import { useAccountOpenStore } from './account-open-store';
+import { setPrimaryAccountApi } from '../api/set-primary-account';
 import { verifyIdentityApi } from '@/features/signup/api/signup';
 import {
   parsePortOneCallbackUrl,
@@ -318,14 +319,15 @@ export function useAccountOpenFlow() {
       const response = await createAccountApi({
         accountTypeUniqueNo: accountOpenState.selectedAccountTypeUniqueNo,
       });
-      const currentAccount = useBankAccountStore.getState();
       const createdBankName = accountOpenState.selectedBankName || 'DONTTAZ';
       const createdAccountAlias = buildAccountAlias(accountOpenState.customerName);
 
+      await setPrimaryAccountApi(response.data.accountNo);
+
       useBankAccountStore.getState().setAccount(
-        currentAccount.accountId,
+        response.data.accountId ?? null,
         createdBankName,
-        currentAccount.balance ?? 0,
+        0,
         response.data.accountNo,
         accountOpenState.selectedProductName || createdAccountAlias
       );

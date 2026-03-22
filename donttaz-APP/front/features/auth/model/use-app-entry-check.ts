@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { getStoredAccessToken, getStoredDevicePin, getStoredRefreshToken } from '@/shared/api/auth-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { clearStoredAuthTokens, clearStoredDevicePin, getStoredAccessToken, getStoredDevicePin, getStoredRefreshToken } from '@/shared/api/auth-storage';
+
+const APP_INSTALLED_KEY = 'app_installed';
 
 export function useAppEntryCheck():
   | 'loading'
@@ -12,6 +15,13 @@ export function useAppEntryCheck():
 
   useEffect(() => {
     const check = async () => {
+      const isInstalled = await AsyncStorage.getItem(APP_INSTALLED_KEY);
+      if (!isInstalled) {
+        await clearStoredAuthTokens();
+        await clearStoredDevicePin();
+        await AsyncStorage.setItem(APP_INSTALLED_KEY, 'true');
+      }
+
       const [refreshToken, storedPin, accessToken] = await Promise.all([
         getStoredRefreshToken(),
         getStoredDevicePin(),
