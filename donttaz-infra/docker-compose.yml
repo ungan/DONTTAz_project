@@ -68,13 +68,14 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: donttaz-grafana
-    restart: always
+    restart: "no"
     ports:
       - "127.0.0.1:3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=a1d2m3i4n5 # [보안] 초기 비밀번호
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     networks:
       - donttaz-net
 

@@ -33,7 +33,11 @@ pipeline {
                             string(credentialsId: 'DB_USERNAME', variable: 'DB_USERNAME'),
                             string(credentialsId: 'DB_PASSWORD', variable: 'DB_PASSWORD'),
                             string(credentialsId: 'REDIS_HOST', variable: 'REDIS_HOST'),
-                            string(credentialsId: 'REDIS_PORT', variable: 'REDIS_PORT')
+                            string(credentialsId: 'REDIS_PORT', variable: 'REDIS_PORT'),
+                            string(credentialsId: 'RABBITMQ_HOST', variable: 'RABBITMQ_HOST'),
+                            string(credentialsId: 'RABBITMQ_PORT', variable: 'RABBITMQ_PORT'),
+                            string(credentialsId: 'RABBITMQ_USERNAME', variable: 'RABBITMQ_USERNAME'),
+                            string(credentialsId: 'RABBITMQ_PASSWORD', variable: 'RABBITMQ_PASSWORD')
                         ]) {
                             sh """
                             echo "FIN_API_BASE_URL=${FIN_API_BASE_URL}" > .env
@@ -43,6 +47,10 @@ pipeline {
                             echo "DB_PASSWORD=${DB_PASSWORD}" >> .env
                             echo "REDIS_HOST=${REDIS_HOST}" >> .env
                             echo "REDIS_PORT=${REDIS_PORT}" >> .env
+                            echo "RABBITMQ_HOST=${RABBITMQ_HOST}" >> .env
+                            echo "RABBITMQ_PORT=${RABBITMQ_PORT}" >> .env
+                            echo "RABBITMQ_USERNAME=${RABBITMQ_USERNAME}" >> .env
+                            echo "RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}" >> .env
                             """
                             echo "🔐 .env file created securely."
                         }
