@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -33,18 +35,35 @@ public class PenaltyWebhookService {
             throw new CustomException(ErrorCode.VAULT_ACCESS_DENIED);
         }
 
+        LocalDateTime expiresAt = request.expiresIn() != null
+                ? LocalDateTime.now().plusSeconds(request.expiresIn())
+                : null;
+
+        String uuidsString = request.receiverUuuids() != null
+                ? String.join(",", request.receiverUuuids())
+                : null;
+
         PenaltyWebhook webhook = penaltyWebhookRepository.findByWishlistVaultId(wishlistVaultId)
                 .orElseGet(() -> PenaltyWebhook.builder()
                         .userId(userId)
                         .wishlistVaultId(wishlistVaultId)
                         .platformType(request.platformType())
                         .webhookToken(request.webhookToken())
+                        .refreshToken(request.refreshToken())
+                        .accessTokenExpiresAt(expiresAt)
+                        .receiverUuuids(uuidsString)
                         .shameMessage(request.shameMessage())
                         .build());
 
         // Update if it already exists
         if (webhook.getId() != null) {
-            webhook.updateWebhookSettings(request.platformType(), request.webhookToken(), request.shameMessage());
+            webhook.updateWebhookSettings(
+                    request.platformType(),
+                    request.webhookToken(),
+                    request.refreshToken(),
+                    expiresAt,
+                    uuidsString,
+                    request.shameMessage());
         }
 
         PenaltyWebhook saved = penaltyWebhookRepository.save(webhook);

@@ -10,7 +10,13 @@ import jakarta.validation.constraints.Size;
 public record PenaltyWebhookRequest(
         @Schema(description = "플랫폼 타입 (기본값: KAKAOTALK)", example = "KAKAOTALK") @NotNull(message = "플랫폼 타입은 필수입니다.") PlatformType platformType,
 
-        @Schema(description = "웹훅 발송을 위한 식별 토큰", example = "kakao_oauth_token_123") @NotBlank(message = "웹훅 토큰은 필수입니다.") String webhookToken,
+        @Schema(description = "웹훅 발송을 위한 식별 토큰 (Access Token)", example = "kakao_oauth_token_123") @NotBlank(message = "웹훅 토큰은 필수입니다.") String webhookToken,
+
+        @Schema(description = "카카오 리프레시 토큰", example = "kakao_refresh_token_123") String refreshToken,
+
+        @Schema(description = "액세스 토큰 유효 시간(초)", example = "21599") Long expiresIn,
+
+        @Schema(description = "메시지를 수신할 친구들의 UUID 목록 (친구에게 보내기용)", example = "[\"uuid1\", \"uuid2\"]") java.util.List<String> receiverUuuids,
 
         @Schema(description = "수치심 메시지 내용 (최대 200자)", example = "방금 야식 결제해 버렸습니다. 한마디씩 부탁드립니다.") @NotBlank(message = "수치심 메시지는 필수입니다.") @Size(max = 200, message = "수치심 메시지는 200자를 초과할 수 없습니다.") String shameMessage) {
 }
