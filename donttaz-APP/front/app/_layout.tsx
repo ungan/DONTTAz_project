@@ -41,6 +41,9 @@ export default function RootLayout() {
           <Stack.Screen name="transfer-confirm" options={{ headerShown: false }} />
           <Stack.Screen name="report" options={{ headerShown: false }} />
           <Stack.Screen name="report-monthly" options={{ headerShown: false }} />
+          <Stack.Screen name="vault-memorandum" options={{ headerShown: false }} />
+          <Stack.Screen name="vault-webhook" options={{ headerShown: false }} />
+          <Stack.Screen name="vault-deposit" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>

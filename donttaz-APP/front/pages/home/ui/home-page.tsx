@@ -23,7 +23,7 @@ export function HomePage() {
       router.push('/(tabs)/plan');
     }
     if (id === '4') {
-      router.push('/(tabs)/vault');
+      router.push('/vault-memorandum');
     }
   };
 
