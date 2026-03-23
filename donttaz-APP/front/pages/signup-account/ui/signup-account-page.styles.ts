@@ -1,13 +1,25 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
   container: {
     flexGrow: 1,
     paddingHorizontal: 16,
     paddingTop: 20,
-    paddingBottom: 32,
-    backgroundColor: '#FFFFFF',
+    paddingBottom: 16,
     gap: 24,
+  },
+  headerBlock: {
+    marginHorizontal: -16,
+  },
+  bottomBar: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 8,
+    backgroundColor: '#FFFFFF',
   },
   section: {
     gap: 12,

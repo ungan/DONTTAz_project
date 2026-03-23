@@ -1,46 +1,66 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
   container: {
     flexGrow: 1,
-    paddingHorizontal: 16,
     paddingTop: 20,
-    paddingBottom: 32,
-    backgroundColor: '#FFFFFF',
-    gap: 24,
+    paddingBottom: 16,
   },
-  section: {
-    gap: 12,
+  headerBlock: {
+    marginHorizontal: 0,
   },
-  title: {
-    fontSize: 24,
+  heroSection: {
+    alignItems: 'center',
+    paddingTop: 72,
+    paddingBottom: 40,
+    gap: 20,
+    paddingHorizontal: 24,
+  },
+  heroTitle: {
+    fontSize: 20,
     fontWeight: '700',
     color: '#111827',
+    textAlign: 'center',
   },
-  description: {
-    fontSize: 15,
-    lineHeight: 24,
-    color: '#4B5563',
+  summaryList: {
+    borderTopWidth: 1.5,
+    borderBottomWidth: 1.5,
+    borderColor: '#111827',
+    marginTop: 48,
+    marginHorizontal: 24,
   },
-  statusCard: {
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: '#F8FAFC',
-    gap: 12,
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 18,
   },
-  statusText: {
-    fontSize: 15,
-    lineHeight: 24,
-    color: '#374151',
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: '#9CA3AF',
+  },
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#111827',
+  },
+  bottomBar: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 8,
+    backgroundColor: '#FFFFFF',
   },
   errorText: {
     fontSize: 14,
     lineHeight: 22,
     color: '#DC2626',
-  },
-  helperText: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: '#6B7280',
   },
 });

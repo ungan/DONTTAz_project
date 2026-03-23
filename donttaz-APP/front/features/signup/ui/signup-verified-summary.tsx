@@ -21,7 +21,7 @@ export function SignupVerifiedSummary({
 }: SignupVerifiedSummaryProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>인증된 본인 정보</Text>
+      <Text style={styles.title}>✓ 본인인증 완료</Text>
       <View style={styles.row}>
         <Text style={styles.label}>이름</Text>
         <Text style={styles.value}>{name}</Text>

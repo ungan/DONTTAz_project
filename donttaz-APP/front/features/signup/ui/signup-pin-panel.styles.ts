@@ -2,14 +2,20 @@ import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   container: {
-    gap: 24,
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingBottom: 24,
   },
   section: {
-    gap: 12,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 20,
+    paddingHorizontal: 24,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 22,
+    fontWeight: '700',
     color: '#111827',
     textAlign: 'center',
   },
@@ -20,17 +26,13 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   indicatorBlock: {
-    gap: 10,
     alignItems: 'center',
-  },
-  indicatorLabel: {
-    fontSize: 13,
-    color: '#6B7280',
   },
   errorText: {
     fontSize: 13,
     lineHeight: 20,
     color: '#DC2626',
     textAlign: 'center',
+    paddingHorizontal: 24,
   },
 });
