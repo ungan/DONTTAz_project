@@ -22,6 +22,9 @@ import com.donttaz.donttazapi.common.config.RabbitMQConfig;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import com.donttaz.donttazapi.vault.repository.DefaultVaultRepository;
 import com.donttaz.donttazapi.vault.repository.WishlistVaultRepository;
+import com.donttaz.donttazapi.account.repository.AccountRepository;
+import com.donttaz.donttazapi.account.domain.Account;
+import com.donttaz.donttazapi.account.domain.AccountStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +43,7 @@ public class VaultCommandService {
         private final CurrentUserProvider currentUserProvider;
         private final MemorandumService memorandumService;
         private final RabbitTemplate rabbitTemplate;
+        private final AccountRepository accountRepository;
 
         @Value("${vault.admin-user-id}")
         private Long adminUserId;
@@ -54,7 +58,8 @@ public class VaultCommandService {
                         BankingClient bankingClient,
                         CurrentUserProvider currentUserProvider,
                         MemorandumService memorandumService,
-                        RabbitTemplate rabbitTemplate) {
+                        RabbitTemplate rabbitTemplate,
+                        AccountRepository accountRepository) {
                 this.defaultVaultRepository = defaultVaultRepository;
                 this.wishlistVaultRepository = wishlistVaultRepository;
                 this.vaultHistoryRepository = vaultHistoryRepository;
@@ -62,6 +67,7 @@ public class VaultCommandService {
                 this.currentUserProvider = currentUserProvider;
                 this.memorandumService = memorandumService;
                 this.rabbitTemplate = rabbitTemplate;
+                this.accountRepository = accountRepository;
         }
 
         @Transactional
@@ -152,6 +158,12 @@ public class VaultCommandService {
                 } else {
                         WishlistVault vault = wishlistVaultRepository.findByIdAndUserId(vaultId, userId)
                                         .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
+
+                        if (vault.getLockedAmount() + request.amount() > vault.getGoalAmount()) {
+                                throw new CustomException(ErrorCode.INVALID_REQUEST,
+                                                "입금 이후 금액이 위시리스트 목표 금액을 초과할 수 없습니다.");
+                        }
+
                         depositToWishlist(vault, request.amount(), request.accountNo());
                         return VaultDepositResponse.builder()
                                         .vaultId(vault.getId())
@@ -173,6 +185,10 @@ public class VaultCommandService {
                                 adminAccountNo, "금고 입금 수납", String.valueOf(amount), accountNo, "금고 입금"));
                 vault.deposit(amount);
                 saveHistory(vault.getId(), VaultKind.WISHLIST, TransactionType.DEPOSIT, amount, 0L);
+
+                if (vault.getLockedAmount() >= vault.getGoalAmount() && vault.getStatus() == VaultStatus.LOCKED) {
+                        processWishlistMaturity(vault, vault.getUserId());
+                }
         }
 
         @Transactional
@@ -182,7 +198,31 @@ public class VaultCommandService {
 
                 if (!wishlistVaults.isEmpty()) {
                         WishlistVault target = wishlistVaults.get(0);
-                        depositToWishlistInternal(target, amount, accountNo);
+                        long currentLocked = target.getLockedAmount();
+                        long goalAmount = target.getGoalAmount();
+                        long remainingCapacity = goalAmount - currentLocked;
+
+                        if (remainingCapacity > 0) {
+                                if (amount <= remainingCapacity) {
+                                        depositToWishlistInternal(target, amount, accountNo);
+                                } else {
+                                        // 목표 금액만큼만 위시리스트 금고에 입금
+                                        depositToWishlistInternal(target, remainingCapacity, accountNo);
+                                        // 초과 금액은 기본 금고에 입금
+                                        long excess = amount - remainingCapacity;
+                                        DefaultVault defaultVault = defaultVaultRepository
+                                                        .findByUserIdAndStatus(userId, VaultStatus.LOCKED)
+                                                        .orElseThrow(() -> new CustomException(
+                                                                        ErrorCode.VAULT_NOT_FOUND));
+                                        depositToDefaultInternal(defaultVault, excess, accountNo);
+                                }
+                        } else {
+                                // 이미 목표 금액을 달성했거나 초과한 경우 모두 기본 금고로
+                                DefaultVault defaultVault = defaultVaultRepository
+                                                .findByUserIdAndStatus(userId, VaultStatus.LOCKED)
+                                                .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
+                                depositToDefaultInternal(defaultVault, amount, accountNo);
+                        }
                 } else {
                         DefaultVault target = defaultVaultRepository.findByUserIdAndStatus(userId, VaultStatus.LOCKED)
                                         .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
@@ -195,6 +235,10 @@ public class VaultCommandService {
                                 adminAccountNo, "금고 자동 입금(배치)", String.valueOf(amount), accountNo, "금고 자동 입금"));
                 vault.deposit(amount);
                 saveHistory(vault.getId(), VaultKind.WISHLIST, TransactionType.DEPOSIT, amount, 0L);
+
+                if (vault.getLockedAmount() >= vault.getGoalAmount() && vault.getStatus() == VaultStatus.LOCKED) {
+                        processWishlistMaturity(vault, vault.getUserId());
+                }
         }
 
         private void depositToDefaultInternal(DefaultVault vault, Long amount, String accountNo) {
@@ -289,9 +333,23 @@ public class VaultCommandService {
                 WishlistVault vault = wishlistVaultRepository.findByIdAndUserId(vaultId, userId)
                                 .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
 
+                processWishlistMaturity(vault, userId);
+        }
+
+        private void processWishlistMaturity(WishlistVault vault, Long userId) {
                 Long interest = vault.calculateInterest();
                 Long finalAmount = vault.getLockedAmount();
                 vault.matureVault();
+                Long totalTransferAmount = finalAmount + interest;
+
+                Account primaryAccount = accountRepository
+                                .findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(userId, AccountStatus.ACTIVE)
+                                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
+
+                bankingClient.transfer(adminUserId, new TransferCommand(
+                                primaryAccount.getAccountNumber(), "금고 만기 환급", String.valueOf(totalTransferAmount),
+                                adminAccountNo,
+                                "금고 자동 해지"));
 
                 saveHistory(vault.getId(), VaultKind.WISHLIST, TransactionType.WITHDRAW_MATURED, finalAmount, interest);
         }
