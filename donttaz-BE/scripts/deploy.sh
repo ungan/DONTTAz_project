@@ -91,8 +91,8 @@ fi
 echo "🔀 Nginx 라우팅 경로를 [$TARGET_ENV] 로 변경합니다..."
 
 # 최신 라우팅 파일을 Nginx 컨테이너 내부로 복사
-docker cp ./nginx/api-blue.inc $NGINX_CONTAINER:/etc/nginx/conf.d/api-blue.inc
-docker cp ./nginx/api-green.inc $NGINX_CONTAINER:/etc/nginx/conf.d/api-green.inc
+docker cp ./nginx/conf.d/api-blue.inc $NGINX_CONTAINER:/etc/nginx/conf.d/api-blue.inc
+docker cp ./nginx/conf.d/api-green.inc $NGINX_CONTAINER:/etc/nginx/conf.d/api-green.inc
 
 # Nginx 에 사용될 프로파일 변경
 docker exec $NGINX_CONTAINER sh -c "echo 'include /etc/nginx/conf.d/api-${TARGET_ENV}.inc;' > /etc/nginx/conf.d/service-env.inc"
