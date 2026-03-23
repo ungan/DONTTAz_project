@@ -9,6 +9,9 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     gap: 24,
   },
+  headerBlock: {
+    marginHorizontal: -16,
+  },
   section: {
     gap: 12,
   },
@@ -26,22 +29,18 @@ export const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     backgroundColor: '#F8FAFC',
-    gap: 12,
+    gap: 10,
   },
   cardTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  cardText: {
     fontSize: 14,
-    lineHeight: 22,
+    fontWeight: '600',
     color: '#6B7280',
+    marginBottom: 2,
   },
-  helperText: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: '#6B7280',
+  cardItem: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#111827',
   },
   errorText: {
     fontSize: 14,

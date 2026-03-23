@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { ScrollView, View, Text } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, PageHeader } from '@/shared/ui';
 import {
   SignupAccountForm,
@@ -11,6 +12,7 @@ import {
 import { styles } from './signup-account-page.styles';
 
 export function SignupAccountPage() {
+  const insets = useSafeAreaInsets();
   const {
     currentStep,
     errorMessage,
@@ -36,41 +38,42 @@ export function SignupAccountPage() {
   }, [isVerified]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <PageHeader title="계정 정보 설정" />
+    <View style={styles.outerContainer}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.headerBlock}>
+          <PageHeader title="계정설정" />
+          <SignupProgress currentStep={currentStep} />
+        </View>
 
-      <SignupProgress currentStep={currentStep} />
+        <View style={styles.section}>
+          <Text style={styles.title}>이메일·비밀번호 설정</Text>
+          <Text style={styles.description}>
+            로그인에 사용할 이메일 주소와 비밀번호를 입력해 주세요.
+          </Text>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.title}>로그인에 사용할 계정을 정해 주세요</Text>
-        <Text style={styles.description}>
-          인증된 본인 정보는 수정하지 않고, 이메일과 비밀번호만 직접 입력합니다.
-        </Text>
+        <SignupVerifiedSummary
+          name={verifiedName}
+          phoneNumber={verifiedPhoneNumber}
+        />
+
+        <SignupAccountForm
+          loginId={loginId}
+          password={password}
+          passwordConfirm={passwordConfirm}
+          loginIdError={loginIdError}
+          passwordError={passwordError}
+          passwordConfirmError={passwordConfirmError}
+          onLoginIdChange={updateLoginId}
+          onPasswordChange={updatePassword}
+          onPasswordConfirmChange={updatePasswordConfirm}
+        />
+      </ScrollView>
+
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        <Button label="다음" onPress={submitAccountStep} />
       </View>
-
-      <SignupVerifiedSummary
-        name={verifiedName}
-        phoneNumber={verifiedPhoneNumber}
-      />
-
-      <SignupAccountForm
-        loginId={loginId}
-        password={password}
-        passwordConfirm={passwordConfirm}
-        loginIdError={loginIdError}
-        passwordError={passwordError}
-        passwordConfirmError={passwordConfirmError}
-        onLoginIdChange={updateLoginId}
-        onPasswordChange={updatePassword}
-        onPasswordConfirmChange={updatePasswordConfirm}
-      />
-
-      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-
-      <Button
-        label="다음"
-        onPress={submitAccountStep}
-      />
-    </ScrollView>
+    </View>
   );
 }

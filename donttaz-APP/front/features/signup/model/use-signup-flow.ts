@@ -84,12 +84,8 @@ export function useSignupFlow() {
     signupState.setVerificationLoading(true);
 
     try {
-      let identityVerificationId = MOCK_VERIFICATION_ID;
-
-      if (process.env.EXPO_PUBLIC_IS_MOCK !== 'true') {
-        const portOneResult = await requestPortOneIdentityVerification();
-        identityVerificationId = portOneResult.identityVerificationId;
-      }
+      const portOneResult = await requestPortOneIdentityVerification();
+      const identityVerificationId = portOneResult.identityVerificationId;
 
       await completeIdentityVerification(identityVerificationId);
     } catch (error) {
@@ -302,9 +298,8 @@ export function useSignupFlow() {
         password: signupState.password,
       });
 
-      await completeLoginSession(response.data);
       await storeDevicePin(signupState.pinCode);
-      signupState.resetFlow();
+      await completeLoginSession(response.data);
     } catch {
       signupState.setErrorMessage(
         '회원가입은 완료되었지만 자동 로그인에 실패했습니다. 다시 시도해 주세요.'
