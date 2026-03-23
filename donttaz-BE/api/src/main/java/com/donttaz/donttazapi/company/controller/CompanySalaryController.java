@@ -5,6 +5,7 @@ import com.donttaz.donttazapi.company.dto.request.PaySalaryRequest;
 import com.donttaz.donttazapi.company.dto.request.RegisterCompanyAccountRequest;
 import com.donttaz.donttazapi.company.dto.response.CompanyAccountResponse;
 import com.donttaz.donttazapi.company.dto.response.CompanyResponse;
+import com.donttaz.donttazapi.company.dto.response.UserAccountSummaryResponse;
 import com.donttaz.donttazapi.company.service.CompanySalaryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
@@ -71,5 +72,23 @@ public class CompanySalaryController {
     @PostMapping("/pay")
     public void paySalary(@Valid @RequestBody PaySalaryRequest request) {
         companySalaryService.paySalary(request.companyAccountId(), request.userAccountNo(), request.amount());
+    }
+
+    /**
+     * 특정 기업 계좌 1억 원 입금 (테스트용)
+     */
+    @Operation(summary = "기업 자금 1억 입금", description = "기업 ID를 기반으로 해당 기업의 첫 번째 계좌에 1억 원을 강제로 입금함. (잔액 부족 방지용)")
+    @PostMapping("/companies/{companyId}/deposit")
+    public void depositCompanyFund(@PathVariable("companyId") Long companyId) {
+        companySalaryService.deposit100Million(companyId);
+    }
+
+    /**
+     * 전체 사용자 계좌 리스트 조회 (테스트용)
+     */
+    @Operation(summary = "전체 사용자 계좌 목록 조회", description = "급여 이체 테스트 시 대상 계좌를 찾기 쉽도록, 전체 활성 사용자의 이름과 계좌 번호를 조회함.")
+    @GetMapping("/users/accounts")
+    public List<UserAccountSummaryResponse> getAllUserAccounts() {
+        return companySalaryService.getAllUserAccounts();
     }
 }
