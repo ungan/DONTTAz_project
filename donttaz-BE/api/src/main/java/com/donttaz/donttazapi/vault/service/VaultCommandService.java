@@ -7,7 +7,6 @@ import com.donttaz.donttazapi.vault.domain.DefaultVault;
 import com.donttaz.donttazapi.vault.domain.WishlistVault;
 import com.donttaz.donttazapi.vault.domain.VaultKind;
 import com.donttaz.donttazapi.vault.domain.VaultStatus;
-import com.donttaz.donttazapi.vault.dto.request.CreateVaultRequest;
 import com.donttaz.donttazapi.vault.dto.request.SetWishlistGoalRequest;
 import com.donttaz.donttazapi.vault.dto.response.CreateVaultResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultDepositResponse;
@@ -71,23 +70,24 @@ public class VaultCommandService {
         }
 
         @Transactional
-        public CreateVaultResponse createVault(CreateVaultRequest request) {
+        public CreateVaultResponse createDefaultVault() {
                 Long userId = currentUserProvider.getCurrentUserId();
+                createDefaultVault(userId);
+                DefaultVault vault = defaultVaultRepository.findByUserId(userId)
+                                .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
+                return CreateVaultResponse.builder()
+                                .vaultId(vault.getId())
+                                .vaultKind(VaultKind.DEFAULT.name())
+                                .lockedAmount(vault.getLockedAmount())
+                                .status(vault.getStatus().name())
+                                .build();
+        }
 
-                if (request.vaultKind() == VaultKind.DEFAULT) {
-                        createDefaultVault(userId);
-                        DefaultVault vault = defaultVaultRepository.findByUserId(userId)
-                                        .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
-                        return CreateVaultResponse.builder()
-                                        .vaultId(vault.getId())
-                                        .vaultKind(VaultKind.DEFAULT.name())
-                                        .lockedAmount(vault.getLockedAmount())
-                                        .status(vault.getStatus().name())
-                                        .build();
-                }
-
+        @Transactional
+        public CreateVaultResponse createWishlistVault(
+                        com.donttaz.donttazapi.vault.dto.request.CreateWishlistVaultRequest request) {
+                Long userId = currentUserProvider.getCurrentUserId();
                 validateWishlistUniqueness(userId);
-                validateWishlistRequirement(request);
 
                 WishlistVault wishlistVault = WishlistVault.builder()
                                 .userId(userId)
@@ -97,11 +97,6 @@ public class VaultCommandService {
                                 .build();
 
                 WishlistVault saved = wishlistVaultRepository.save(wishlistVault);
-
-                // 각서 동시 생성 (필수)
-                if (request.memorandum() == null) {
-                        throw new CustomException(ErrorCode.INVALID_REQUEST, "위시리스트 금고 생성 시 각서 작성은 필수입니다.");
-                }
 
                 memorandumService.createInitialMemorandum(
                                 userId,
@@ -132,12 +127,6 @@ public class VaultCommandService {
         private void validateWishlistUniqueness(Long userId) {
                 if (wishlistVaultRepository.existsByUserIdAndStatus(userId, VaultStatus.LOCKED)) {
                         throw new CustomException(ErrorCode.INVALID_REQUEST, "사용자는 1개의 활성 위시리스트 금고만 가질 수 있습니다.");
-                }
-        }
-
-        private void validateWishlistRequirement(CreateVaultRequest request) {
-                if (request.wishName() == null || request.wishName().isBlank() || request.goalAmount() == null) {
-                        throw new CustomException(ErrorCode.INVALID_REQUEST, "위시리스트 금고 생성 시 목표 이름과 금액은 필수입니다.");
                 }
         }
 
