@@ -12,6 +12,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# NLP 모델 빌드 시점에 미리 다운로드 (재시작 시 재다운로드 방지)
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('jhgan/ko-sbert-multitask')"
+
 # 애플리케이션 코드 복사
 COPY . .
 
