@@ -87,14 +87,6 @@ public class WishlistVault extends BaseEntity {
         }
     }
 
-    public void updateGoal(String wishName, Long goalAmount) {
-        if (this.status != VaultStatus.LOCKED) {
-            throw new CustomException(ErrorCode.INVALID_REQUEST, "잠금 상태인 금고만 목표를 수정할 수 있습니다.");
-        }
-        this.wishName = wishName;
-        this.goalAmount = goalAmount;
-    }
-
     public void withdraw(Long amount) {
         if (this.status != VaultStatus.LOCKED) {
             throw new CustomException(ErrorCode.INVALID_REQUEST, "잠금 상태인 금고만 출금할 수 있습니다.");

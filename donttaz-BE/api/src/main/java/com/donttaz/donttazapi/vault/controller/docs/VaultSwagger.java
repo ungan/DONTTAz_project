@@ -2,7 +2,6 @@ package com.donttaz.donttazapi.vault.controller.docs;
 
 import com.donttaz.donttazapi.vault.domain.VaultKind;
 import com.donttaz.donttazapi.vault.dto.request.CreateWishlistVaultRequest;
-import com.donttaz.donttazapi.vault.dto.request.SetWishlistGoalRequest;
 import com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest;
 import com.donttaz.donttazapi.vault.dto.request.VaultWithdrawRequest;
 import com.donttaz.donttazapi.vault.dto.response.CreateVaultResponse;
@@ -93,11 +92,6 @@ public interface VaultSwagger {
                         @Parameter(description = "금고 종류", example = "WISHLIST") @PathVariable VaultKind kind,
                         @Parameter(description = "금고 ID", example = "10") @PathVariable Long vaultId,
                         @RequestBody VaultWithdrawRequest request);
-
-        @Operation(summary = "위시리스트 목표 설정/수정", description = "위시리스트 금고의 이름과 금액을 설정/수정합니다.")
-        ResponseEntity<VaultSummaryResponse> setWishlistGoal(
-                        @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId,
-                        @RequestBody SetWishlistGoalRequest request);
 
         @Operation(summary = "위시리스트 목표 달성 (정상 해지) 처리", description = "위시리스트 금고를 정상적으로 해지 처리합니다. 무출금 시 1% 보너스가 지급됩니다.")
         ResponseEntity<VaultSummaryResponse> achieveWishlist(
