@@ -3,7 +3,6 @@ package com.donttaz.donttazapi.vault.controller;
 import com.donttaz.donttazapi.vault.controller.docs.VaultSwagger;
 import com.donttaz.donttazapi.vault.domain.VaultKind;
 import com.donttaz.donttazapi.vault.dto.request.CreateWishlistVaultRequest;
-import com.donttaz.donttazapi.vault.dto.request.SetWishlistGoalRequest;
 import com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest;
 import com.donttaz.donttazapi.vault.dto.request.VaultWithdrawRequest;
 import com.donttaz.donttazapi.vault.dto.response.CreateVaultResponse;
@@ -78,15 +77,6 @@ public class VaultController implements VaultSwagger {
                         @PathVariable Long vaultId,
                         @Valid @RequestBody VaultWithdrawRequest request) {
                 return ResponseEntity.ok(vaultCommandService.withdraw(vaultId, kind, request));
-        }
-
-        @Override
-        @PatchMapping("/wishlist/{vaultId}")
-        public ResponseEntity<VaultSummaryResponse> setWishlistGoal(
-                        @PathVariable Long vaultId,
-                        @Valid @RequestBody SetWishlistGoalRequest request) {
-                vaultCommandService.setWishlistGoal(vaultId, request);
-                return ResponseEntity.ok(vaultQueryService.getVaultDetail(vaultId, VaultKind.WISHLIST));
         }
 
         @Override

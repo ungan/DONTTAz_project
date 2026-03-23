@@ -7,7 +7,6 @@ import com.donttaz.donttazapi.vault.domain.DefaultVault;
 import com.donttaz.donttazapi.vault.domain.WishlistVault;
 import com.donttaz.donttazapi.vault.domain.VaultKind;
 import com.donttaz.donttazapi.vault.domain.VaultStatus;
-import com.donttaz.donttazapi.vault.dto.request.SetWishlistGoalRequest;
 import com.donttaz.donttazapi.vault.dto.response.CreateVaultResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultDepositResponse;
 import com.donttaz.donttazapi.vault.dto.response.VaultWithdrawResponse;
@@ -306,14 +305,6 @@ public class VaultCommandService {
                                 .totalRefundAmount(totalTransferAmount)
                                 .withdrawalCount(vault.getWithdrawalCount())
                                 .build();
-        }
-
-        @Transactional
-        public void setWishlistGoal(Long vaultId, SetWishlistGoalRequest request) {
-                Long userId = currentUserProvider.getCurrentUserId();
-                WishlistVault vault = wishlistVaultRepository.findByIdAndUserId(vaultId, userId)
-                                .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
-                vault.updateGoal(request.wishName(), request.goalAmount());
         }
 
         @Transactional
