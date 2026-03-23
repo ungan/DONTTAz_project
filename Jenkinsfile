@@ -37,7 +37,10 @@ pipeline {
                             string(credentialsId: 'RABBITMQ_HOST', variable: 'RABBITMQ_HOST'),
                             string(credentialsId: 'RABBITMQ_PORT', variable: 'RABBITMQ_PORT'),
                             string(credentialsId: 'RABBITMQ_USERNAME', variable: 'RABBITMQ_USERNAME'),
-                            string(credentialsId: 'RABBITMQ_PASSWORD', variable: 'RABBITMQ_PASSWORD')
+                            string(credentialsId: 'RABBITMQ_PASSWORD', variable: 'RABBITMQ_PASSWORD'),
+                            string(credentialsId: 'KAKAO_CLIENT_ID', variable: 'KAKAO_CLIENT_ID'),
+                            string(credentialsId: 'KAKAO_CLIENT_SECRET', variable: 'KAKAO_CLIENT_SECRET'),
+                            string(credentialsId: 'API_SECRET', variable: 'API_SECRET')
                         ]) {
                             sh """
                             echo "FIN_API_BASE_URL=${FIN_API_BASE_URL}" > .env
@@ -51,6 +54,9 @@ pipeline {
                             echo "RABBITMQ_PORT=${RABBITMQ_PORT}" >> .env
                             echo "RABBITMQ_USERNAME=${RABBITMQ_USERNAME}" >> .env
                             echo "RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}" >> .env
+                            echo "KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}" >> .env
+                            echo "KAKAO_CLIENT_SECRET=${KAKAO_CLIENT_SECRET}" >> .env
+                            echo "API_SECRET=${API_SECRET}" >> .env
                             """
                             echo "🔐 .env file created securely."
                         }
