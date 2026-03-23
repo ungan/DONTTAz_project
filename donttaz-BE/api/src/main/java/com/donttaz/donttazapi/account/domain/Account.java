@@ -136,6 +136,10 @@ public class Account extends BaseEntity {
         this.isPrimary = Boolean.TRUE;
     }
 
+    public void updateLastSyncedAt(LocalDateTime lastSyncedAt) {
+        this.lastSyncedAt = lastSyncedAt;
+    }
+
     public void unlink(Long balance, LocalDateTime lastSyncedAt) {
         this.balance = balance;
         this.lastSyncedAt = lastSyncedAt;

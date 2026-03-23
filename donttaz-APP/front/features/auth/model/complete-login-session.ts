@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { getMyAccountsApi } from '@/entities/account';
 import { useSessionStore } from '@/entities/session';
 import { useBankAccountStore } from '@/entities/bank-account';
 import { storeAuthTokens } from '@/shared/api/auth-storage';
@@ -10,6 +11,39 @@ function isLegacyMockAccount(accountId: number | null, accountNo: string | null)
   return (
     accountId === mockBankAccount.data.accountId || accountNo === mockBankAccount.data.accountNo
   );
+}
+
+function parseBalance(balance: string | number | null | undefined) {
+  const numericBalance = typeof balance === 'number' ? balance : Number(balance ?? 0);
+  return Number.isFinite(numericBalance) ? numericBalance : 0;
+}
+
+function resolveFallbackAccountId() {
+  return process.env.EXPO_PUBLIC_ACCOUNT_ID ? Number(process.env.EXPO_PUBLIC_ACCOUNT_ID) : null;
+}
+
+async function syncPrimaryAccountFromApi() {
+  const response = await getMyAccountsApi();
+  const primaryAccount = response.data.accountList.find((account) => account.isPrimary) ?? response.data.accountList[0];
+
+  if (!primaryAccount) {
+    return false;
+  }
+
+  const resolvedAccountId = primaryAccount.accountId ?? resolveFallbackAccountId();
+  if (!resolvedAccountId) {
+    return false;
+  }
+
+  useBankAccountStore.getState().setAccount(
+    resolvedAccountId,
+    primaryAccount.bankName,
+    parseBalance(primaryAccount.accountBalance),
+    primaryAccount.accountNo,
+    primaryAccount.accountName
+  );
+
+  return true;
 }
 
 export async function completeLoginSession(data: LoginResponseData) {
@@ -33,13 +67,21 @@ export async function completeLoginSession(data: LoginResponseData) {
       currentAccount.clearAccount();
     }
 
-    // TODO: 백엔드 accountId 반환 fix 후 제거
-    if (!useBankAccountStore.getState().accountId) {
-      const fallbackId = process.env.EXPO_PUBLIC_ACCOUNT_ID
-        ? Number(process.env.EXPO_PUBLIC_ACCOUNT_ID)
-        : null;
-      if (fallbackId) {
-        useBankAccountStore.getState().setAccount(fallbackId, 'DONTTAZ', 0, null, null);
+    try {
+      const synced = await syncPrimaryAccountFromApi();
+
+      if (!synced && !useBankAccountStore.getState().accountId) {
+        const fallbackId = resolveFallbackAccountId();
+        if (fallbackId) {
+          useBankAccountStore.getState().setAccount(fallbackId, 'DONTTAZ', 0, null, null);
+        }
+      }
+    } catch {
+      if (!useBankAccountStore.getState().accountId) {
+        const fallbackId = resolveFallbackAccountId();
+        if (fallbackId) {
+          useBankAccountStore.getState().setAccount(fallbackId, 'DONTTAZ', 0, null, null);
+        }
       }
     }
   }

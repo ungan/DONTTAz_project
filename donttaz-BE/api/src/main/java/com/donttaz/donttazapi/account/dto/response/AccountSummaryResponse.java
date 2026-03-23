@@ -6,6 +6,8 @@ import lombok.Builder;
 @Builder
 @Schema(description = "수시입출금 계좌 요약 정보")
 public record AccountSummaryResponse(
+        @Schema(description = "계좌 내부 식별자", example = "1")
+        Long accountId,
         @Schema(description = "은행 코드", example = "020")
         String bankCode,
 
