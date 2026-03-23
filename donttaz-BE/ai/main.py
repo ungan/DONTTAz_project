@@ -12,6 +12,9 @@ app = FastAPI(
     title="Donttaz AI Service",
     description="Internal AI calculation service for Donttaz",
     version="1.1.0",
+    servers=[
+        {"url": "/", "description": "Default (Auto detected)"}
+    ]
 )
 
 Instrumentator().instrument(app).expose(app)
