@@ -10,7 +10,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 20,
+    gap: 12,
     paddingHorizontal: 24,
   },
   title: {
@@ -20,13 +20,15 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 14,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 24,
     color: '#6B7280',
     textAlign: 'center',
   },
   indicatorBlock: {
     alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 4,
   },
   errorText: {
     fontSize: 13,

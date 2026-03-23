@@ -1,8 +1,8 @@
-import paymentHistory from './data/payment-history.json';
+// import paymentHistory from './data/payment-history.json';
 import transfer from './data/transfer.json';
 import monthlyReport from './data/monthly-report.json';
 import yearlyReport from './data/yearly-report.json';
-import accounts from './data/accounts.json';
+// import accounts from './data/accounts.json';
 // import burndown from './data/burndown.json';
 import burndown from './data/burndown-surviving.json';
 import vault from './data/vault.json';
@@ -16,16 +16,8 @@ type MockHandler = {
 };
 
 export const mockHandlers: MockHandler[] = [
-  {
-    method: 'GET',
-    url: '/accounts',
-    response: accounts,
-  },
-  {
-    method: 'GET',
-    url: '/accounts/:accountId/transactions',
-    response: paymentHistory,
-  },
+  // { method: 'GET', url: '/accounts', response: accounts },
+  // { method: 'GET', url: '/accounts/:accountId/transactions', response: paymentHistory },
   {
     method: 'POST',
     url: '/accounts/transfer',

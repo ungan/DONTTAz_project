@@ -8,9 +8,9 @@ export const styles = StyleSheet.create({
     gap: 16,
   },
   dot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 1.5,
     borderColor: '#D1D5DB',
     backgroundColor: 'transparent',
