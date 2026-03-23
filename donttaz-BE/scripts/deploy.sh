@@ -9,7 +9,7 @@ NGINX_CONTAINER="nginx"
 MAX_RETRIES=40
 RETRY_INTERVAL=3
 API_HEALTH_URL="/actuator/health"
-AI_HEALTH_URL="/api/health" # FastAPI 헬스 체크 경로 (임시. 실제 경로로 수정 필요)
+AI_HEALTH_URL="/health" # FastAPI 헬스 체크 경로
 
 cd $PROJECT_DIR
 
@@ -75,7 +75,19 @@ for i in $(seq 1 $MAX_RETRIES); do
     sleep $RETRY_INTERVAL
 done
 
-AI_IS_READY=true # AI 보류
+# AI Health Check
+echo "⏳ [$TARGET_ENV] AI 서버 기동 대기 중..."
+AI_IS_READY=false
+for i in $(seq 1 $MAX_RETRIES); do
+    STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://donttaz-ai-${TARGET_ENV}:8000${AI_HEALTH_URL})
+    if [ "${STATUS_CODE:-000}" -eq 200 ]; then
+        echo "✅ [$TARGET_ENV] AI 서버 정상 기동 확인 (200 OK)"
+        AI_IS_READY=true
+        break
+    fi
+    echo "  - 아직 준비되지 않음 (상태 코드: $STATUS_CODE). $RETRY_INTERVAL초 후 재시도... ($i/$MAX_RETRIES)"
+    sleep $RETRY_INTERVAL
+done
 
 if [ "$API_IS_READY" = false ] || [ "$AI_IS_READY" = false ]; then
     echo "❌ [$TARGET_ENV] 헬스 체크 실패. 배포를 중단하고 새로 띄운 컨테이너를 종료합니다."

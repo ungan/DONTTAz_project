@@ -14,10 +14,7 @@ app = FastAPI(
     version="1.1.0",
 )
 
-<<<<<<< donttaz-BE/ai/main.py
-=======
 Instrumentator().instrument(app).expose(app)
->>>>>>> donttaz-BE/ai/main.py
 
 @app.get("/")
 def read_root():
