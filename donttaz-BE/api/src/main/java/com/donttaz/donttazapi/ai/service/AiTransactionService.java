@@ -12,9 +12,7 @@ import com.donttaz.donttazapi.ai.dto.response.TransactionCategoryUpdateResponse;
 import com.donttaz.donttazapi.account.repository.AccountRepository;
 import com.donttaz.donttazapi.ai.repository.TransactionAiMetadataRepository;
 import com.donttaz.donttazapi.account.repository.TransactionRepository;
-import com.donttaz.donttazapi.account.service.BankingAccountQueryService;
-import com.donttaz.donttazapi.account.service.dto.TransactionQueryResult;
-import com.donttaz.donttazapi.account.service.dto.TransactionSummaryResult;
+import com.donttaz.donttazapi.account.service.TransactionSyncService;
 import com.donttaz.donttazapi.common.exception.CustomException;
 import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
@@ -54,7 +52,7 @@ public class AiTransactionService {
     private final TransactionRepository transactionRepository;
     private final TransactionAiMetadataRepository transactionAiMetadataRepository;
     private final SpendingPlanRepository spendingPlanRepository;
-    private final BankingAccountQueryService bankingAccountQueryService;
+    private final TransactionSyncService transactionSyncService;
     private final AiServiceClient aiServiceClient;
     private final CurrentUserProvider currentUserProvider;
 
@@ -331,52 +329,14 @@ public class AiTransactionService {
         LocalDate endDate = request.endDate() != null ? request.endDate() : LocalDate.now();
 
         for (Account account : accounts) {
-            totalSyncedCount += syncAccountTransactions(account, startDate, endDate);
+            List<Transaction> newTransactions = transactionSyncService.syncTransactions(account, startDate, endDate);
+            if (!newTransactions.isEmpty()) {
+                analyzeAndSaveAiMetadata(newTransactions);
+            }
+            totalSyncedCount += newTransactions.size();
         }
 
         return new AiTransactionSyncResponse(totalSyncedCount, LocalDateTime.now());
-    }
-
-    private int syncAccountTransactions(Account account, LocalDate startDate, LocalDate endDate) {
-        TransactionQueryResult queryResult = bankingAccountQueryService.getTransactions(
-                account.getAccountNumber(),
-                startDate,
-                endDate,
-                "ALL",
-                1,
-                100
-        );
-
-        List<Transaction> newTransactions = new ArrayList<>();
-
-        for (TransactionSummaryResult res : queryResult.transactions()) {
-            if (!transactionRepository.existsByAccountAccountIdAndSourceAndSourceTxId(
-                    account.getAccountId(), "FIN_API", res.externalTransactionId())) {
-                
-                Transaction transaction = Transaction.builder()
-                        .account(account)
-                        .userId(account.getUserId())
-                        .source("FIN_API")
-                        .sourceTxId(res.externalTransactionId())
-                        .txType(res.type())
-                        .txTypeName(res.type())
-                        .amount(res.amount().longValue())
-                        .balanceSnapshot(res.balanceAfter().longValue())
-                        .counterpartyName(res.counterpartyName())
-                        .transactionSummary(res.counterpartyName())
-                        .transactionAt(res.transactionDate())
-                        .syncedAt(LocalDateTime.now())
-                        .build();
-                
-                newTransactions.add(transactionRepository.save(transaction));
-            }
-        }
-
-        if (!newTransactions.isEmpty()) {
-            analyzeAndSaveAiMetadata(newTransactions);
-        }
-
-        return newTransactions.size();
     }
 
     private void analyzeAndSaveAiMetadata(List<Transaction> transactions) {

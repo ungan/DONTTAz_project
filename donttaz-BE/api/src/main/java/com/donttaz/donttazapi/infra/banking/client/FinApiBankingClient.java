@@ -327,7 +327,7 @@ public class FinApiBankingClient implements BankingClient {
                         formatDate(startDate),
                         formatDate(endDate),
                         type,
-                        "ASC"
+                        "DESC"
                 ),
                 FinApiTransactionListResponse.class
         );

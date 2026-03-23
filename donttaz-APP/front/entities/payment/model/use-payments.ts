@@ -16,6 +16,11 @@ export function usePayments(params?: UsePaymentsParams) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestParams = {
+    page: 0,
+    size: 3,
+    ...params,
+  };
 
   useEffect(() => {
     if (!accountId) {
@@ -28,14 +33,14 @@ export function usePayments(params?: UsePaymentsParams) {
     setIsPending(true);
     setError(null);
 
-    getPaymentsApi({ accountId, ...params })
+    getPaymentsApi({ accountId, ...requestParams })
       .then((res) => setTransactions(res.data.transactions))
       .catch(() => {
         setTransactions([]);
         setError('거래내역을 불러오지 못했습니다.');
       })
       .finally(() => setIsPending(false));
-  }, [accountId, params?.endDate, params?.page, params?.size, params?.startDate, params?.type]);
+  }, [accountId, requestParams.endDate, requestParams.page, requestParams.size, requestParams.startDate, requestParams.type,]);
 
   return { transactions, isPending, error };
 }

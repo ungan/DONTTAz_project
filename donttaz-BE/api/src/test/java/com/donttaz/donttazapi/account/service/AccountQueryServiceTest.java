@@ -1,19 +1,22 @@
 package com.donttaz.donttazapi.account.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.donttaz.donttazapi.account.domain.Account;
 import com.donttaz.donttazapi.account.domain.AccountStatus;
+import com.donttaz.donttazapi.account.domain.Transaction;
 import com.donttaz.donttazapi.account.dto.response.AccountListResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionListResponse;
 import com.donttaz.donttazapi.account.repository.AccountRepository;
+import com.donttaz.donttazapi.account.repository.TransactionRepository;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountResult;
-import com.donttaz.donttazapi.account.service.dto.TransactionDetailResult;
-import com.donttaz.donttazapi.account.service.dto.TransactionQueryResult;
-import com.donttaz.donttazapi.account.service.dto.TransactionSummaryResult;
+import com.donttaz.donttazapi.ai.repository.TransactionAiMetadataRepository;
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
 import com.donttaz.donttazapi.payment.domain.Merchant;
 import com.donttaz.donttazapi.payment.domain.Payment;
@@ -29,12 +32,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class AccountQueryServiceTest {
 
     @Mock
     private AccountRepository accountRepository;
+
+    @Mock
+    private TransactionRepository transactionRepository;
+
+    @Mock
+    private TransactionAiMetadataRepository transactionAiMetadataRepository;
 
     @Mock
     private DemandDepositService demandDepositService;
@@ -44,6 +55,9 @@ class AccountQueryServiceTest {
 
     @Mock
     private BankingAccountQueryService bankingAccountQueryService;
+
+    @Mock
+    private TransactionSyncService transactionSyncService;
 
     @Mock
     private PaymentRepository paymentRepository;
@@ -108,44 +122,38 @@ class AccountQueryServiceTest {
     }
 
     @Test
-    @DisplayName("getTransactions overlays merchant data for payment transactions")
+    @DisplayName("getTransactions reads from DB and overlays merchant data for payment rows")
     void getTransactionsSuccess() {
-        Account account = Account.builder()
+        Account account = createAccount();
+        ReflectionTestUtils.setField(account, "accountId", 10L);
+        Transaction transaction = Transaction.builder()
+                .account(account)
                 .userId(1L)
-                .bankCode("001")
-                .bankName("BANK")
-                .accountNumber("0016174648358792")
-                .balance(89_900_000L)
-                .linkedAt(LocalDateTime.now())
-                .lastSyncedAt(LocalDateTime.now())
-                .isDeleted(Boolean.FALSE)
-                .status(AccountStatus.ACTIVE)
+                .source("FIN_API")
+                .sourceTxId("61")
+                .txType("WITHDRAWAL")
+                .txTypeName("WITHDRAWAL_TRANSFER")
+                .amount(10_000L)
+                .balanceSnapshot(89_900_000L)
+                .counterpartyName("TRANSFER")
+                .transactionSummary("TRANSFER")
+                .transactionAt(LocalDateTime.of(2024, 4, 1, 10, 32, 29))
+                .syncedAt(LocalDateTime.of(2024, 4, 1, 10, 33, 0))
                 .build();
-        TransactionQueryResult result = new TransactionQueryResult(
-                3L,
-                1,
-                true,
-                List.of(
-                        new TransactionSummaryResult(
-                                "61",
-                                LocalDateTime.of(2024, 4, 1, 10, 32, 29),
-                                "WITHDRAWAL",
-                                10_000,
-                                89_900_000,
-                                "TRANSFER",
-                                "WITHDRAWAL_TRANSFER"
-                        )
-                )
-        );
+        ReflectionTestUtils.setField(transaction, "id", 701L);
         Payment payment = createPayment("61", "EMART", "0204667768182760");
 
         given(currentUserProvider.getCurrentUserId()).willReturn(1L);
         given(accountRepository.findByAccountIdAndUserIdAndStatusAndIsDeletedFalse(10L, 1L, AccountStatus.ACTIVE))
                 .willReturn(Optional.of(account));
-        given(bankingAccountQueryService.getTransactions("0016174648358792", LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31), "A", 0, 20))
-                .willReturn(result);
+        given(transactionSyncService.syncTransactions(account, LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31)))
+                .willReturn(List.of());
+        given(transactionRepository.search(eq(10L), eq(1L), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of(transaction)));
         given(paymentRepository.findAllByUserIdAndWithdrawalTransactionIdIn(1L, List.of("61")))
                 .willReturn(List.of(payment));
+        given(transactionAiMetadataRepository.findAllByTransactionIdIn(List.of(701L)))
+                .willReturn(List.of());
 
         TransactionListResponse response = accountQueryService.getTransactions(
                 10L,
@@ -156,18 +164,64 @@ class AccountQueryServiceTest {
                 20
         );
 
-        assertThat(response.totalElements()).isEqualTo(3L);
+        assertThat(response.totalElements()).isEqualTo(1L);
         assertThat(response.transactions()).hasSize(1);
         assertThat(response.transactions().get(0).transactionId()).isEqualTo("61");
         assertThat(response.transactions().get(0).type()).isEqualTo("WITHDRAWAL");
         assertThat(response.transactions().get(0).counterpartyName()).isEqualTo("EMART");
         assertThat(response.transactions().get(0).category()).isEqualTo("PAYMENT");
+
+        verify(transactionSyncService, times(1))
+                .syncTransactions(account, LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31));
     }
 
     @Test
-    @DisplayName("getTransactionDetail overlays merchant data for payment transactions")
+    @DisplayName("getTransactionDetail reads stored transaction and overlays merchant data")
     void getTransactionDetailSuccess() {
-        Account account = Account.builder()
+        Account account = createAccount();
+        ReflectionTestUtils.setField(account, "accountId", 10L);
+        Transaction transaction = Transaction.builder()
+                .account(account)
+                .userId(1L)
+                .source("FIN_API")
+                .sourceTxId("61")
+                .txType("WITHDRAWAL")
+                .txTypeName("WITHDRAWAL_TRANSFER")
+                .amount(10_000L)
+                .balanceSnapshot(89_900_000L)
+                .counterpartyName("TRANSFER")
+                .counterpartyAccountNo("0204667768182760")
+                .transactionSummary("TRANSFER")
+                .transactionAt(LocalDateTime.of(2024, 4, 1, 10, 32, 29))
+                .syncedAt(LocalDateTime.of(2024, 4, 1, 10, 33, 0))
+                .build();
+        ReflectionTestUtils.setField(transaction, "id", 701L);
+        Payment payment = createPayment("61", "EMART", "0204667768182760");
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(1L);
+        given(accountRepository.findByAccountIdAndUserIdAndStatusAndIsDeletedFalse(10L, 1L, AccountStatus.ACTIVE))
+                .willReturn(Optional.of(account));
+        given(transactionRepository.findByIdAndAccountAccountIdAndAccountUserId(61L, 10L, 1L))
+                .willReturn(Optional.empty());
+        given(transactionRepository.findByAccountAccountIdAndAccountUserIdAndSourceTxId(10L, 1L, "61"))
+                .willReturn(Optional.of(transaction));
+        given(paymentRepository.findByUserIdAndWithdrawalTransactionId(1L, "61"))
+                .willReturn(Optional.of(payment));
+        given(transactionAiMetadataRepository.findByTransactionId(701L))
+                .willReturn(Optional.empty());
+
+        TransactionDetailResponse response = accountQueryService.getTransactionDetail(10L, "61");
+
+        assertThat(response.transactionId()).isEqualTo("61");
+        assertThat(response.accountId()).isEqualTo(10L);
+        assertThat(response.counterpartyName()).isEqualTo("EMART");
+        assertThat(response.counterpartyAccount()).isEqualTo("0204667768182760");
+        assertThat(response.category()).isEqualTo("PAYMENT");
+        assertThat(response.memo()).isEqualTo("EMART");
+    }
+
+    private Account createAccount() {
+        return Account.builder()
                 .userId(1L)
                 .bankCode("001")
                 .bankName("BANK")
@@ -178,38 +232,6 @@ class AccountQueryServiceTest {
                 .isDeleted(Boolean.FALSE)
                 .status(AccountStatus.ACTIVE)
                 .build();
-        TransactionDetailResult result = new TransactionDetailResult(
-                "61",
-                "0016174648358792",
-                LocalDateTime.of(2024, 4, 1, 10, 32, 29),
-                "WITHDRAWAL",
-                10_000,
-                89_900_000,
-                "TRANSFER",
-                null,
-                "0204667768182760",
-                0,
-                "WITHDRAWAL_TRANSFER",
-                null
-        );
-        Payment payment = createPayment("61", "EMART", "0204667768182760");
-
-        given(currentUserProvider.getCurrentUserId()).willReturn(1L);
-        given(accountRepository.findByAccountIdAndUserIdAndStatusAndIsDeletedFalse(10L, 1L, AccountStatus.ACTIVE))
-                .willReturn(Optional.of(account));
-        given(bankingAccountQueryService.getTransactionDetail("0016174648358792", "61"))
-                .willReturn(result);
-        given(paymentRepository.findByUserIdAndWithdrawalTransactionId(1L, "61"))
-                .willReturn(Optional.of(payment));
-
-        TransactionDetailResponse response = accountQueryService.getTransactionDetail(10L, "61");
-
-        assertThat(response.transactionId()).isEqualTo("61");
-        assertThat(response.accountId()).isEqualTo(10L);
-        assertThat(response.counterpartyName()).isEqualTo("EMART");
-        assertThat(response.counterpartyAccount()).isEqualTo("0204667768182760");
-        assertThat(response.category()).isEqualTo("PAYMENT");
-        assertThat(response.memo()).isEqualTo("EMART");
     }
 
     private Payment createPayment(String withdrawalTransactionId, String merchantName, String settlementAccountNo) {
