@@ -49,7 +49,7 @@ export function SignupAccountForm({
       />
 
       <Text style={styles.helperText}>
-        백엔드 규칙에 맞춰 영문, 숫자, 특수문자를 모두 포함해야 합니다.
+        영문, 숫자, 특수문자를 포함한 8~16자로 입력해 주세요.
       </Text>
 
       <CustomInput

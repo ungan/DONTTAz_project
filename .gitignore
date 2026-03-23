@@ -591,3 +591,38 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python
 /DOCS/
 /AGENTS.md
+
+__pycache__/
+*.py[cod]
+
+venv/
+.env/
+
+.vscode/
+.idea/
+
+app/data/
+*.csv
+
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Model / logs
+lightning_logs/
+*.pkl
+
+# IntelliJ / VSCode
+.vscode/
+.idea/
+
+# Gradle
+.gradle/
+build/
+bin/
+out/
+
+# Node
+node_modules/

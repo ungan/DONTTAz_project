@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './page-header.styles';
 
 interface PageHeaderProps {
@@ -12,6 +13,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, onBack, rightAction }: PageHeaderProps) {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const handleBack = () => {
     if (onBack) {
@@ -22,7 +24,7 @@ export function PageHeader({ title, onBack, rightAction }: PageHeaderProps) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
       <TouchableOpacity style={styles.backButton} onPress={handleBack} activeOpacity={0.7}>
         <Ionicons name="chevron-back" size={20} color="#374151" />
       </TouchableOpacity>

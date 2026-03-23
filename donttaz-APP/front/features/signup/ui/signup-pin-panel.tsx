@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { NumericKeypad, PinIndicator } from '@/shared/ui';
+import { Primary } from '@/shared/constants/theme';
 import { styles } from './signup-pin-panel.styles';
 
 interface SignupPinPanelProps {
@@ -22,26 +23,21 @@ export function SignupPinPanel({
     <View style={styles.container}>
       <View style={styles.section}>
         <Text style={styles.title}>
-          {isConfirming ? '한 번 더 입력해 주세요' : '간편 PIN을 설정해 주세요'}
+          {isConfirming ? 'PIN을 한 번 더 입력해 주세요' : 'PIN 6자리를 입력해 주세요'}
         </Text>
         <Text style={styles.subtitle}>
           {isConfirming
-            ? '같은 숫자 6자리를 다시 입력하면 설정이 완료됩니다.'
-            : '앱 재진입 시 사용할 숫자 6자리를 입력해 주세요.'}
+            ? '처음 입력한 PIN과 동일하게 입력해 주세요'
+            : '앱 재실행 시 사용할 간편 비밀번호예요'}
         </Text>
+        <View style={styles.indicatorBlock}>
+          <PinIndicator
+            filledCount={isConfirming ? pinCodeConfirm.length : pinCode.length}
+            filledColor={Primary}
+          />
+        </View>
+        {pinError ? <Text style={styles.errorText}>{pinError}</Text> : null}
       </View>
-
-      <View style={styles.indicatorBlock}>
-        <Text style={styles.indicatorLabel}>PIN 입력</Text>
-        <PinIndicator filledCount={pinCode.length} />
-      </View>
-
-      <View style={styles.indicatorBlock}>
-        <Text style={styles.indicatorLabel}>PIN 확인</Text>
-        <PinIndicator filledCount={pinCodeConfirm.length} />
-      </View>
-
-      {pinError ? <Text style={styles.errorText}>{pinError}</Text> : null}
 
       <NumericKeypad onKeyPress={onKeyPress} hiddenKeys={['00']} />
     </View>
