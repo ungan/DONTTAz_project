@@ -431,14 +431,9 @@ export function useAccountOpenFlow() {
     accountOpenState.setErrorMessage(null);
 
     try {
-      const identityVerificationId =
-        process.env.EXPO_PUBLIC_IS_MOCK === 'true'
-          ? 'mock-verification-id'
-          : (
-              await requestPortOneIdentityVerification({
-                callbackPath: ACCOUNT_OPEN_PORTONE_CALLBACK_PATH,
-              })
-            ).identityVerificationId;
+      const { identityVerificationId } = await requestPortOneIdentityVerification({
+        callbackPath: ACCOUNT_OPEN_PORTONE_CALLBACK_PATH,
+      });
 
       return verifyCurrentUserOwnership(identityVerificationId);
     } catch (error) {
