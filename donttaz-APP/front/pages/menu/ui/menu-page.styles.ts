@@ -1,74 +1,84 @@
 import { StyleSheet } from 'react-native';
-import { Primary } from '@/shared/constants/theme';
 
 export const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    paddingHorizontal: 16,
-    paddingTop: 24,
-    paddingBottom: 32,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    backgroundColor: '#F9FAFB',
+    gap: 24,
+  },
+  profileSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  content: {
-    gap: 16,
-  },
-  heroCard: {
-    padding: 20,
-    borderRadius: 20,
-    backgroundColor: Primary,
-    gap: 8,
-  },
-  heroLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#DBEAFE',
-  },
-  heroTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  heroDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#EFF6FF',
-  },
-  sectionCard: {
-    padding: 20,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
     backgroundColor: '#FFFFFF',
-    gap: 10,
+    borderRadius: 16,
+    padding: 20,
   },
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#6B7280',
-  },
-  sectionTitle: {
-    fontSize: 18,
+  profileName: {
+    fontSize: 20,
     fontWeight: '700',
     color: '#111827',
   },
-  sectionText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#4B5563',
+  profileSub: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    marginTop: 2,
   },
-  errorText: {
-    fontSize: 14,
-    lineHeight: 20,
+  section: {
+    gap: 8,
+  },
+  sectionHeader: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B7280',
+    paddingHorizontal: 4,
+  },
+  sectionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  iconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapperDanger: {
+    backgroundColor: '#FEF2F2',
+  },
+  menuTextGroup: {
+    flex: 1,
+    gap: 2,
+  },
+  menuLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  menuLabelDanger: {
     color: '#DC2626',
   },
-  bottomSection: {
-    gap: 12,
-  },
-  helperText: {
+  menuDescription: {
     fontSize: 13,
-    lineHeight: 19,
-    color: '#6B7280',
+    color: '#9CA3AF',
+  },
+  errorText: {
+    fontSize: 13,
+    color: '#DC2626',
     textAlign: 'center',
   },
 });

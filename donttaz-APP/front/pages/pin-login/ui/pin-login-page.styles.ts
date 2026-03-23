@@ -2,51 +2,49 @@ import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    paddingHorizontal: 16,
-    paddingTop: 32,
-    paddingBottom: 24,
+    flex: 1,
     backgroundColor: '#FFFFFF',
-    justifyContent: 'space-between',
   },
-  topSection: {
-    gap: 24,
-  },
-  titleGroup: {
-    gap: 8,
+  pinSection: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingHorizontal: 24,
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
     color: '#111827',
   },
-  description: {
-    fontSize: 15,
-    lineHeight: 22,
+  subtitle: {
+    fontSize: 16,
     color: '#6B7280',
   },
-  pinSection: {
-    alignItems: 'center',
-    gap: 16,
-    marginTop: 12,
-  },
-  pinLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
+  indicatorWrapper: {
+    marginTop: 8,
+    marginBottom: 4,
   },
   errorText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#DC2626',
     textAlign: 'center',
   },
   helperText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#6B7280',
+    fontSize: 13,
+    color: '#9CA3AF',
     textAlign: 'center',
   },
-  bottomSection: {
-    gap: 12,
+  keypadSection: {
+    paddingBottom: 16,
+  },
+  switchAccountButton: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  switchAccountText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    textDecorationLine: 'underline',
   },
 });

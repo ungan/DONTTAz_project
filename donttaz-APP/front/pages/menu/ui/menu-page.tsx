@@ -1,13 +1,24 @@
 import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSessionStore } from '@/entities/session';
 import { useLogout } from '@/features/auth';
-import { Button, ConfirmModal } from '@/shared/ui';
+import { ConfirmModal } from '@/shared/ui';
 import { styles } from './menu-page.styles';
+
+type MenuItem = {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  description: string;
+  onPress: () => void;
+  danger?: boolean;
+};
 
 export function MenuPage() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { name } = useSessionStore();
   const { logout, isPending, error, resetError } = useLogout();
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
@@ -23,51 +34,83 @@ export function MenuPage() {
 
   const handleConfirmLogout = async () => {
     const isSuccess = await logout();
-
     if (isSuccess) {
       setIsConfirmVisible(false);
     }
   };
 
+  const financeItems: MenuItem[] = [
+    {
+      icon: 'wallet-outline',
+      label: '계좌 개설',
+      description: '새 입출금 통장 만들기',
+      onPress: () => router.push('/account-open-terms'),
+    },
+  ];
+
+  const accountItems: MenuItem[] = [
+    {
+      icon: 'log-out-outline',
+      label: '로그아웃',
+      description: '이 기기에서 세션 종료',
+      onPress: openConfirm,
+      danger: true,
+    },
+  ];
+
+  const renderItem = (item: MenuItem) => (
+    <TouchableOpacity
+      key={item.label}
+      style={styles.menuItem}
+      onPress={item.onPress}
+      activeOpacity={0.6}
+    >
+      <View style={[styles.iconWrapper, item.danger && styles.iconWrapperDanger]}>
+        <Ionicons
+          name={item.icon}
+          size={22}
+          color={item.danger ? '#DC2626' : '#5899FD'}
+        />
+      </View>
+      <View style={styles.menuTextGroup}>
+        <Text style={[styles.menuLabel, item.danger && styles.menuLabelDanger]}>
+          {item.label}
+        </Text>
+        <Text style={styles.menuDescription}>{item.description}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
+    </TouchableOpacity>
+  );
+
   return (
     <>
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.content}>
-          <View style={styles.heroCard}>
-            <Text style={styles.heroLabel}>전체</Text>
-            <Text style={styles.heroTitle}>{name ? `${name}님 안녕하세요` : '계정 설정'}</Text>
-            <Text style={styles.heroDescription}>
-              자주 쓰는 계좌 개설과 로그인 관련 작업을 이 화면에서 빠르게 시작할 수 있습니다.
-            </Text>
+      <ScrollView
+        contentContainerStyle={[styles.container, { paddingTop: insets.top + 16 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.profileSection}>
+          <View>
+            <Text style={styles.profileName}>{name ?? '사용자'}님</Text>
+            <Text style={styles.profileSub}>내 정보 관리</Text>
           </View>
+          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+        </View>
 
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>금융</Text>
           <View style={styles.sectionCard}>
-            <Text style={styles.sectionLabel}>신규 계좌</Text>
-            <Text style={styles.sectionTitle}>통장 개설 시작</Text>
-            <Text style={styles.sectionText}>
-              약관 동의 단계부터 계좌 개설 플로우를 확인할 수 있습니다. 현재는 약관 화면과
-              다음 단계 자리까지만 연결되어 있습니다.
-            </Text>
-            <Button label="계좌 개설" onPress={() => router.push('/account-open-terms')} />
-          </View>
-
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionLabel}>로그인 상태</Text>
-            <Text style={styles.sectionTitle}>이 기기에서 세션 종료</Text>
-            <Text style={styles.sectionText}>
-              로그아웃하면 access token, refresh token, 저장된 PIN 정보를 함께 정리하고 로그인
-              화면으로 이동합니다.
-            </Text>
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            {financeItems.map(renderItem)}
           </View>
         </View>
 
-        <View style={styles.bottomSection}>
-          <Text style={styles.helperText}>
-            금융 서비스 특성상 공용 기기나 테스트 기기에서는 사용 후 로그아웃을 권장합니다.
-          </Text>
-          <Button label="로그아웃" variant="outline" onPress={openConfirm} />
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>계정</Text>
+          <View style={styles.sectionCard}>
+            {accountItems.map(renderItem)}
+          </View>
         </View>
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </ScrollView>
 
       <ConfirmModal
