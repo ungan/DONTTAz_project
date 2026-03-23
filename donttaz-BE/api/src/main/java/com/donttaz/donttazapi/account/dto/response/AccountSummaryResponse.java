@@ -15,10 +15,13 @@ public record AccountSummaryResponse(
         @Schema(description = "예금주명", example = "USER")
         String userName,
 
-        @Schema(description = "마스킹된 계좌번호", example = "020-***-8182760")
+        @Schema(description = "실제 계좌번호", example = "0201234568182760")
         String accountNo,
 
-        @Schema(description = "계좌 상품명", example = "우리은행 수시입출금 상품명")
+        @Schema(description = "마스킹 계좌번호", example = "020-***-8182760")
+        String maskedAccountNo,
+
+        @Schema(description = "계좌 상품명", example = "우리은행 수시입출금 상품")
         String accountName,
 
         @Schema(description = "계좌 유형 코드", example = "1")

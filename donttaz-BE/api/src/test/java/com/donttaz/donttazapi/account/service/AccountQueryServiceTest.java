@@ -100,7 +100,8 @@ class AccountQueryServiceTest {
         assertThat(response.totalBalance()).isEqualTo(8_003_477L);
         assertThat(response.accountList()).hasSize(1);
         assertThat(response.accountList().get(0).bankCode()).isEqualTo("020");
-        assertThat(response.accountList().get(0).accountNo()).isEqualTo("020-***-182760");
+        assertThat(response.accountList().get(0).accountNo()).isEqualTo("0201238182760");
+        assertThat(response.accountList().get(0).maskedAccountNo()).isEqualTo("020-***-182760");
         assertThat(response.accountList().get(0).isPrimary()).isTrue();
         verify(demandDepositService).getAccounts();
         verify(accountSyncService).syncDemandDepositAccounts(results);
