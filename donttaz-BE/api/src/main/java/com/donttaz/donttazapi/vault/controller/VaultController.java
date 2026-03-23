@@ -2,7 +2,7 @@ package com.donttaz.donttazapi.vault.controller;
 
 import com.donttaz.donttazapi.vault.controller.docs.VaultSwagger;
 import com.donttaz.donttazapi.vault.domain.VaultKind;
-import com.donttaz.donttazapi.vault.dto.request.CreateVaultRequest;
+import com.donttaz.donttazapi.vault.dto.request.CreateWishlistVaultRequest;
 import com.donttaz.donttazapi.vault.dto.request.SetWishlistGoalRequest;
 import com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest;
 import com.donttaz.donttazapi.vault.dto.request.VaultWithdrawRequest;
@@ -34,11 +34,18 @@ public class VaultController implements VaultSwagger {
         }
 
         @Override
-        @PostMapping
-        public ResponseEntity<CreateVaultResponse> createVault(
-                        @Valid @RequestBody CreateVaultRequest request) {
+        @PostMapping("/default")
+        public ResponseEntity<CreateVaultResponse> createDefaultVault() {
                 return ResponseEntity.status(HttpStatus.CREATED)
-                                .body(vaultCommandService.createVault(request));
+                                .body(vaultCommandService.createDefaultVault());
+        }
+
+        @Override
+        @PostMapping("/wishlist")
+        public ResponseEntity<CreateVaultResponse> createWishlistVault(
+                        @Valid @RequestBody CreateWishlistVaultRequest request) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(vaultCommandService.createWishlistVault(request));
         }
 
         @Override

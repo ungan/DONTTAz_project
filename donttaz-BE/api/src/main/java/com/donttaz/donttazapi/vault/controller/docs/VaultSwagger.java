@@ -1,7 +1,7 @@
 package com.donttaz.donttazapi.vault.controller.docs;
 
 import com.donttaz.donttazapi.vault.domain.VaultKind;
-import com.donttaz.donttazapi.vault.dto.request.CreateVaultRequest;
+import com.donttaz.donttazapi.vault.dto.request.CreateWishlistVaultRequest;
 import com.donttaz.donttazapi.vault.dto.request.SetWishlistGoalRequest;
 import com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest;
 import com.donttaz.donttazapi.vault.dto.request.VaultWithdrawRequest;
@@ -29,14 +29,21 @@ import java.util.List;
 @SecurityRequirement(name = "bearerAuth")
 public interface VaultSwagger {
 
-        @Operation(summary = "금고 생성", description = "새로운 금고를 생성합니다. 사용자는 '기본(DEFAULT)' 1개와 '위시리스트(WISHLIST)' 1개를 동시에 보유할 수 있습니다.")
+        @Operation(summary = "기본 금고 생성", description = "새로운 기본 금고를 생성합니다.")
         @ApiResponses({
                         @ApiResponse(responseCode = "201", description = "금고 생성 성공", content = @Content(mediaType = "application/json", examples = {
-                                        @ExampleObject(name = "기본 금고 생성 예시", value = "{\"vaultId\": 1, \"vaultKind\": \"DEFAULT\", \"lockedAmount\": 0, \"status\": \"LOCKED\"}"),
+                                        @ExampleObject(name = "기본 금고 생성 예시", value = "{\"vaultId\": 1, \"vaultKind\": \"DEFAULT\", \"lockedAmount\": 0, \"status\": \"LOCKED\"}")
+                        }))
+        })
+        ResponseEntity<CreateVaultResponse> createDefaultVault();
+
+        @Operation(summary = "위시리스트 금고 생성", description = "새로운 위시리스트 금고를 생성합니다.")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "201", description = "금고 생성 성공", content = @Content(mediaType = "application/json", examples = {
                                         @ExampleObject(name = "위시리스트 금고 생성 예시", value = "{\"vaultId\": 10, \"vaultKind\": \"WISHLIST\", \"lockedAmount\": 0, \"status\": \"LOCKED\"}")
                         }))
         })
-        ResponseEntity<CreateVaultResponse> createVault(@RequestBody CreateVaultRequest request);
+        ResponseEntity<CreateVaultResponse> createWishlistVault(@RequestBody CreateWishlistVaultRequest request);
 
         @Operation(summary = "내 금고 목록 조회", description = "사용자의 활성화된 금고 목록(기본 + 위시리스트)을 통합 조회합니다.")
         @ApiResponses({
