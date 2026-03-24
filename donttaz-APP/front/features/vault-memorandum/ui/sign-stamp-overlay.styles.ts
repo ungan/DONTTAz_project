@@ -9,8 +9,8 @@ export const styles = StyleSheet.create({
     zIndex: 100,
   },
   stamp: {
-    width: 160,
-    height: 160,
+    width: 300,
+    height: 100,
     borderRadius: 8,
     borderWidth: 6,
     borderColor: '#C0392B',
@@ -19,8 +19,8 @@ export const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   stampInner: {
-    width: 144,
-    height: 144,
+    width: 264,
+    height: 84,
     borderRadius: 4,
     borderWidth: 2,
     borderColor: '#C0392B',
@@ -28,10 +28,9 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stampText: {
-    fontSize: 72,
-    fontWeight: '900',
+    fontSize: 40,
     color: '#C0392B',
-    letterSpacing: 4,
-    fontFamily: 'serif',
+    letterSpacing: 8,
+    fontFamily: 'BebasNeue',
   },
 });

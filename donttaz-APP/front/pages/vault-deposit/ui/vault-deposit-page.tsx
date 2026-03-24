@@ -1,18 +1,49 @@
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { NumericKeypad } from '@/shared/ui';
 import { useDepositAmount } from '@/features/vault-deposit';
+import { useMyAccounts } from '@/entities/account';
+import { depositVaultApi } from '@/entities/vault';
+import type { VaultKind } from '@/entities/vault';
 import { styles } from './vault-deposit-page.styles';
 
 export function VaultDepositPage() {
   const router = useRouter();
-  const { lockedAmount } = useLocalSearchParams<{ lockedAmount: string }>();
+  const { kind, vaultId, lockedAmount } = useLocalSearchParams<{
+    kind: string;
+    vaultId: string;
+    lockedAmount: string;
+  }>();
 
-  const { formattedAmount, isValid, handleKeyPress } = useDepositAmount();
+  const { amount, formattedAmount, isValid, handleKeyPress } = useDepositAmount();
+  const { accounts } = useMyAccounts();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentBalance = Number(lockedAmount ?? 0);
+  const primaryAccount = accounts.find((a) => a.isPrimary) ?? accounts[0];
+
+  const handleConfirm = async () => {
+    if (!primaryAccount) {
+      Alert.alert('오류', '연결된 계좌가 없습니다.');
+      return;
+    }
+    const requestBody = { amount };
+    console.log('[deposit] kind:', kind, '| vaultId:', vaultId);
+    console.log('[deposit] request body:', JSON.stringify(requestBody));
+    setIsSubmitting(true);
+    try {
+      const result = await depositVaultApi(kind as VaultKind, Number(vaultId), requestBody);
+      console.log('[deposit] success:', JSON.stringify(result));
+      router.back();
+    } catch (e) {
+      console.error('[deposit] error:', e);
+      Alert.alert('오류', '입금 중 문제가 발생했습니다.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -47,15 +78,12 @@ export function VaultDepositPage() {
       {/* 확인 + 키패드 */}
       <View style={styles.bottomArea}>
         <TouchableOpacity
-          style={[styles.confirmButton, !isValid && styles.confirmButtonDisabled]}
-          disabled={!isValid}
-          onPress={() => {
-            // TODO: 입금 API 연결
-            router.back();
-          }}
+          style={[styles.confirmButton, (!isValid || isSubmitting) && styles.confirmButtonDisabled]}
+          disabled={!isValid || isSubmitting}
+          onPress={handleConfirm}
           activeOpacity={0.85}
         >
-          <Text style={[styles.confirmText, !isValid && styles.confirmTextDisabled]}>확인</Text>
+          <Text style={[styles.confirmText, (!isValid || isSubmitting) && styles.confirmTextDisabled]}>확인</Text>
         </TouchableOpacity>
         <NumericKeypad onKeyPress={handleKeyPress} />
       </View>

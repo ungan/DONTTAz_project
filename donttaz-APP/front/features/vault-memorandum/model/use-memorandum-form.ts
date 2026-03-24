@@ -1,28 +1,20 @@
-import { useState } from 'react';
 import type { MemorandumRequest } from '@/entities/vault';
 
+const CONTENT1 =
+  '위시리스트 목표를 달성하기 전 긴급 출금을 시도할 경우, 본인이 사전에 지정한 지인들에게 수치심 메시지가 자동으로 발송됨을 인지하고 이에 동의한다.';
+
+const CONTENT2 =
+  '위시리스트 금고를 목표 달성 전 중도 해지할 경우, 지정된 지인들에게 동일하게 수치심 메시지가 자동 발송됨을 인지하고 이에 동의한다.';
+
+const CONTENT3 =
+  '본 각서는 위시리스트 목표 금액 달성 시까지 유효하며, 목표 달성과 동시에 자동으로 효력을 잃는다.';
+
 export function useMemorandumForm() {
-  const [content1, setContent1] = useState('');
-  const [content2, setContent2] = useState(
-    '이 메시지를 확인한 지인들은 부디 나를 불쌍히 여기지 말고, 채팅창에 온갖 조롱과 멸시의 이모티콘을 쏟아부어 주길 바란다.',
-  );
-  const [content3, setContent3] = useState(
-    '오늘부터 금고 해제 쿨다운이 끝날 때까지 나의 모든 저작 운동은 물과 공기로만 이루어질 예정이다.',
-  );
-
-  const isValid = content1.trim().length >= 2;
-
   const getRequestBody = (): MemorandumRequest => ({
-    content1: content1.trim(),
-    content2: content2.trim(),
-    content3: content3.trim(),
+    content1: CONTENT1,
+    content2: CONTENT2,
+    content3: CONTENT3,
   });
 
-  return {
-    content1, setContent1,
-    content2, setContent2,
-    content3, setContent3,
-    isValid,
-    getRequestBody,
-  };
+  return { getRequestBody };
 }

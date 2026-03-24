@@ -1,9 +1,12 @@
 import { apiClient } from '@/shared/api';
-import type { GetVaultTransactionsResponse } from '../types/vault';
+import type { GetVaultTransactionsResponse, VaultKind } from '../types/vault';
 
-export async function getVaultTransactionsApi(vaultId: number): Promise<GetVaultTransactionsResponse> {
+export async function getVaultTransactionsApi(
+  kind: VaultKind,
+  vaultId: number
+): Promise<GetVaultTransactionsResponse> {
   const response = await apiClient.get<GetVaultTransactionsResponse>(
-    `/vaults/${vaultId}/history`
+    `/vaults/${kind}/${vaultId}/history`
   );
   return response.data;
 }

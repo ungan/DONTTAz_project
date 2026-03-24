@@ -28,11 +28,11 @@ export function VaultBalance({ lockedAmount, onDeposit, onWithdraw }: VaultBalan
       </View>
 
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.button} onPress={onDeposit} activeOpacity={0.7}>
-          <Text style={styles.buttonText}>+ 넣기</Text>
+        <TouchableOpacity style={[styles.button, styles.buttonPrimary]} onPress={onDeposit} activeOpacity={0.8}>
+          <Text style={[styles.buttonText, styles.buttonTextPrimary]}>+ 넣기</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={onWithdraw} activeOpacity={0.7}>
-          <Text style={styles.buttonText}>— 긴급 출금</Text>
+        <TouchableOpacity style={[styles.button, styles.buttonOutline]} onPress={onWithdraw} activeOpacity={0.8}>
+          <Text style={[styles.buttonText, styles.buttonTextOutline]}>긴급 출금</Text>
         </TouchableOpacity>
       </View>
     </View>

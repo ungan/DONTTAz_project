@@ -1,6 +1,6 @@
 export type VaultKind = 'DEFAULT' | 'WISHLIST';
 export type VaultStatus = 'LOCKED' | 'MATURED' | 'BROKEN';
-export type VaultTransactionType = 'DEPOSIT' | 'WITHDRAWAL';
+export type VaultTransactionType = 'DEPOSIT' | 'WITHDRAW_BROKEN';
 
 export interface Vault {
   vaultId: number;
@@ -43,7 +43,6 @@ export interface Wishlist {
 export interface WishlistRequest {
   wishName: string;
   goalAmount: number;
-  targetDate: string;
 }
 
 export interface GetWishlistResponse {
@@ -70,6 +69,34 @@ export interface MemorandumRequest {
 
 export interface GetMemorandumResponse {
   data: VaultMemorandum;
+}
+
+export interface CreateWishlistVaultRequest {
+  wishName: string;
+  goalAmount: number;
+}
+
+export interface CreateWishlistVaultData {
+  vaultId: number;
+  vaultKind: VaultKind;
+  lockedAmount: number;
+  status: VaultStatus;
+}
+
+export interface CreateWishlistVaultResponse {
+  status: string;
+  message: string;
+  data: CreateWishlistVaultData;
+}
+
+export interface DepositVaultRequest {
+  amount: number;
+}
+
+export interface DepositVaultResponse {
+  vaultId: number;
+  depositedAmount: number;
+  lockedAmount: number;
 }
 
 export type WebhookPlatform = 'MATTERMOST' | 'KAKAO_TALK';
