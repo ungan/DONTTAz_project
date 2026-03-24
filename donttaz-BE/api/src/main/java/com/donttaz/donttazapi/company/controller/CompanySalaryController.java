@@ -2,7 +2,6 @@ package com.donttaz.donttazapi.company.controller;
 
 import com.donttaz.donttazapi.company.dto.request.CreateCompanyRequest;
 import com.donttaz.donttazapi.company.dto.request.PaySalaryRequest;
-import com.donttaz.donttazapi.company.dto.request.RegisterCompanyAccountRequest;
 import com.donttaz.donttazapi.company.dto.response.CompanyAccountResponse;
 import com.donttaz.donttazapi.company.dto.response.CompanyResponse;
 import com.donttaz.donttazapi.company.dto.response.UserAccountSummaryResponse;
@@ -30,22 +29,23 @@ public class CompanySalaryController {
     private final CompanySalaryService companySalaryService;
 
     /**
-     * 기업 정보 생성
+     * 기업 정보 생성 (계좌 개설 및 자금 1억 충전 자동화)
      */
-    @Operation(summary = "기업 등록", description = "새로운 기업 정보를 시스템에 등록함.")
+    @Operation(summary = "기업 등록", description = "새로운 기업 정보를 등록하고, 계좌 개설 및 1억 원 입금까지 한 번에 자동 처리함.")
     @PostMapping("/company")
     public Long createCompany(@Valid @RequestBody CreateCompanyRequest request) {
-        return companySalaryService.createCompany(request.name());
+        return companySalaryService.createCompany(request.name(), request.userId());
     }
 
     /**
      * 기업 계좌 생성
+     * (기업 등업 API 3단계 통합으로 인해 주석 처리됨.)
      */
-    @Operation(summary = "기업 계좌 생성", description = "금융 API를 통해 기업 명의의 계좌를 직접 생성 및 등록함.")
-    @PostMapping("/account")
-    public void createCompanyAccount(@Valid @RequestBody RegisterCompanyAccountRequest request) {
-        companySalaryService.createCompanyAccount(request.companyId(), request.userId());
-    }
+    // @Operation(summary = "기업 계좌 생성", description = "금융 API를 통해 기업 명의의 계좌를 직접 생성 및 등록함.")
+    // @PostMapping("/account")
+    // public void createCompanyAccount(@Valid @RequestBody RegisterCompanyAccountRequest request) {
+    //     companySalaryService.createCompanyAccount(request.companyId(), request.userId());
+    // }
 
     /**
      * 전체 기업 목록 조회

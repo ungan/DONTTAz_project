@@ -38,13 +38,21 @@ public class CompanySalaryService {
         private final BankingClient bankingClient; // 금융 API 클라이언트 추가함
 
         /**
-         * 기업 정보 생성
+         * 기업 정보 생성 및 계좌 자동 연동 (1억 입금 포함)
          */
-        public Long createCompany(String name) {
+        public Long createCompany(String name, Long userId) {
                 Company company = Company.builder()
                                 .name(name)
                                 .build();
-                return companyRepository.save(company).getCompanyId(); // 생성 기업 ID 반환
+                Long createdCompanyId = companyRepository.save(company).getCompanyId(); // 생성 기업 ID 반환
+
+                // 2단계: 기업 계좌 자동 개설
+                createCompanyAccount(createdCompanyId, userId);
+
+                // 3단계: 개설된 계좌에 즉시 테스트 자금 1억 강제 충전
+                deposit100Million(createdCompanyId);
+
+                return createdCompanyId;
         }
 
         /**
