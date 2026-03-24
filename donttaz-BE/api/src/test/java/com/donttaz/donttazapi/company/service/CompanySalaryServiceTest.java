@@ -63,7 +63,7 @@ class CompanySalaryServiceTest {
 
                 // then
                 // 금융 API 호출 확인
-                verify(bankingClient).createDemandDepositAccount(eq(userId), eq("001-1-1"));
+                verify(bankingClient).createDemandDepositAccount(eq(userId), eq("003-1-befca2dba9314d"));
                 // DB 저장 확인
                 verify(companyAccountRepository).save(any(CompanyAccount.class));
         }
