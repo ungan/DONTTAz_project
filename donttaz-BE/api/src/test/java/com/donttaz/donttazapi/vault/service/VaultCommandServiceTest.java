@@ -71,8 +71,7 @@ class VaultCommandServiceTest {
                                 com.donttaz.donttazapi.memorandum.dto.response.MemorandumResponse.builder()
                                                 .build());
 
-                CreateWishlistVaultRequest request = new CreateWishlistVaultRequest("애플워치", 500000L,
-                                new com.donttaz.donttazapi.memorandum.dto.request.MemorandumRequest());
+                CreateWishlistVaultRequest request = new CreateWishlistVaultRequest("애플워치", 500000L);
                 CreateVaultResponse response = vaultCommandService.createWishlistVault(request);
 
                 assertThat(response.lockedAmount()).isEqualTo(0L);
