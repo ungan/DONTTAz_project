@@ -43,11 +43,14 @@ public class VaultCommandService {
         private final RabbitTemplate rabbitTemplate;
         private final AccountRepository accountRepository;
 
-        @Value("${vault.admin-user-id}")
+        @Value("${vault.admin-user-id:1}")
         private Long adminUserId;
 
-        @Value("${vault.admin-account-no}")
+        @Value("${vault.admin-account-no:0018888888888888}")
         private String adminAccountNo;
+
+        @Value("${vault.team-account-no:0018888888888888}")
+        private String teamAccountNo;
 
         public VaultCommandService(
                         DefaultVaultRepository defaultVaultRepository,
@@ -139,11 +142,13 @@ public class VaultCommandService {
                                                 "대표계좌를 찾을 수 없습니다."));
 
                 String accountNo = primaryAccount.getAccountNumber();
+                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? teamAccountNo
+                                : adminAccountNo;
 
                 if (kind == VaultKind.DEFAULT) {
                         DefaultVault vault = defaultVaultRepository.findByUserIdAndStatus(userId, VaultStatus.LOCKED)
                                         .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
-                        depositToDefault(vault, request.amount(), accountNo);
+                        depositToDefault(vault, request.amount(), accountNo, targetAdminAccountNo);
                         return VaultDepositResponse.builder()
                                         .vaultId(vault.getId())
                                         .depositedAmount(request.amount())
@@ -158,7 +163,7 @@ public class VaultCommandService {
                                                 "입금 이후 금액이 위시리스트 목표 금액을 초과할 수 없습니다.");
                         }
 
-                        depositToWishlist(vault, request.amount(), accountNo);
+                        depositToWishlist(vault, request.amount(), accountNo, targetAdminAccountNo);
                         return VaultDepositResponse.builder()
                                         .vaultId(vault.getId())
                                         .depositedAmount(request.amount())
@@ -167,16 +172,17 @@ public class VaultCommandService {
                 }
         }
 
-        private void depositToDefault(DefaultVault vault, Long amount, String accountNo) {
+        private void depositToDefault(DefaultVault vault, Long amount, String accountNo, String targetAdminAccountNo) {
                 bankingClient.transfer(vault.getUserId(), new TransferCommand(
-                                adminAccountNo, "금고 입금 수납", String.valueOf(amount), accountNo, "금고 입금"));
+                                targetAdminAccountNo, "금고 입금 수납", String.valueOf(amount), accountNo, "금고 입금"));
                 vault.deposit(amount);
                 saveHistory(vault.getId(), VaultKind.DEFAULT, TransactionType.DEPOSIT, amount, 0L);
         }
 
-        private void depositToWishlist(WishlistVault vault, Long amount, String accountNo) {
+        private void depositToWishlist(WishlistVault vault, Long amount, String accountNo,
+                        String targetAdminAccountNo) {
                 bankingClient.transfer(vault.getUserId(), new TransferCommand(
-                                adminAccountNo, "금고 입금 수납", String.valueOf(amount), accountNo, "금고 입금"));
+                                targetAdminAccountNo, "금고 입금 수납", String.valueOf(amount), accountNo, "금고 입금"));
                 vault.deposit(amount);
                 saveHistory(vault.getId(), VaultKind.WISHLIST, TransactionType.DEPOSIT, amount, 0L);
 
@@ -225,8 +231,10 @@ public class VaultCommandService {
         }
 
         private void depositToWishlistInternal(WishlistVault vault, Long amount, String accountNo) {
+                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? teamAccountNo
+                                : adminAccountNo;
                 bankingClient.transfer(vault.getUserId(), new TransferCommand(
-                                adminAccountNo, "금고 자동 입금(배치)", String.valueOf(amount), accountNo, "금고 자동 입금"));
+                                targetAdminAccountNo, "금고 자동 입금(배치)", String.valueOf(amount), accountNo, "금고 자동 입금"));
                 vault.deposit(amount);
                 saveHistory(vault.getId(), VaultKind.WISHLIST, TransactionType.DEPOSIT, amount, 0L);
 
@@ -236,8 +244,10 @@ public class VaultCommandService {
         }
 
         private void depositToDefaultInternal(DefaultVault vault, Long amount, String accountNo) {
+                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? teamAccountNo
+                                : adminAccountNo;
                 bankingClient.transfer(vault.getUserId(), new TransferCommand(
-                                adminAccountNo, "금고 자동 입금(배치)", String.valueOf(amount), accountNo, "금고 자동 입금"));
+                                targetAdminAccountNo, "금고 자동 입금(배치)", String.valueOf(amount), accountNo, "금고 자동 입금"));
                 vault.deposit(amount);
                 saveHistory(vault.getId(), VaultKind.DEFAULT, TransactionType.DEPOSIT, amount, 0L);
         }
@@ -264,8 +274,13 @@ public class VaultCommandService {
                 vault.withdraw(request.amount());
                 Long totalTransferAmount = request.amount() + interest;
 
-                bankingClient.transfer(adminUserId, new TransferCommand(
-                                request.accountNo(), "금고 출금 지급", String.valueOf(totalTransferAmount), adminAccountNo,
+                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? teamAccountNo
+                                : adminAccountNo;
+                Long targetAdminUserId = (adminUserId == null) ? 1L : adminUserId;
+
+                bankingClient.transfer(targetAdminUserId, new TransferCommand(
+                                request.accountNo(), "금고 출금 지급", String.valueOf(totalTransferAmount),
+                                targetAdminAccountNo,
                                 "금고 출금"));
 
                 saveHistory(vault.getId(), VaultKind.DEFAULT, TransactionType.WITHDRAW_BROKEN, request.amount(),
@@ -286,8 +301,13 @@ public class VaultCommandService {
                 vault.withdraw(request.amount());
                 Long totalTransferAmount = request.amount() + interest;
 
-                bankingClient.transfer(adminUserId, new TransferCommand(
-                                request.accountNo(), "금고 출금 지급", String.valueOf(totalTransferAmount), adminAccountNo,
+                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? teamAccountNo
+                                : adminAccountNo;
+                Long targetAdminUserId = (adminUserId == null) ? 1L : adminUserId;
+
+                bankingClient.transfer(targetAdminUserId, new TransferCommand(
+                                request.accountNo(), "금고 출금 지급", String.valueOf(totalTransferAmount),
+                                targetAdminAccountNo,
                                 "금고 출금"));
 
                 saveHistory(vault.getId(), VaultKind.WISHLIST, TransactionType.WITHDRAW_BROKEN, request.amount(),
@@ -332,9 +352,13 @@ public class VaultCommandService {
                                 .findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(userId, AccountStatus.ACTIVE)
                                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
 
-                bankingClient.transfer(adminUserId, new TransferCommand(
+                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? teamAccountNo
+                                : adminAccountNo;
+                Long targetAdminUserId = (adminUserId == null) ? 1L : adminUserId;
+
+                bankingClient.transfer(targetAdminUserId, new TransferCommand(
                                 primaryAccount.getAccountNumber(), "금고 만기 환급", String.valueOf(totalTransferAmount),
-                                adminAccountNo,
+                                targetAdminAccountNo,
                                 "금고 자동 해지"));
 
                 saveHistory(vault.getId(), VaultKind.WISHLIST, TransactionType.WITHDRAW_MATURED, finalAmount, interest);
