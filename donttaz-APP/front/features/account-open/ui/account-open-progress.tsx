@@ -1,28 +1,17 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
 import type { AccountOpenStep } from '../types/account-open';
 import { styles } from './account-open-progress.styles';
 
-const STEPS: Array<{ key: AccountOpenStep; label: string }> = [
-  { key: 'terms', label: '계좌개설' },
-  { key: 'verify', label: '본인인증' },
-  { key: 'profile', label: '정보입력' },
-  { key: 'banking', label: '전자금융' },
-];
+const ACCOUNT_OPEN_STEP_ORDER: AccountOpenStep[] = ['terms', 'verify', 'profile', 'banking'];
 
 export function AccountOpenProgress({ currentStep }: { currentStep: AccountOpenStep }) {
-  return (
-    <View style={styles.container}>
-      {STEPS.map((step) => {
-        const isActive = step.key === currentStep;
+  const currentIndex = ACCOUNT_OPEN_STEP_ORDER.indexOf(currentStep);
+  const fillPercent = ((currentIndex + 1) / ACCOUNT_OPEN_STEP_ORDER.length) * 100;
 
-        return (
-          <View key={step.key} style={styles.stepItem}>
-            <Text style={[styles.stepLabel, isActive && styles.stepLabelActive]}>{step.label}</Text>
-            <View style={[styles.stepBar, isActive && styles.stepBarActive]} />
-          </View>
-        );
-      })}
+  return (
+    <View style={styles.track}>
+      <View style={[styles.fill, { width: `${fillPercent}%` }]} />
     </View>
   );
 }

@@ -3,65 +3,76 @@ import { Primary } from '@/shared/constants/theme';
 
 export const styles = StyleSheet.create({
   section: {
-    width: '100%',
-    gap: 12,
+    gap: 10,
   },
-  title: {
-    fontSize: 18,
+  sectionHeader: {
+    gap: 2,
+  },
+  sectionTitle: {
+    fontSize: 15,
     fontWeight: '700',
     color: '#111827',
   },
-  subtitle: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#6B7280',
+  sectionSubtitle: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#9CA3AF',
   },
-  list: {
-    gap: 8,
-  },
-  row: {
-    minHeight: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  card: {
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 8,
-    paddingHorizontal: 16,
     backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
   },
-  summaryRow: {
-    borderColor: '#D1D5DB',
-    backgroundColor: '#F9FAFB',
-  },
-  rowLeft: {
+  allRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    gap: 10,
-    paddingRight: 8,
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
-  iconCircle: {
+  allLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 0,
+  },
+  innerDivider: {
+    height: 1,
+    backgroundColor: '#F9FAFB',
+    marginHorizontal: 16,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  itemLabel: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#374151',
+  },
+  checkCircle: {
     width: 22,
     height: 22,
     borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#D1D5DB',
     backgroundColor: '#FFFFFF',
   },
-  iconCircleActive: {
+  checkCircleActive: {
     borderColor: Primary,
     backgroundColor: Primary,
-  },
-  rowLabel: {
-    flex: 1,
-    fontSize: 15,
-    color: '#374151',
-  },
-  summaryLabel: {
-    fontWeight: '600',
-    color: '#111827',
   },
 });

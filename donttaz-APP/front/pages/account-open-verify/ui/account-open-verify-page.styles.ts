@@ -5,12 +5,14 @@ export const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 24,
     backgroundColor: '#FFFFFF',
-    gap: 24,
+    gap: 28,
+  },
+  headerBlock: {
+    gap: 12,
   },
   heroSection: {
-    gap: 8,
+    gap: 6,
   },
   title: {
     fontSize: 24,
@@ -19,33 +21,50 @@ export const styles = StyleSheet.create({
     color: '#111827',
   },
   description: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 21,
     color: '#6B7280',
   },
-  caption: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: '#9CA3AF',
-  },
-  summaryCard: {
-    gap: 12,
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: '#F9FAFB',
+  infoCard: {
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    backgroundColor: '#F9FAFB',
+    overflow: 'hidden',
   },
-  summaryTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  verifiedBadgeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#5899FD',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+  },
+  innerDivider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginHorizontal: 16,
+  },
+  innerDividerVerified: {
+    backgroundColor: '#FFFFFF',
   },
   summaryRow: {
-    gap: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
   summaryLabel: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#6B7280',
   },
   summaryValue: {
@@ -59,7 +78,14 @@ export const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 13,
-    lineHeight: 20,
-    color: '#6B7280',
+    lineHeight: 19,
+    color: '#9CA3AF',
+    textAlign: 'center',
+  },
+  bottomBar: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 10,
+    backgroundColor: '#FFFFFF',
   },
 });

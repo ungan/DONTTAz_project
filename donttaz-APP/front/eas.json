@@ -9,7 +9,11 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_BASE_URL": "https://j14c104.p.ssafy.io/api/v1",
+        "EXPO_PUBLIC_IS_MOCK": "false"
+      }
     },
     "production": {
       "autoIncrement": true

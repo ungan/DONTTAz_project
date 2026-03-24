@@ -41,10 +41,52 @@ export function MenuPage() {
 
   const financeItems: MenuItem[] = [
     {
+      icon: 'receipt-outline',
+      label: '전체 결제내역',
+      description: '내 계좌 거래내역 조회',
+      onPress: () => router.push('/payment-history'),
+    },
+    {
+      icon: 'swap-horizontal-outline',
+      label: '이체',
+      description: '다른 계좌로 송금하기',
+      onPress: () => router.push('/transfer-account'),
+    },
+    {
       icon: 'wallet-outline',
       label: '계좌 개설',
       description: '새 입출금 통장 만들기',
       onPress: () => router.push('/account-open-terms'),
+    },
+  ];
+
+  const planItems: MenuItem[] = [
+    {
+      icon: 'bar-chart-outline',
+      label: '소비 리포트',
+      description: '월별·연별 소비 분석',
+      onPress: () => router.push('/report'),
+    },
+    {
+      icon: 'trending-down-outline',
+      label: '소비 계획',
+      description: '번다운 차트로 예산 관리',
+      onPress: () => router.push('/(tabs)/plan'),
+    },
+  ];
+
+  const vaultItems: MenuItem[] = [
+    {
+      icon: 'lock-closed-outline',
+      label: '가상금고',
+      description: '목돈 모으기 & 위시리스트',
+      onPress: () => router.push('/(tabs)/vault'),
+    },
+    {
+      icon: 'document-text-outline',
+      label: '각서 작성',
+      description: '소비 절제 각서 설정',
+      onPress: () => router.push('/vault-memorandum'),
     },
   ];
 
@@ -100,6 +142,20 @@ export function MenuPage() {
           <Text style={styles.sectionHeader}>금융</Text>
           <View style={styles.sectionCard}>
             {financeItems.map(renderItem)}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>소비 관리</Text>
+          <View style={styles.sectionCard}>
+            {planItems.map(renderItem)}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>가상금고</Text>
+          <View style={styles.sectionCard}>
+            {vaultItems.map(renderItem)}
           </View>
         </View>
 

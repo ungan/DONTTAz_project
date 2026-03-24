@@ -3,21 +3,19 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     width: '100%',
-    gap: 12,
+    gap: 20,
   },
-  helperText: {
-    marginTop: -4,
-    fontSize: 13,
-    lineHeight: 19,
-    color: '#6B7280',
+  fieldGroup: {
+    gap: 8,
   },
-  limitSection: {
-    gap: 6,
-  },
-  limitLabel: {
+  label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
     color: '#374151',
+  },
+  hint: {
+    fontSize: 12,
+    color: '#9CA3AF',
   },
   errorText: {
     fontSize: 12,

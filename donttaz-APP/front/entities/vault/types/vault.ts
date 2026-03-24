@@ -1,5 +1,5 @@
-export type VaultKind = 'DEFAULT';
-export type VaultStatus = 'LOCKED' | 'UNLOCKED';
+export type VaultKind = 'DEFAULT' | 'WISHLIST';
+export type VaultStatus = 'LOCKED' | 'MATURED' | 'BROKEN';
 export type VaultTransactionType = 'DEPOSIT' | 'WITHDRAWAL';
 
 export interface Vault {
@@ -9,9 +9,9 @@ export interface Vault {
   status: VaultStatus;
   wishName: string;
   goalAmount: number;
-  targetDate: string;
   baseInterestRate: number;
   penaltyInterestRate: number;
+  withdrawalCount: number;
 }
 
 export interface GetVaultsResponse {

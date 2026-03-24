@@ -50,7 +50,6 @@ interface AccountOpenStore extends AccountOpenState {
     productName: string
   ) => void;
   setCustomerName: (value: string) => void;
-  setEnglishName: (value: string) => void;
   setPhoneNumber: (value: string) => void;
   setZipCode: (value: string) => void;
   setAddress: (value: string) => void;
@@ -71,7 +70,6 @@ interface AccountOpenStore extends AccountOpenState {
   setIsIdentityVerificationPending: (value: boolean) => void;
   setIsCreatePending: (value: boolean) => void;
   setCustomerNameError: (value: string | null) => void;
-  setEnglishNameError: (value: string | null) => void;
   setPhoneNumberError: (value: string | null) => void;
   setAddressError: (value: string | null) => void;
   setEmailError: (value: string | null) => void;
@@ -95,7 +93,6 @@ const initialState: AccountOpenState = {
   selectedBankName: '',
   selectedProductName: '',
   customerName: '',
-  englishName: '',
   phoneNumber: '',
   zipCode: '',
   address: '',
@@ -120,7 +117,6 @@ const initialState: AccountOpenState = {
   isProductLoading: false,
   isCreatePending: false,
   customerNameError: null,
-  englishNameError: null,
   phoneNumberError: null,
   addressError: null,
   emailError: null,
@@ -145,7 +141,6 @@ export const useAccountOpenStore = create<AccountOpenStore>((set) => ({
       selectedProductName,
     }),
   setCustomerName: (customerName) => set({ customerName }),
-  setEnglishName: (englishName) => set({ englishName }),
   setPhoneNumber: (phoneNumber) => set({ phoneNumber }),
   setZipCode: (zipCode) => set({ zipCode }),
   setAddress: (address) => set({ address }),
@@ -170,7 +165,6 @@ export const useAccountOpenStore = create<AccountOpenStore>((set) => ({
     set({ isIdentityVerificationPending }),
   setIsCreatePending: (isCreatePending) => set({ isCreatePending }),
   setCustomerNameError: (customerNameError) => set({ customerNameError }),
-  setEnglishNameError: (englishNameError) => set({ englishNameError }),
   setPhoneNumberError: (phoneNumberError) => set({ phoneNumberError }),
   setAddressError: (addressError) => set({ addressError }),
   setEmailError: (emailError) => set({ emailError }),

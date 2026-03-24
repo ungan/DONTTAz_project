@@ -19,7 +19,6 @@ export interface AccountOpenState {
   selectedBankName: string;
   selectedProductName: string;
   customerName: string;
-  englishName: string;
   phoneNumber: string;
   zipCode: string;
   address: string;
@@ -44,7 +43,6 @@ export interface AccountOpenState {
   isProductLoading: boolean;
   isCreatePending: boolean;
   customerNameError: string | null;
-  englishNameError: string | null;
   phoneNumberError: string | null;
   addressError: string | null;
   emailError: string | null;

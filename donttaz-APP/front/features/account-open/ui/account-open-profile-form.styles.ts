@@ -6,20 +6,49 @@ export const styles = StyleSheet.create({
     width: '100%',
     gap: 16,
   },
-  lockedFieldNotice: {
-    padding: 12,
+  verifiedCard: {
     borderRadius: 12,
-    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: '#BFDBFE',
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F9FAFB',
+    overflow: 'hidden',
   },
-  lockedFieldNoticeText: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: '#1D4ED8',
+  verifiedCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
-  readonlyInput: {
+  verifiedCardBadge: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Primary,
+  },
+  verifiedDivider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+  },
+  verifiedRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  verifiedInnerDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 16,
+  },
+  verifiedLabel: {
+    fontSize: 14,
     color: '#6B7280',
+  },
+  verifiedValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
   },
   consentGroup: {
     flexDirection: 'row',

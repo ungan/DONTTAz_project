@@ -1,16 +1,25 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  headerBlock: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    gap: 12,
+    backgroundColor: '#FFFFFF',
+  },
   container: {
     flexGrow: 1,
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 24,
-    backgroundColor: '#FFFFFF',
+    paddingTop: 20,
+    paddingBottom: 16,
     gap: 24,
   },
   heroSection: {
-    gap: 8,
+    gap: 6,
   },
   title: {
     fontSize: 24,
@@ -19,8 +28,13 @@ export const styles = StyleSheet.create({
     color: '#111827',
   },
   description: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 21,
     color: '#6B7280',
+  },
+  bottomBar: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    backgroundColor: '#FFFFFF',
   },
 });

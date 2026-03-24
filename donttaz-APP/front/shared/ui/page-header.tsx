@@ -24,7 +24,7 @@ export function PageHeader({ title, onBack, rightAction }: PageHeaderProps) {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <TouchableOpacity style={styles.backButton} onPress={handleBack} activeOpacity={0.7}>
         <Ionicons name="chevron-back" size={20} color="#374151" />
       </TouchableOpacity>

@@ -3,15 +3,9 @@ import { getMyAccountsApi } from '@/entities/account';
 import { useSessionStore } from '@/entities/session';
 import { useBankAccountStore } from '@/entities/bank-account';
 import { storeAuthTokens } from '@/shared/api/auth-storage';
-import mockBankAccount from '@/shared/mock/data/bank-account.json';
 import type { LoginResponseData } from '../types/login';
 import { useAuthRuntimeStore } from './auth-runtime-store';
 
-function isLegacyMockAccount(accountId: number | null, accountNo: string | null) {
-  return (
-    accountId === mockBankAccount.data.accountId || accountNo === mockBankAccount.data.accountNo
-  );
-}
 
 function parseBalance(balance: string | number | null | undefined) {
   const numericBalance = typeof balance === 'number' ? balance : Number(balance ?? 0);
@@ -52,36 +46,20 @@ export async function completeLoginSession(data: LoginResponseData) {
   useSessionStore.getState().setSession(data.userId, data.name);
   useAuthRuntimeStore.getState().setPinVerified(true);
 
-  if (process.env.EXPO_PUBLIC_IS_MOCK === 'true') {
-    useBankAccountStore.getState().setAccount(
-      mockBankAccount.data.accountId,
-      mockBankAccount.data.bankName,
-      mockBankAccount.data.balance,
-      mockBankAccount.data.accountNo,
-      mockBankAccount.data.accountName
-    );
-  } else {
-    const currentAccount = useBankAccountStore.getState();
+  try {
+    const synced = await syncPrimaryAccountFromApi();
 
-    if (isLegacyMockAccount(currentAccount.accountId, currentAccount.accountNo)) {
-      currentAccount.clearAccount();
-    }
-
-    try {
-      const synced = await syncPrimaryAccountFromApi();
-
-      if (!synced && !useBankAccountStore.getState().accountId) {
-        const fallbackId = resolveFallbackAccountId();
-        if (fallbackId) {
-          useBankAccountStore.getState().setAccount(fallbackId, 'DONTTAZ', 0, null, null);
-        }
+    if (!synced && !useBankAccountStore.getState().accountId) {
+      const fallbackId = resolveFallbackAccountId();
+      if (fallbackId) {
+        useBankAccountStore.getState().setAccount(fallbackId, 'DONTTAZ', 0, null, null);
       }
-    } catch {
-      if (!useBankAccountStore.getState().accountId) {
-        const fallbackId = resolveFallbackAccountId();
-        if (fallbackId) {
-          useBankAccountStore.getState().setAccount(fallbackId, 'DONTTAZ', 0, null, null);
-        }
+    }
+  } catch {
+    if (!useBankAccountStore.getState().accountId) {
+      const fallbackId = resolveFallbackAccountId();
+      if (fallbackId) {
+        useBankAccountStore.getState().setAccount(fallbackId, 'DONTTAZ', 0, null, null);
       }
     }
   }

@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text } from 'react-native';
 import { useURL } from 'expo-linking';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Button, PageHeader } from '@/shared/ui';
 import {
   ACCOUNT_OPEN_PORTONE_CALLBACK_PATH,
@@ -12,6 +14,7 @@ import { matchesPortOneCallbackPath } from '@/features/signup';
 import { styles } from './account-open-verify-page.styles';
 
 export function AccountOpenVerifyPage() {
+  const insets = useSafeAreaInsets();
   const callbackUrl = useURL();
   const handledCallbackUrlRef = useRef<string | null>(null);
   const {
@@ -26,6 +29,7 @@ export function AccountOpenVerifyPage() {
     verifiedOwnerName,
     verifiedOwnerPhoneNumber,
     completeVerificationFromCallbackUrl,
+    proceedToProfileStep,
     submitVerifyStep,
   } = useAccountOpenFlow();
   const moveToVerifyStepRef = useRef(moveToVerifyStep);
@@ -56,63 +60,67 @@ export function AccountOpenVerifyPage() {
     void completeVerificationFromCallbackUrlRef.current(callbackUrl);
   }, [callbackUrl]);
 
+  const isVerified = !!verifiedOwnerName && !!verifiedOwnerPhoneNumber;
+  const displayName = isVerified ? verifiedOwnerName : (currentUserName || '-');
+  const displayPhone = isVerified ? verifiedOwnerPhoneNumber : (currentUserPhoneNumber || '-');
+
   return (
     <View style={styles.container}>
-      <PageHeader title="계좌정보 인증" onBack={() => router.replace('/account-open-terms' as never)} />
-
-      <AccountOpenProgress currentStep="verify" />
+      <View style={styles.headerBlock}>
+        <PageHeader title="본인인증" onBack={() => router.replace('/account-open-terms' as never)} />
+        <AccountOpenProgress currentStep="verify" />
+      </View>
 
       <View style={styles.heroSection}>
-        <Text style={styles.title}>본인인증 재확인</Text>
+        <Text style={styles.title}>본인 확인</Text>
         <Text style={styles.description}>
-          계좌 개설 전, PortOne 본인인증 결과와 현재 로그인한 사용자 정보를 다시 한 번 비교합니다.
-        </Text>
-        <Text style={styles.caption}>
-          이름과 휴대폰 번호가 모두 일치하면 개설 정보 입력 단계로 이동합니다.
+          {isVerified
+            ? '본인인증이 완료되었습니다. 계속 진행해 주세요.'
+            : '계좌 개설을 위해 본인인증을 진행합니다.'}
         </Text>
       </View>
 
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>비교 기준</Text>
+      <View style={styles.infoCard}>
+        {isVerified && (
+          <>
+            <View style={styles.verifiedBadge}>
+              <Ionicons name="checkmark-circle" size={15} color="#5899FD" />
+              <Text style={styles.verifiedBadgeText}>인증 완료</Text>
+            </View>
+            <View style={styles.divider} />
+          </>
+        )}
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>현재 사용자 이름</Text>
-          <Text style={styles.summaryValue}>{currentUserName || '-'}</Text>
+          <Text style={styles.summaryLabel}>이름</Text>
+          <Text style={styles.summaryValue}>{displayName}</Text>
         </View>
+        <View style={[styles.innerDivider, isVerified && styles.innerDividerVerified]} />
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>현재 사용자 휴대폰</Text>
-          <Text style={styles.summaryValue}>{currentUserPhoneNumber || '-'}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>최근 인증 이름</Text>
-          <Text style={styles.summaryValue}>{verifiedOwnerName || '-'}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>최근 인증 휴대폰</Text>
-          <Text style={styles.summaryValue}>{verifiedOwnerPhoneNumber || '-'}</Text>
+          <Text style={styles.summaryLabel}>휴대폰</Text>
+          <Text style={styles.summaryValue}>{displayPhone}</Text>
         </View>
       </View>
 
-      {identityVerificationError ? (
-        <Text style={styles.errorText}>{identityVerificationError}</Text>
-      ) : null}
-      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
+        {identityVerificationError ? (
+          <Text style={styles.errorText}>{identityVerificationError}</Text>
+        ) : null}
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
-      <Button
-        label={
-          isIdentityVerificationPending
-            ? '본인인증 확인 중...'
-            : isCreatePending
-              ? '계좌 준비 중...'
-              : '본인인증 다시 하기'
-        }
-        disabled={isIdentityVerificationPending || isCreatePending}
-        isLoading={isIdentityVerificationPending || isCreatePending}
-        onPress={submitVerifyStep}
-      />
-
-      <Text style={styles.helperText}>
-        인증 완료 후 앱으로 자동 복귀가 실패하면, 인증 페이지의 앱 복귀 버튼을 눌러 다시 돌아오면 됩니다.
-      </Text>
+        {isVerified ? (
+          <Button label="다음" onPress={proceedToProfileStep} />
+        ) : (
+          <>
+            <Button
+              label={isIdentityVerificationPending ? '본인인증 확인 중...' : '본인인증 하기'}
+              disabled={isIdentityVerificationPending || isCreatePending}
+              isLoading={isIdentityVerificationPending || isCreatePending}
+              onPress={submitVerifyStep}
+            />
+            <Text style={styles.helperText}>자동 복귀가 안 되면 복귀 버튼을 눌러 주세요.</Text>
+          </>
+        )}
+      </View>
     </View>
   );
 }

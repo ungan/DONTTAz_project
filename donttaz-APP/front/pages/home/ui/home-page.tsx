@@ -23,7 +23,7 @@ export function HomePage() {
       router.push('/(tabs)/plan');
     }
     if (id === '4') {
-      router.push('/vault-memorandum');
+      router.push('/(tabs)/vault');
     }
   };
 
@@ -36,7 +36,7 @@ export function HomePage() {
       </View>
       <View style={styles.widgetsSection}>
         <FavoriteMenu onItemPress={handleFavoriteMenuPress} />
-        <PaymentHistory />
+        <PaymentHistory onViewAllPress={() => router.push('/payment-history')} />
       </View>
     </ScrollView>
   );

@@ -4,7 +4,7 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingBottom: 24,
+    paddingBottom: 60,
   },
   section: {
     flex: 1,
