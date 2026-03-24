@@ -43,6 +43,18 @@ public class AccountQueryService {
 
     private static final String PAYMENT_CATEGORY = "PAYMENT";
     private static final int DEFAULT_TRANSACTION_LOOKBACK_MONTHS = 3;
+    private static final String SELF_COUNTERPARTY_NAME = "SELF";
+    private static final String TRANSFER_COUNTERPARTY_NAME = "TRANSFER";
+    private static final String DEPOSIT_TYPE = "DEPOSIT";
+    private static final String WITHDRAWAL_TYPE = "WITHDRAWAL";
+    private static final String DEPOSIT_TRANSFER_TYPE = "DEPOSIT_TRANSFER";
+    private static final String WITHDRAWAL_TRANSFER_TYPE = "WITHDRAWAL_TRANSFER";
+    private static final String SELF_COUNTERPARTY_LABEL = "본인";
+    private static final String TRANSFER_COUNTERPARTY_LABEL = "이체";
+    private static final String DEPOSIT_LABEL = "입금";
+    private static final String WITHDRAWAL_LABEL = "출금";
+    private static final String DEPOSIT_TRANSFER_LABEL = "이체 입금";
+    private static final String WITHDRAWAL_TRANSFER_LABEL = "이체 출금";
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
@@ -378,7 +390,7 @@ public class AccountQueryService {
         if (payment != null && payment.getMerchantName() != null && !payment.getMerchantName().isBlank()) {
             return payment.getMerchantName();
         }
-        return transaction.getCounterpartyName();
+        return translateCounterpartyName(transaction.getCounterpartyName());
     }
 
     private String resolveCounterpartyAccount(Transaction transaction, Payment payment) {
@@ -392,7 +404,7 @@ public class AccountQueryService {
         if (payment != null && payment.getMerchantName() != null && !payment.getMerchantName().isBlank()) {
             return payment.getMerchantName();
         }
-        return transaction.getTransactionSummary();
+        return translateDisplayText(transaction.getTransactionSummary());
     }
 
     private String resolveCategory(Transaction transaction, Payment payment, TransactionAiMetadata metadata) {
@@ -417,10 +429,10 @@ public class AccountQueryService {
         }
 
         if (transaction.getTxTypeName() != null && !transaction.getTxTypeName().isBlank()) {
-            return transaction.getTxTypeName();
+            return translateTransactionLabel(transaction.getTxTypeName());
         }
 
-        return toApiTransactionType(transaction.getTxType());
+        return translateTransactionLabel(toApiTransactionType(transaction.getTxType()));
     }
 
     private Optional<Long> parseTransactionId(String transactionId) {
@@ -469,5 +481,35 @@ public class AccountQueryService {
 
     private Long resolveCurrentUserId() {
         return currentUserProvider.getCurrentUserId();
+    }
+
+    private String translateCounterpartyName(String counterpartyName) {
+        if (counterpartyName == null || counterpartyName.isBlank()) {
+            return counterpartyName;
+        }
+
+        return switch (counterpartyName.toUpperCase()) {
+            case SELF_COUNTERPARTY_NAME -> SELF_COUNTERPARTY_LABEL;
+            case TRANSFER_COUNTERPARTY_NAME -> TRANSFER_COUNTERPARTY_LABEL;
+            default -> counterpartyName;
+        };
+    }
+
+    private String translateTransactionLabel(String label) {
+        if (label == null || label.isBlank()) {
+            return label;
+        }
+
+        return switch (label.toUpperCase()) {
+            case DEPOSIT_TYPE, "1" -> DEPOSIT_LABEL;
+            case WITHDRAWAL_TYPE, "2" -> WITHDRAWAL_LABEL;
+            case DEPOSIT_TRANSFER_TYPE -> DEPOSIT_TRANSFER_LABEL;
+            case WITHDRAWAL_TRANSFER_TYPE -> WITHDRAWAL_TRANSFER_LABEL;
+            default -> label;
+        };
+    }
+
+    private String translateDisplayText(String value) {
+        return translateTransactionLabel(translateCounterpartyName(value));
     }
 }

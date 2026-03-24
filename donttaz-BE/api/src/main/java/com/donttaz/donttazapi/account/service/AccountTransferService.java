@@ -56,8 +56,13 @@ public class AccountTransferService {
 
     private static final Logger log = LoggerFactory.getLogger(AccountTransferService.class);
     private static final String TRANSACTION_SOURCE_FIN_API = "FIN_API";
-    private static final String TRANSFER_COUNTERPARTY_NAME = "TRANSFER";
+    private static final String SELF_COUNTERPARTY_NAME = "본인";
+    private static final String TRANSFER_COUNTERPARTY_NAME = "이체";
     private static final String PAYMENT_SETTLEMENT_SUMMARY = "PAYMENT_SETTLEMENT";
+    private static final String DEPOSIT_LABEL = "입금";
+    private static final String WITHDRAWAL_LABEL = "출금";
+    private static final String DEPOSIT_TRANSFER_LABEL = "이체 입금";
+    private static final String WITHDRAWAL_TRANSFER_LABEL = "이체 출금";
 
     private final BankingClient bankingClient;
     private final AccountSyncService accountSyncService;
@@ -285,10 +290,10 @@ public class AccountTransferService {
                         .source(TRANSACTION_SOURCE_FIN_API)
                         .sourceTxId(externalTransactionId)
                         .txType(toSourceTransactionType(type))
-                        .txTypeName(type.name())
+                        .txTypeName(toTransactionTypeLabel(type))
                         .amount(toLong(amount))
                         .balanceSnapshot(toLong(account.getBalance()))
-                        .counterpartyName("SELF")
+                        .counterpartyName(SELF_COUNTERPARTY_NAME)
                         .transactionSummary(summary)
                         .transactionAt(toTransactionAt(transactionDate))
                         .syncedAt(LocalDateTime.now())
@@ -462,9 +467,22 @@ public class AccountTransferService {
 
     private String resolveSourceTransactionTypeName(TransactionType type, String txTypeName) {
         if (txTypeName == null || txTypeName.isBlank()) {
-            return type.name();
+            return toTransactionTypeLabel(type);
         }
-        return txTypeName;
+        return switch (txTypeName.toUpperCase()) {
+            case "DEPOSIT", "1" -> DEPOSIT_LABEL;
+            case "WITHDRAWAL", "2" -> WITHDRAWAL_LABEL;
+            case "DEPOSIT_TRANSFER" -> DEPOSIT_TRANSFER_LABEL;
+            case "WITHDRAWAL_TRANSFER" -> WITHDRAWAL_TRANSFER_LABEL;
+            default -> txTypeName;
+        };
+    }
+
+    private String toTransactionTypeLabel(TransactionType type) {
+        return switch (type) {
+            case DEPOSIT -> DEPOSIT_LABEL;
+            case WITHDRAWAL -> WITHDRAWAL_LABEL;
+        };
     }
 
     private AccountTransferItemResponse toAccountTransferItemResponse(TransferTransactionResult result) {
