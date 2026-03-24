@@ -42,6 +42,9 @@ public class SpendingPlan extends BaseEntity {
     @Column(name = "surplus_amount", nullable = false)
     private Integer surplusAmount;
 
+    @Column(name = "sealed_amount")
+    private Integer sealedAmount;
+
     @OneToMany(mappedBy = "spendingPlan", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CategorySpendingPlan> categoryPlans = new ArrayList<>();
 
@@ -51,13 +54,15 @@ public class SpendingPlan extends BaseEntity {
             String targetYearMonth,
             Integer monthlyIncome,
             Integer totalBudget,
-            Integer surplusAmount
+            Integer surplusAmount,
+            Integer sealedAmount
     ) {
         this.userId = userId;
         this.targetYearMonth = targetYearMonth;
         this.monthlyIncome = monthlyIncome;
         this.totalBudget = totalBudget;
         this.surplusAmount = surplusAmount;
+        this.sealedAmount = sealedAmount;
     }
 
     public void addCategoryPlan(CategorySpendingPlan categoryPlan) {

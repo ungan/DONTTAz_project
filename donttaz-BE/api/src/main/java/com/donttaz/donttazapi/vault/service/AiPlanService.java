@@ -27,7 +27,13 @@ public class AiPlanService {
         log.info("AI 소비 플랜 조회: userId={}, yearMonth={}", userId, yearMonth);
 
         return spendingPlanRepository.findByUserIdAndTargetYearMonth(userId, yearMonth)
-                .map(plan -> plan.getSurplusAmount().longValue())
+                .map(plan -> {
+                    // 팀원분이 sealedAmount 파싱 로직을 푸시하기 전까지는 NPE 방지를 위해 surplusAmount로 폴백(Fallback)하도록 안전 파이프라인 구성
+                    if (plan.getSealedAmount() != null && plan.getSealedAmount() > 0) {
+                        return plan.getSealedAmount().longValue();
+                    }
+                    return plan.getSurplusAmount() != null ? plan.getSurplusAmount().longValue() : 0L;
+                })
                 .orElseGet(() -> {
                     log.warn("해당 월의 AI 소비 플랜이 존재하지 않습니다. userId={}, yearMonth={}", userId, yearMonth);
                     return 0L;
