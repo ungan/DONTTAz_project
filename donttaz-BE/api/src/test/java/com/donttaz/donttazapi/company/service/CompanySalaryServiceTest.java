@@ -16,6 +16,7 @@ import com.donttaz.donttazapi.company.repository.CompanyAccountRepository;
 import com.donttaz.donttazapi.company.repository.CompanyRepository;
 import com.donttaz.donttazapi.infra.banking.client.BankingClient;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountCreateResult;
+import com.donttaz.donttazapi.vault.service.SalaryAutoTransferService;
 import com.donttaz.donttazapi.user.domain.User;
 import com.donttaz.donttazapi.user.repository.UserRepository;
 import java.util.Optional;
@@ -41,6 +42,8 @@ class CompanySalaryServiceTest {
         private AccountTransferService accountTransferService;
         @Mock
         private BankingClient bankingClient; // 금융 API 클라이언트 모킹 추가함
+        @Mock
+        private SalaryAutoTransferService salaryAutoTransferService;
 
         @InjectMocks
         private CompanySalaryService companySalaryService;
@@ -119,6 +122,9 @@ class CompanySalaryServiceTest {
                                         request.transactionBalance().equals(amount.toString()) &&
                                         request.withdrawalAccountNo().equals(companyAccountNo) &&
                                         request.depositAccountNo().equals(userAccountNo)));
+
+                // 금고 연쇄 이체 트리거가 호출되었는지 확인
+                verify(salaryAutoTransferService).processUserSalaryTransfer(eq(targetUser));
         }
 
         /*

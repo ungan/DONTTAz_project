@@ -18,6 +18,7 @@ import com.donttaz.donttazapi.company.repository.CompanyRepository;
 import com.donttaz.donttazapi.infra.banking.client.BankingClient;
 import com.donttaz.donttazapi.user.domain.User;
 import com.donttaz.donttazapi.user.repository.UserRepository;
+import com.donttaz.donttazapi.vault.service.SalaryAutoTransferService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class CompanySalaryService {
         private final UserRepository userRepository;
         private final AccountTransferService accountTransferService;
         private final BankingClient bankingClient; // 금융 API 클라이언트 추가함
+        private final SalaryAutoTransferService salaryAutoTransferService;
 
         /**
          * 기업 정보 생성 및 계좌 자동 연동 (1억 입금 포함)
@@ -124,6 +126,9 @@ public class CompanySalaryService {
 
                 // 시스템 이체 실행
                 accountTransferService.transfer(companyAccount.getUserId(), transferRequest);
+
+                // 이체 완료(급여 지급 성공) 확인 후 즉시 타겟 유저에 대해 금고 자동 이체 로직을 연쇄 트리거
+                salaryAutoTransferService.processUserSalaryTransfer(targetUser);
         }
 
         /**
@@ -132,11 +137,13 @@ public class CompanySalaryService {
         @Transactional(readOnly = true)
         public List<UserAccountSummaryResponse> getAllUserAccounts() {
                 return accountRepository.findAll().stream()
-                                .filter(account -> !account.getIsDeleted() && account.getStatus() == AccountStatus.ACTIVE)
+                                .filter(account -> !account.getIsDeleted()
+                                                && account.getStatus() == AccountStatus.ACTIVE)
                                 .map(account -> {
                                         User user = userRepository.findById(account.getUserId()).orElse(null);
                                         String userName = (user != null) ? user.getName() : "알 수 없음";
-                                        return new UserAccountSummaryResponse(account.getUserId(), userName, account.getAccountNumber());
+                                        return new UserAccountSummaryResponse(account.getUserId(), userName,
+                                                        account.getAccountNumber());
                                 })
                                 .toList();
         }
@@ -145,8 +152,10 @@ public class CompanySalaryService {
          * 기업 계좌 1억 원 강제 입금 (테스트/Swagger용)
          */
         public void deposit100Million(Long companyId) {
-                CompanyAccount companyAccount = companyAccountRepository.findByCompany_CompanyId(companyId).stream().findFirst()
-                                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_REQUEST, "기업 계좌가 하나도 존재하지 않음. 계좌를 먼저 생성해 주세요."));
+                CompanyAccount companyAccount = companyAccountRepository.findByCompany_CompanyId(companyId).stream()
+                                .findFirst()
+                                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_REQUEST,
+                                                "기업 계좌가 하나도 존재하지 않음. 계좌를 먼저 생성해 주세요."));
 
                 AccountDepositRequest request = new AccountDepositRequest("100000000", "테스트 1억 원 강제 입금");
                 accountTransferService.deposit(companyAccount.getUserId(), companyAccount.getAccountNumber(), request);
