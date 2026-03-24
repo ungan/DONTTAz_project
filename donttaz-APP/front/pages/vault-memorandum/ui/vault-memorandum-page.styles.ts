@@ -7,9 +7,6 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FAFAF7',
   },
-  flex: {
-    flex: 1,
-  },
   scroll: {
     flex: 1,
   },
@@ -18,7 +15,6 @@ export const styles = StyleSheet.create({
     paddingTop: 16,
   },
 
-  // 제목
   mainTitle: {
     fontSize: 40,
     fontWeight: '900',
@@ -29,7 +25,6 @@ export const styles = StyleSheet.create({
     letterSpacing: 4,
   },
 
-  // 유언자 정보
   userInfoSection: {
     marginBottom: 20,
     gap: 6,
@@ -49,17 +44,16 @@ export const styles = StyleSheet.create({
   },
 
   sectionSubtitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: HANDWRITTEN,
-    color: '#555555',
-    lineHeight: 22,
+    color: '#1A1A1A',
+    lineHeight: 26,
     letterSpacing: 0.5,
-    marginBottom: 24,
+    marginBottom: 32,
   },
 
-  // 조항
   articleBlock: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   articleTitle: {
     fontSize: 17,
@@ -67,50 +61,20 @@ export const styles = StyleSheet.create({
     fontFamily: HANDWRITTEN,
     color: '#1A1A1A',
     letterSpacing: 2,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   articleText: {
     fontSize: 15,
     fontFamily: HANDWRITTEN,
     color: '#1A1A1A',
-    lineHeight: 24,
-    letterSpacing: 1,
-  },
-
-  // 제1조 인라인 입력
-  article1Row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'baseline',
-  },
-  causeInput: {
-    fontSize: 15,
-    fontFamily: HANDWRITTEN,
-    color: '#C0392B',
-    letterSpacing: 1,
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#C0392B',
-    minWidth: 80,
-    maxWidth: 160,
-    paddingBottom: 1,
-    paddingHorizontal: 2,
-  },
-
-  // 제2조, 제3조 멀티라인 입력
-  multilineInput: {
-    fontSize: 15,
-    fontFamily: HANDWRITTEN,
-    color: '#1A1A1A',
     lineHeight: 26,
     letterSpacing: 1,
-    borderWidth: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: '#CCCCCC',
-    paddingVertical: 8,
-    minHeight: 80,
+  },
+  articleEmphasis: {
+    fontWeight: '700',
+    color: '#C0392B',
   },
 
-  // 서명 섹션
   signatureSection: {
     marginTop: 8,
     marginBottom: 32,
@@ -125,17 +89,22 @@ export const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
 
-  // 서명 버튼
+  fadeOverlay: {
+    position: 'absolute',
+    bottom: 120,
+    left: 0,
+    right: 0,
+    height: 60,
+  },
+
   signButton: {
     backgroundColor: '#444444',
     height: 56,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
-  },
-  signButtonDisabled: {
-    opacity: 0.4,
+    marginHorizontal: 28,
+    marginVertical: 32,
   },
   signButtonText: {
     fontSize: 16,

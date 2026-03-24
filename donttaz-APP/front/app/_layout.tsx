@@ -1,5 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
+import { BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
@@ -13,6 +14,7 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Chewy: require('@/shared/assets/fonts/Chewy-Regular.ttf'),
     BalooDa2Bold: require('@/shared/assets/fonts/BalooDa2-Bold.ttf'),
+    BebasNeue: BebasNeue_400Regular,
   });
 
   if (fontError) console.error('Font load error:', fontError);

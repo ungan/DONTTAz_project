@@ -17,7 +17,16 @@ export const BottomSheetBase = forwardRef<BottomSheet, BottomSheetBaseProps>(
         keyboardBehavior="extend"
         keyboardBlurBehavior="restore"
         onClose={onClose}
-        backgroundStyle={{ backgroundColor: '#FFFFFF' }}
+        backgroundStyle={{
+          backgroundColor: '#FFFFFF',
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          elevation: 16,
+        }}
         handleIndicatorStyle={{ backgroundColor: '#D1D5DB', width: 40 }}
       >
         <BottomSheetScrollView

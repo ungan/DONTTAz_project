@@ -9,9 +9,8 @@ interface SignStampOverlayProps {
 
 export function SignStampOverlay({ visible, onAnimationEnd }: SignStampOverlayProps) {
   const overlayOpacity = useRef(new Animated.Value(0)).current;
-  const stampScale = useRef(new Animated.Value(0.3)).current;
+  const stampScale = useRef(new Animated.Value(1.4)).current;
   const stampOpacity = useRef(new Animated.Value(0)).current;
-  const stampRotate = useRef(new Animated.Value(-20)).current;
 
   useEffect(() => {
     if (!visible) return;
@@ -19,40 +18,27 @@ export function SignStampOverlay({ visible, onAnimationEnd }: SignStampOverlayPr
     Animated.sequence([
       Animated.timing(overlayOpacity, {
         toValue: 1,
-        duration: 350,
+        duration: 150,
         useNativeDriver: true,
       }),
-      Animated.delay(80),
       Animated.parallel([
-        Animated.spring(stampScale, {
-          toValue: 1,
-          friction: 3,
-          tension: 130,
-          useNativeDriver: true,
-        }),
-        Animated.timing(stampOpacity, {
+        Animated.timing(stampScale, {
           toValue: 1,
           duration: 120,
           useNativeDriver: true,
         }),
-        Animated.spring(stampRotate, {
-          toValue: -8,
-          friction: 5,
-          tension: 100,
+        Animated.timing(stampOpacity, {
+          toValue: 1,
+          duration: 80,
           useNativeDriver: true,
         }),
       ]),
     ]).start(() => {
-      setTimeout(() => onAnimationEnd?.(), 1000);
+      setTimeout(() => onAnimationEnd?.(), 900);
     });
   }, [visible]);
 
   if (!visible) return null;
-
-  const rotateDeg = stampRotate.interpolate({
-    inputRange: [-20, -8],
-    outputRange: ['-20deg', '-8deg'],
-  });
 
   return (
     <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]} pointerEvents="none">
@@ -61,12 +47,12 @@ export function SignStampOverlay({ visible, onAnimationEnd }: SignStampOverlayPr
           styles.stamp,
           {
             opacity: stampOpacity,
-            transform: [{ scale: stampScale }, { rotate: rotateDeg }],
+            transform: [{ scale: stampScale }, { rotate: '-15deg' }],
           },
         ]}
       >
         <Animated.View style={styles.stampInner}>
-          <Animated.Text style={styles.stampText}>인증</Animated.Text>
+          <Animated.Text style={styles.stampText}>APPROVED</Animated.Text>
         </Animated.View>
       </Animated.View>
     </Animated.View>

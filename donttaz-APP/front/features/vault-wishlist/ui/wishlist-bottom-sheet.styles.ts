@@ -26,6 +26,9 @@ export const styles = StyleSheet.create({
   amountInput: {
     flex: 1,
   },
+  amountInputWrapper: {
+    flex: 1,
+  },
   unit: {
     fontSize: 16,
     fontWeight: '500',

@@ -45,19 +45,28 @@ export const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
     justifyContent: 'center',
   },
   button: {
-    paddingVertical: 10,
-    paddingHorizontal: 28,
+    paddingVertical: 9,
+    paddingHorizontal: 24,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: '#D1D5DB',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
   },
+  buttonPrimary: {},
+  buttonOutline: {},
   buttonText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '500',
+  },
+  buttonTextPrimary: {
+    color: '#111827',
+  },
+  buttonTextOutline: {
     color: '#111827',
   },
 });

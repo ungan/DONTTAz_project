@@ -22,7 +22,7 @@ const MENU_ITEMS = [
   {
     id: '4',
     icon: require('@/shared/assets/icons/medium-icon4.svg'),
-    label: '가상금고',
+    label: '금고',
   },
 ];
 
