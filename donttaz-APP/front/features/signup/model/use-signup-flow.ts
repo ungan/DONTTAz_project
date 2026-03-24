@@ -71,10 +71,20 @@ export function useSignupFlow() {
   const completeIdentityVerification = async (identityVerificationId: string) => {
     let verifiedData = getFallbackVerificationData();
 
+    if (__DEV__) {
+      console.log('[SignupDebug][Flow] completeIdentityVerification:start', {
+        identityVerificationId,
+      });
+    }
+
     const response = await verifyIdentityApi({
       identityVerificationId,
     });
     verifiedData = response.data;
+
+    if (__DEV__) {
+      console.log('[SignupDebug][Flow] completeIdentityVerification:success', verifiedData);
+    }
 
     applyVerifiedIdentity(verifiedData);
   };
@@ -83,12 +93,40 @@ export function useSignupFlow() {
     signupState.setErrorMessage(null);
     signupState.setVerificationLoading(true);
 
+    if (__DEV__) {
+      console.log('[SignupDebug][Flow] startVerification:start', {
+        isMock: process.env.EXPO_PUBLIC_IS_MOCK,
+        baseUrl: process.env.EXPO_PUBLIC_BASE_URL,
+      });
+    }
+
     try {
-      const portOneResult = await requestPortOneIdentityVerification();
-      const identityVerificationId = portOneResult.identityVerificationId;
+      let identityVerificationId = MOCK_VERIFICATION_ID;
+
+      if (process.env.EXPO_PUBLIC_IS_MOCK !== 'true') {
+        if (__DEV__) {
+          console.log('[SignupDebug][Flow] startVerification:beforePortOne');
+        }
+
+        const portOneResult = await requestPortOneIdentityVerification();
+        identityVerificationId = portOneResult.identityVerificationId;
+
+        if (__DEV__) {
+          console.log('[SignupDebug][Flow] startVerification:afterPortOne', {
+            identityVerificationId,
+          });
+        }
+      }
 
       await completeIdentityVerification(identityVerificationId);
     } catch (error) {
+      if (__DEV__) {
+        console.log('[SignupDebug][Flow] startVerification:error', {
+          error,
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+
       signupState.setErrorMessage(
         error instanceof Error ? error.message : '본인인증 처리 중 문제가 발생했습니다.'
       );
@@ -98,6 +136,10 @@ export function useSignupFlow() {
   };
 
   const completeVerificationFromCallbackUrl = async (url: string) => {
+    if (__DEV__) {
+      console.log('[SignupDebug][Flow] completeVerificationFromCallbackUrl:start', { url });
+    }
+
     const { identityVerificationId, errorCode, errorMessage } = parsePortOneCallbackUrl(url);
 
     if (identityVerificationId && identityVerificationId.length > 0) {
@@ -118,6 +160,13 @@ export function useSignupFlow() {
     }
 
     if (errorMessage && errorMessage.length > 0) {
+      if (__DEV__) {
+        console.log('[SignupDebug][Flow] completeVerificationFromCallbackUrl:error', {
+          errorCode,
+          errorMessage,
+        });
+      }
+
       signupState.setErrorMessage(
         errorCode && errorCode.length > 0 ? `[${errorCode}] ${errorMessage}` : errorMessage
       );

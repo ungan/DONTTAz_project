@@ -29,6 +29,10 @@ export function useAppEntryCheck():
         new Promise(resolve => setTimeout(resolve, 800)),
       ]);
 
+      const hasRefreshToken = !!refreshToken;
+      const hasDevicePin = !!storedPin;
+      const hasAccessToken = !!accessToken;
+
       if (refreshToken && storedPin) {
         setStatus('pin-required');
         return;

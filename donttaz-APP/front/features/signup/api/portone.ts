@@ -111,7 +111,19 @@ export async function requestPortOneIdentityVerification(
   const redirectUri = buildPortOneCallbackUrl(options.callbackPath ?? PORTONE_CALLBACK_PATH);
   const authUrl = buildPortOneTestPageUrl(redirectUri);
 
+  if (__DEV__) {
+    console.log('[SignupDebug][PortOne] openAuthSession:start', {
+      authUrl,
+      redirectUri,
+      callbackPath: options.callbackPath ?? PORTONE_CALLBACK_PATH,
+    });
+  }
+
   const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+
+  if (__DEV__) {
+    console.log('[SignupDebug][PortOne] openAuthSession:result', result);
+  }
 
   if (result.type !== 'success') {
     throw new Error('본인인증이 취소되었거나 완료되지 않았습니다.');
@@ -131,6 +143,12 @@ export async function requestPortOneIdentityVerification(
         ? `[${errorCode}] ${errorMessage}`
         : errorMessage
     );
+  }
+
+  if (__DEV__) {
+    console.log('[SignupDebug][PortOne] openAuthSession:missingIdentityVerificationId', {
+      url: result.url,
+    });
   }
 
   throw new Error('본인인증 결과를 확인할 수 없습니다.');

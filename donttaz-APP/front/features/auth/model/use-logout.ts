@@ -10,18 +10,6 @@ import { logoutApi } from '../api/logout';
 import { refreshApi } from '../api/refresh';
 import { clearLocalAuthSession } from './clear-local-auth-session';
 
-function shouldClearSessionOnError(error: unknown) {
-  if (!isAxiosError(error)) {
-    return false;
-  }
-
-  return (
-    error.response?.status === 400 ||
-    error.response?.status === 401 ||
-    error.response?.status === 403
-  );
-}
-
 function getLogoutErrorMessage(error: unknown) {
   if (isAxiosError(error)) {
     return error.response?.data?.message ?? '로그아웃 처리 중 문제가 발생했습니다.';
@@ -70,14 +58,14 @@ export function useLogout() {
       router.replace('/login');
       return true;
     } catch (error) {
-      if (shouldClearSessionOnError(error)) {
+      try {
         await clearLocalAuthSession();
         router.replace('/login');
         return true;
+      } catch {
+        setError(getLogoutErrorMessage(error));
+        return false;
       }
-
-      setError(getLogoutErrorMessage(error));
-      return false;
     } finally {
       setIsPending(false);
     }

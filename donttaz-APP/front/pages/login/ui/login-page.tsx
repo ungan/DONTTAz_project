@@ -10,6 +10,13 @@ export function LoginPage() {
   const { login, isPending, error } = useLogin();
 
   const handleLogin = () => {
+    if (__DEV__) {
+      console.log('[LoginDebug][Page] handleLogin:press', {
+        loginId,
+        hasPassword: password.length > 0,
+      });
+    }
+
     login(loginId, password);
   };
 
