@@ -15,5 +15,5 @@ public record DemandDepositAccountResult(
         String accountBalance,
         String lastTransactionDate,
         String currency
-) {
+) implements AccountSummarySource {
 }

@@ -15,5 +15,5 @@ public record AccountDetailResult(
         String accountBalance,
         String lastTransactionDate,
         String currency
-) {
+) implements AccountSummarySource {
 }

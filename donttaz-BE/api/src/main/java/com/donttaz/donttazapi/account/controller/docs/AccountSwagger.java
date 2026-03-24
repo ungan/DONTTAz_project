@@ -14,6 +14,7 @@ import com.donttaz.donttazapi.account.dto.response.AccountDepositResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountHolderNameResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountListResponse;
+import com.donttaz.donttazapi.account.dto.response.AccountSummaryResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountTransferLimitUpdateResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountTransferResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountWithdrawalResponse;
@@ -66,6 +67,13 @@ public interface AccountSwagger {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "계좌 목록 조회 성공")
         })
         ResponseEntity<AccountListResponse> getAccounts();
+
+        @Operation(operationId = "getPrimaryAccount", summary = "대표 계좌 조회", description = "현재 사용자의 대표 계좌 1건을 조회합니다.")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "대표 계좌 조회 성공"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "대표 계좌를 찾을 수 없음")
+        })
+        ResponseEntity<AccountSummaryResponse> getPrimaryAccount();
 
         @Operation(operationId = "getAccountDetail", summary = "계좌 상세 조회", description = "계좌번호(accountNo)로 계좌 상세 정보를 조회합니다.")
         @ApiResponses({

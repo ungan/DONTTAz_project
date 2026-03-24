@@ -15,6 +15,7 @@ import com.donttaz.donttazapi.account.dto.response.AccountDepositResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountHolderNameResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountListResponse;
+import com.donttaz.donttazapi.account.dto.response.AccountSummaryResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountTransferLimitUpdateResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountTransferResponse;
 import com.donttaz.donttazapi.account.dto.response.AccountWithdrawalResponse;
@@ -75,6 +76,13 @@ public class AccountController implements AccountSwagger {
         public ResponseEntity<AccountListResponse> getAccounts() {
                 return ResponseEntity.ok(
                                 accountQueryService.getAccounts());
+        }
+
+        @GetMapping("/primary")
+        @Override
+        public ResponseEntity<AccountSummaryResponse> getPrimaryAccount() {
+                return ResponseEntity.ok(
+                                accountQueryService.getPrimaryAccount());
         }
 
         @GetMapping("/{accountNo}")
