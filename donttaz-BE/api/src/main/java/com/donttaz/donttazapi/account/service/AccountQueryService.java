@@ -16,6 +16,7 @@ import com.donttaz.donttazapi.account.repository.TransactionRepository;
 import com.donttaz.donttazapi.account.service.dto.AccountBalanceResult;
 import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
 import com.donttaz.donttazapi.account.service.dto.AccountHolderNameResult;
+import com.donttaz.donttazapi.account.service.dto.AccountSummarySource;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountResult;
 import com.donttaz.donttazapi.ai.domain.TransactionAiMetadata;
 import com.donttaz.donttazapi.ai.repository.TransactionAiMetadataRepository;
@@ -124,6 +125,18 @@ public class AccountQueryService {
                 .lastTransactionDate(account.lastTransactionDate())
                 .currency(account.currency())
                 .build();
+    }
+
+    @Transactional
+    public AccountSummaryResponse getPrimaryAccount() {
+        Long userId = resolveCurrentUserId();
+        Account primaryAccount = accountRepository
+                .findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(userId, AccountStatus.ACTIVE)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND, "대표 계좌를 찾을 수 없습니다."));
+        AccountDetailResult accountDetail = bankingAccountQueryService.getAccountDetail(userId, primaryAccount.getAccountNumber());
+        Account syncedAccount = accountSyncService.syncAccountDetailSnapshot(userId, accountDetail);
+
+        return toAccountSummaryResponse(accountDetail, syncedAccount);
     }
 
     public AccountDetailResponse getAccountDetail(String accountNo) {
@@ -261,7 +274,7 @@ public class AccountQueryService {
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
     }
 
-    private AccountSummaryResponse toAccountSummaryResponse(DemandDepositAccountResult account, Account metadata) {
+    private AccountSummaryResponse toAccountSummaryResponse(AccountSummarySource account, Account metadata) {
         return AccountSummaryResponse.builder()
                 .accountId(metadata != null ? metadata.getAccountId() : null)
                 .bankCode(account.bankCode())

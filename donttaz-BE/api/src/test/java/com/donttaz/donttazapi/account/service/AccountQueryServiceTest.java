@@ -11,10 +11,12 @@ import com.donttaz.donttazapi.account.domain.Account;
 import com.donttaz.donttazapi.account.domain.AccountStatus;
 import com.donttaz.donttazapi.account.domain.Transaction;
 import com.donttaz.donttazapi.account.dto.response.AccountListResponse;
+import com.donttaz.donttazapi.account.dto.response.AccountSummaryResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionDetailResponse;
 import com.donttaz.donttazapi.account.dto.response.TransactionListResponse;
 import com.donttaz.donttazapi.account.repository.AccountRepository;
 import com.donttaz.donttazapi.account.repository.TransactionRepository;
+import com.donttaz.donttazapi.account.service.dto.AccountDetailResult;
 import com.donttaz.donttazapi.account.service.dto.DemandDepositAccountResult;
 import com.donttaz.donttazapi.ai.repository.TransactionAiMetadataRepository;
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
@@ -119,6 +121,46 @@ class AccountQueryServiceTest {
         assertThat(response.accountList().get(0).isPrimary()).isTrue();
         verify(demandDepositService).getAccounts();
         verify(accountSyncService).syncDemandDepositAccounts(results);
+    }
+
+    @Test
+    @DisplayName("getPrimaryAccount returns active primary account summary")
+    void getPrimaryAccountSuccess() {
+        Account account = createAccount();
+        ReflectionTestUtils.setField(account, "accountId", 10L);
+        ReflectionTestUtils.setField(account, "isPrimary", Boolean.TRUE);
+        AccountDetailResult accountDetail = new AccountDetailResult(
+                "001",
+                "BANK",
+                "USER",
+                "0016174648358792",
+                "Demand Deposit",
+                "1",
+                "DEPOSIT",
+                "20240320",
+                "20290320",
+                "100000000",
+                "20000000",
+                "89900000",
+                "20240323",
+                "KRW"
+        );
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(1L);
+        given(accountRepository.findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(1L, AccountStatus.ACTIVE))
+                .willReturn(Optional.of(account));
+        given(bankingAccountQueryService.getAccountDetail(1L, "0016174648358792"))
+                .willReturn(accountDetail);
+        given(accountSyncService.syncAccountDetailSnapshot(1L, accountDetail))
+                .willReturn(account);
+
+        AccountSummaryResponse response = accountQueryService.getPrimaryAccount();
+
+        assertThat(response.accountId()).isEqualTo(10L);
+        assertThat(response.accountNo()).isEqualTo("0016174648358792");
+        assertThat(response.maskedAccountNo()).isEqualTo("001-***-358792");
+        assertThat(response.isPrimary()).isTrue();
+        assertThat(response.accountBalance()).isEqualTo("89900000");
     }
 
     @Test
