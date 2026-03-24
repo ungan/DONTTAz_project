@@ -17,6 +17,9 @@ import com.donttaz.donttazapi.vault.repository.DefaultVaultRepository;
 import com.donttaz.donttazapi.vault.repository.WishlistVaultRepository;
 import com.donttaz.donttazapi.vault.repository.VaultHistoryRepository;
 import com.donttaz.donttazapi.infra.banking.client.BankingClient;
+import com.donttaz.donttazapi.account.repository.AccountRepository;
+import com.donttaz.donttazapi.account.domain.Account;
+import com.donttaz.donttazapi.account.domain.AccountStatus;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,6 +48,9 @@ class VaultCommandServiceTest {
 
         @Mock
         private MemorandumService memorandumService;
+
+        @Mock
+        private AccountRepository accountRepository;
 
         @InjectMocks
         private VaultCommandService vaultCommandService;
@@ -92,10 +98,14 @@ class VaultCommandServiceTest {
                                 .status(VaultStatus.LOCKED)
                                 .build();
                 given(wishlistVaultRepository.findByIdAndUserId(VAULT_ID, USER_ID)).willReturn(Optional.of(vault));
+                given(accountRepository.findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(any(), any()))
+                                .willReturn(Optional.of(Account.builder()
+                                                .accountNumber("1000000000")
+                                                .status(AccountStatus.ACTIVE)
+                                                .build()));
 
                 VaultDepositResponse response = vaultCommandService.deposit(VAULT_ID, VaultKind.WISHLIST,
-                                new com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest("1000000000",
-                                                100000L));
+                                new com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest(100000L));
 
                 assertThat(response.depositedAmount()).isEqualTo(100000L);
                 assertThat(response.lockedAmount()).isEqualTo(100000L);
