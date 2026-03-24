@@ -25,13 +25,10 @@ public class MemorandumService {
     private final CurrentUserProvider currentUserProvider;
 
     @Transactional
-    public void createInitialMemorandum(Long userId, Long wishlistVaultId, String c1, String c2, String c3) {
+    public void createInitialMemorandum(Long userId, Long wishlistVaultId) {
         Memorandum memorandum = Memorandum.builder()
                 .userId(userId)
                 .wishlistVaultId(wishlistVaultId)
-                .content1(c1)
-                .content2(c2)
-                .content3(c3)
                 .build();
         memorandumRepository.save(memorandum);
     }
@@ -58,9 +55,6 @@ public class MemorandumService {
                 .userPhoneNumber(user.getPhoneNumber())
                 .wishlistVaultId(vault.getId())
                 .wishName(vault.getWishName())
-                .content1(memorandum.getContent1())
-                .content2(memorandum.getContent2())
-                .content3(memorandum.getContent3())
                 .status(memorandum.getStatus())
                 .signedAt(memorandum.getSignedAt())
                 .build();

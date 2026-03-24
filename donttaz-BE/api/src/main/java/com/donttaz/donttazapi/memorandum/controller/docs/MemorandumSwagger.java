@@ -11,11 +11,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 @SecurityRequirement(name = "bearerAuth")
 public interface MemorandumSwagger {
 
-    @Operation(summary = "금고 연동 각서 조회", description = "특정 금고에 연결된 각서 정보를 조회합니다.")
-    MemorandumResponse getMemorandum(
-            @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId);
+        @Operation(summary = "금고 연동 각서 조회", description = "특정 금고에 연결된 각서 정보를 조회합니다.")
+        MemorandumResponse getMemorandum(
+                        @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId);
 
-    @Operation(summary = "각서 최종 서명", description = "각서 작성을 완료하고 최종 서명합니다. 서명 후에는 각서 내용을 수정할 수 없습니다.")
-    void signMemorandum(
-            @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId);
+        @Operation(summary = "각서 최종 서명", description = "작성 중인 각서를 최종 서명 처리합니다. 서명 후에는 각서의 상태가 SIGNED로 변경됩니다.")
+        void signMemorandum(
+                        @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId);
 }

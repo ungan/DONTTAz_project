@@ -99,10 +99,7 @@ public class VaultCommandService {
 
                 memorandumService.createInitialMemorandum(
                                 userId,
-                                saved.getId(),
-                                request.memorandum().content1(),
-                                request.memorandum().content2(),
-                                request.memorandum().content3());
+                                saved.getId());
 
                 MemorandumResponse memoResponse = memorandumService.getMemorandumByVaultId(saved.getId());
                 return CreateVaultResponse.fromWishlist(saved, memoResponse);
