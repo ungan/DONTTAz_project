@@ -26,15 +26,6 @@ public class Memorandum extends BaseEntity {
     @Column(name = "wishlist_vault_id", nullable = false)
     private Long wishlistVaultId;
 
-    @Column(name = "content1", length = 500)
-    private String content1; // 제1조: 사인 규명 (사전 고백)
-
-    @Column(name = "content2", length = 500)
-    private String content2; // 제2조: 주변 사람 공표 사항
-
-    @Column(name = "content3", length = 500)
-    private String content3; // 제3조: 향후 다짐
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private MemorandumStatus status;
@@ -43,12 +34,9 @@ public class Memorandum extends BaseEntity {
     private LocalDateTime signedAt;
 
     @Builder
-    private Memorandum(Long userId, Long wishlistVaultId, String content1, String content2, String content3) {
+    private Memorandum(Long userId, Long wishlistVaultId) {
         this.userId = userId;
         this.wishlistVaultId = wishlistVaultId;
-        this.content1 = content1;
-        this.content2 = content2;
-        this.content3 = content3;
         this.status = MemorandumStatus.WRITING;
     }
 
@@ -72,12 +60,7 @@ public class Memorandum extends BaseEntity {
         }
     }
 
-    public void updateContent(String content1, String content2, String content3) {
-        if (this.status != MemorandumStatus.WRITING) {
-            throw new IllegalStateException("서명된 각서는 수정할 수 없습니다.");
-        }
-        this.content1 = content1;
-        this.content2 = content2;
-        this.content3 = content3;
+    public void updateStatus(MemorandumStatus status) {
+        this.status = status;
     }
 }

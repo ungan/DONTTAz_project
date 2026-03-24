@@ -51,7 +51,7 @@ class MemorandumServiceTest {
         Long vaultId = 10L;
 
         // When
-        memorandumService.createInitialMemorandum(userId, vaultId, "사인", "공표", "다짐");
+        memorandumService.createInitialMemorandum(userId, vaultId);
 
         // Then
         verify(memorandumRepository).save(any(Memorandum.class));
@@ -69,9 +69,6 @@ class MemorandumServiceTest {
         Memorandum mockMemo = Memorandum.builder()
                 .userId(userId)
                 .wishlistVaultId(vaultId)
-                .content1("사인")
-                .content2("공표")
-                .content3("다짐")
                 .build();
         ReflectionTestUtils.setField(mockMemo, "id", 100L);
         given(memorandumRepository.findByWishlistVaultId(vaultId)).willReturn(Optional.of(mockMemo));
@@ -99,7 +96,6 @@ class MemorandumServiceTest {
         assertThat(result.userId()).isEqualTo(userId);
         assertThat(result.userName()).isEqualTo("홍길동");
         assertThat(result.wishName()).isEqualTo("애플워치");
-        assertThat(result.content1()).isEqualTo("사인");
         assertThat(result.status()).isEqualTo(MemorandumStatus.WRITING);
     }
 

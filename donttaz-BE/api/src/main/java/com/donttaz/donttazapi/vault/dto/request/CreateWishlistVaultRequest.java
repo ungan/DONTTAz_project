@@ -11,5 +11,5 @@ public record CreateWishlistVaultRequest(
 
         @Schema(description = "목표 금액", example = "900000") @NotNull(message = "목표 금액은 필수입니다.") Long goalAmount,
 
-        @Schema(description = "각서 정보") @Valid @NotNull(message = "각서 내용은 필수입니다.") com.donttaz.donttazapi.memorandum.dto.request.MemorandumRequest memorandum) {
+        @Schema(description = "각서 정보") @Valid @NotNull(message = "각서 정보는 필수입니다.") com.donttaz.donttazapi.memorandum.dto.request.MemorandumRequest memorandum) {
 }
