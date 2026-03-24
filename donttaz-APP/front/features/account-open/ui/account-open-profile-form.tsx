@@ -8,7 +8,6 @@ const EMAIL_DOMAIN_OPTIONS = ['gmail.com', 'naver.com', 'kakao.com', '직접입�
 
 interface AccountOpenProfileFormProps {
   customerName: string;
-  englishName: string;
   phoneNumber: string;
   zipCode: string;
   address: string;
@@ -16,7 +15,6 @@ interface AccountOpenProfileFormProps {
   emailLocalPart: string;
   emailDomain: string;
   customerNameError: string | null;
-  englishNameError: string | null;
   phoneNumberError: string | null;
   addressError: string | null;
   emailError: string | null;
@@ -24,7 +22,6 @@ interface AccountOpenProfileFormProps {
   isAlimtalkAgreed: boolean;
   isMailAgreed: boolean;
   onCustomerNameChange: (value: string) => void;
-  onEnglishNameChange: (value: string) => void;
   onPhoneNumberChange: (value: string) => void;
   onZipCodeChange: (value: string) => void;
   onAddressChange: (value: string) => void;
@@ -57,7 +54,6 @@ function ConsentRow({
 
 export function AccountOpenProfileForm({
   customerName,
-  englishName,
   phoneNumber,
   zipCode,
   address,
@@ -65,7 +61,6 @@ export function AccountOpenProfileForm({
   emailLocalPart,
   emailDomain,
   customerNameError,
-  englishNameError,
   phoneNumberError,
   addressError,
   emailError,
@@ -73,7 +68,6 @@ export function AccountOpenProfileForm({
   isAlimtalkAgreed,
   isMailAgreed,
   onCustomerNameChange,
-  onEnglishNameChange,
   onPhoneNumberChange,
   onZipCodeChange,
   onAddressChange,
@@ -92,35 +86,18 @@ export function AccountOpenProfileForm({
       onEmailDomainChange('');
       return;
     }
-
     onEmailDomainChange(value);
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.lockedFieldNotice}>
-        <Text style={styles.lockedFieldNoticeText}>
-          이름과 휴대전화번호는 본인인증 결과를 기준으로 자동 입력됩니다.
-        </Text>
-      </View>
-
       <CustomInput
         label="이름"
         value={customerName}
         onChangeText={onCustomerNameChange}
         placeholder="본인인증 결과가 표시됩니다"
         editable={false}
-        style={styles.readonlyInput}
         errorMessage={customerNameError ?? undefined}
-      />
-
-      <CustomInput
-        label="영문명"
-        value={englishName}
-        onChangeText={onEnglishNameChange}
-        placeholder="영문명(대문자)"
-        autoCapitalize="characters"
-        errorMessage={englishNameError ?? undefined}
       />
 
       <CustomInput
@@ -130,7 +107,6 @@ export function AccountOpenProfileForm({
         placeholder="본인인증 결과가 표시됩니다"
         keyboardType="number-pad"
         editable={false}
-        style={styles.readonlyInput}
         errorMessage={phoneNumberError ?? undefined}
       />
 

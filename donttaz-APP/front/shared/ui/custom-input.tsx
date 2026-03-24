@@ -25,6 +25,7 @@ export function CustomInput({
   ...props
 }: CustomInputProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const isReadonly = props.editable === false;
 
   return (
     <View style={styles.wrapper}>
@@ -33,12 +34,13 @@ export function CustomInput({
       <View
         style={[
           styles.inputContainer,
-          isFocused && styles.inputContainerFocused,
+          !isReadonly && isFocused && styles.inputContainerFocused,
           !!errorMessage && styles.inputContainerError,
+          isReadonly && styles.inputContainerReadonly,
         ]}
       >
         <TextInput
-          style={[styles.input, style]}
+          style={[styles.input, isReadonly && styles.inputReadonly, style]}
           placeholderTextColor="#9CA3AF"
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
@@ -88,6 +90,13 @@ const styles = StyleSheet.create({
   },
   inputContainerError: {
     borderColor: '#EF4444',
+  },
+  inputContainerReadonly: {
+    backgroundColor: '#F3F4F6',
+    borderColor: '#E5E7EB',
+  },
+  inputReadonly: {
+    color: '#9CA3AF',
   },
   input: {
     flex: 1,

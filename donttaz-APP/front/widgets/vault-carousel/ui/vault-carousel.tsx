@@ -1,22 +1,20 @@
 import React, { useRef, useState } from 'react';
 import { View, FlatList, Dimensions, NativeScrollEvent, NativeSyntheticEvent, FlatList as FlatListType } from 'react-native';
 import { VaultBalance } from '@/widgets/vault-balance';
-import type { Vault, Wishlist, WishlistRequest } from '@/entities/vault';
+import type { Vault } from '@/entities/vault';
 import { WishlistSlide } from './wishlist-slide';
 import { styles } from './vault-carousel.styles';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 interface VaultCarouselProps {
-  vault: Vault;
-  wishlists: Wishlist[];
+  defaultVault: Vault;
+  wishlistVault: Vault | null;
   onDeposit: () => void;
   onWithdraw: () => void;
-  onRegisterPress: () => void;
-  onEditPress: (item: Wishlist) => void;
 }
 
-export function VaultCarousel({ vault, wishlists, onDeposit, onWithdraw, onRegisterPress, onEditPress }: VaultCarouselProps) {
+export function VaultCarousel({ defaultVault, wishlistVault, onDeposit, onWithdraw }: VaultCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatListType>(null);
 
@@ -28,16 +26,13 @@ export function VaultCarousel({ vault, wishlists, onDeposit, onWithdraw, onRegis
   const slides = [
     <VaultBalance
       key="balance"
-      lockedAmount={vault.lockedAmount}
+      lockedAmount={defaultVault.lockedAmount}
       onDeposit={onDeposit}
       onWithdraw={onWithdraw}
     />,
     <WishlistSlide
       key="wishlist"
-      wishlists={wishlists}
-      lockedAmount={vault.lockedAmount}
-      onRegisterPress={onRegisterPress}
-      onEditPress={onEditPress}
+      wishlistVault={wishlistVault}
     />,
   ];
 

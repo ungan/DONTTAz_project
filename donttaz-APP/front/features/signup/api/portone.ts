@@ -1,4 +1,5 @@
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 
 export interface PortOneVerificationResult {
   identityVerificationId: string;
@@ -21,7 +22,7 @@ function normalizeCallbackPath(callbackPath: string) {
 }
 
 export function buildPortOneCallbackUrl(callbackPath: string = PORTONE_CALLBACK_PATH) {
-  return `front://${normalizeCallbackPath(callbackPath)}`;
+  return Linking.createURL(normalizeCallbackPath(callbackPath));
 }
 
 export const PORTONE_CALLBACK_URL = buildPortOneCallbackUrl(PORTONE_CALLBACK_PATH);

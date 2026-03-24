@@ -13,31 +13,11 @@ interface AccountOpenTermsSectionProps {
   onToggleItem: (id: string) => void;
 }
 
-function AgreementRow({
-  label,
-  isAgreed,
-  onPress,
-  isSummary = false,
-}: {
-  label: string;
-  isAgreed: boolean;
-  onPress: () => void;
-  isSummary?: boolean;
-}) {
+function CheckIcon({ active }: { active: boolean }) {
   return (
-    <TouchableOpacity style={[styles.row, isSummary && styles.summaryRow]} activeOpacity={0.8} onPress={onPress}>
-      <View style={styles.rowLeft}>
-        <View style={[styles.iconCircle, isAgreed && styles.iconCircleActive]}>
-          <Ionicons
-            name={isAgreed ? 'checkmark' : 'ellipse-outline'}
-            size={16}
-            color={isAgreed ? '#FFFFFF' : '#9CA3AF'}
-          />
-        </View>
-        <Text style={[styles.rowLabel, isSummary && styles.summaryLabel]}>{label}</Text>
-      </View>
-      <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
-    </TouchableOpacity>
+    <View style={[styles.checkCircle, active && styles.checkCircleActive]}>
+      <Ionicons name="checkmark" size={14} color={active ? '#FFFFFF' : '#D1D5DB'} />
+    </View>
   );
 }
 
@@ -51,24 +31,36 @@ export function AccountOpenTermsSection({
 }: AccountOpenTermsSectionProps) {
   return (
     <View style={styles.section}>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        {subtitle ? <Text style={styles.sectionSubtitle}>{subtitle}</Text> : null}
+      </View>
 
-      <AgreementRow
-        label={`${title} 모두 동의`}
-        isAgreed={allAgreed}
-        onPress={onToggleAll}
-        isSummary
-      />
+      <View style={styles.card}>
+        {/* 전체 동의 행 */}
+        <TouchableOpacity style={styles.allRow} activeOpacity={0.7} onPress={onToggleAll}>
+          <CheckIcon active={allAgreed} />
+          <Text style={styles.allLabel}>{title} 전체 동의</Text>
+        </TouchableOpacity>
 
-      <View style={styles.list}>
-        {items.map((item) => (
-          <AgreementRow
-            key={item.id}
-            label={item.title}
-            isAgreed={item.isAgreed}
-            onPress={() => onToggleItem(item.id)}
-          />
+        <View style={styles.divider} />
+
+        {/* 개별 항목 */}
+        {items.map((item, index) => (
+          <View key={item.id}>
+            <TouchableOpacity
+              style={styles.itemRow}
+              activeOpacity={0.7}
+              onPress={() => onToggleItem(item.id)}
+            >
+              <CheckIcon active={item.isAgreed} />
+              <Text style={styles.itemLabel} numberOfLines={2}>
+                {item.title}
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color="#C4C9D4" />
+            </TouchableOpacity>
+            {index < items.length - 1 && <View style={styles.innerDivider} />}
+          </View>
         ))}
       </View>
     </View>

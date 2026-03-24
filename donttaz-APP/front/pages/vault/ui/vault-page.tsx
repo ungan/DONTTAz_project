@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { PageHeader } from '@/shared/ui';
-import { useVault, useWishlist } from '@/entities/vault';
+import { useVault } from '@/entities/vault';
 import type { Wishlist, WishlistRequest } from '@/entities/vault';
 import { WishlistBottomSheet } from '@/features/vault-wishlist';
 import { WithdrawWarningModal } from '@/features/vault-withdraw';
@@ -15,8 +15,7 @@ import { styles } from './vault-page.styles';
 
 export function VaultPage() {
   const router = useRouter();
-  const { vault, transactions, isPending } = useVault();
-  const { wishlists, post, patch } = useWishlist(vault?.vaultId ?? null);
+  const { defaultVault, wishlistVault, transactions, isPending } = useVault();
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [editTarget, setEditTarget] = useState<Wishlist | undefined>();
@@ -27,34 +26,28 @@ export function VaultPage() {
     bottomSheetRef.current?.expand();
   };
 
-  const handleWishlistSubmit = async (body: WishlistRequest, wishId?: number) => {
-    if (wishId) {
-      await patch(wishId, body);
-    } else {
-      await post(body);
-    }
+  const handleWishlistSubmit = async (_body: WishlistRequest, _wishId?: number) => {
+    // TODO: wishlist 금고 수정 API 연결
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <PageHeader title="가상 금고" onBack={() => router.replace('/(tabs)/home')} />
-      {isPending || !vault ? (
+      {isPending || !defaultVault ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#5899FD" />
         </View>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false}>
           <VaultCarousel
-            vault={vault}
-            wishlists={wishlists}
-            onDeposit={() => router.push(`/vault-deposit?lockedAmount=${vault.lockedAmount}`)}
+            defaultVault={defaultVault}
+            wishlistVault={wishlistVault}
+            onDeposit={() => router.push(`/vault-deposit?lockedAmount=${defaultVault.lockedAmount}`)}
             onWithdraw={() => setShowWithdrawModal(true)}
-            onRegisterPress={() => openBottomSheet()}
-            onEditPress={(item) => openBottomSheet(item)}
           />
           <VaultNotice
-            baseInterestRate={vault.baseInterestRate}
-            penaltyInterestRate={vault.penaltyInterestRate}
+            baseInterestRate={defaultVault.baseInterestRate}
+            penaltyInterestRate={defaultVault.penaltyInterestRate}
           />
           <VaultHistory transactions={transactions} />
         </ScrollView>
@@ -62,8 +55,8 @@ export function VaultPage() {
 
       <WithdrawWarningModal
         visible={showWithdrawModal}
-        penaltyRate={vault?.penaltyInterestRate ?? 0.1}
-        baseInterestRate={vault?.baseInterestRate ?? 3.0}
+        penaltyRate={defaultVault?.penaltyInterestRate ?? 0.1}
+        baseInterestRate={defaultVault?.baseInterestRate ?? 3.0}
         onCancel={() => setShowWithdrawModal(false)}
         onConfirm={() => {
           setShowWithdrawModal(false);

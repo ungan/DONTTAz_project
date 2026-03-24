@@ -265,7 +265,7 @@ export function useSignupFlow() {
     password: signupState.password,
     pinCode: signupState.pinCode,
     name: signupState.verifiedName,
-    phoneNumber: signupState.verifiedPhoneNumber,
+    phoneNumber: signupState.verifiedPhoneNumber.replace(/[^0-9]/g, ''),
     deviceId: DEFAULT_DEVICE_ID,
   });
 
@@ -281,7 +281,9 @@ export function useSignupFlow() {
     try {
       if (!latestState.hasCreatedAccount) {
         signupState.setSignupLoading(true);
-        await signupApi(buildSignupRequest());
+        const signupBody = buildSignupRequest();
+        console.log('[SIGNUP REQUEST]', JSON.stringify(signupBody));
+        await signupApi(signupBody);
         signupState.setHasCreatedAccount(true);
       }
     } catch (error) {

@@ -6,5 +6,5 @@ export async function patchWishlistApi(
   wishId: number,
   body: WishlistRequest
 ): Promise<void> {
-  await apiClient.patch(`/api/v1/vaults/${vaultId}/wishlist/${wishId}`, body);
+  await apiClient.patch(`/vaults/${vaultId}/wishlist/${wishId}`, body);
 }

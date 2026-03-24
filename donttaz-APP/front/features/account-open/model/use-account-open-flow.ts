@@ -14,7 +14,6 @@ import {
 import { ACCOUNT_OPEN_PORTONE_CALLBACK_PATH } from '../types/account-open';
 
 const PHONE_REGEX = /^01[0-9]\d{7,8}$/;
-const ENGLISH_NAME_REGEX = /^[A-Za-z\s]+$/;
 const BANKING_ID_REGEX = /^[a-zA-Z0-9]{6,12}$/;
 const BANKING_PASSWORD_REGEX = /^[0-9]{4}$/;
 
@@ -117,13 +116,6 @@ export function useAccountOpenFlow() {
     }
   };
 
-  const updateEnglishName = (value: string) => {
-    accountOpenState.setEnglishName(value);
-    if (accountOpenState.englishNameError) {
-      accountOpenState.setEnglishNameError(null);
-    }
-  };
-
   const updatePhoneNumber = (value: string) => {
     const sanitizedValue = value.replace(/[^0-9]/g, '');
     accountOpenState.setPhoneNumber(sanitizedValue);
@@ -185,7 +177,6 @@ export function useAccountOpenFlow() {
 
     accountOpenState.setErrorMessage(null);
     accountOpenState.setCustomerNameError(null);
-    accountOpenState.setEnglishNameError(null);
     accountOpenState.setPhoneNumberError(null);
     accountOpenState.setAddressError(null);
     accountOpenState.setEmailError(null);
@@ -197,14 +188,6 @@ export function useAccountOpenFlow() {
 
     if (!accountOpenState.customerName.trim()) {
       accountOpenState.setCustomerNameError('이름을 입력해주세요.');
-      hasError = true;
-    }
-
-    if (!accountOpenState.englishName.trim()) {
-      accountOpenState.setEnglishNameError('영문명을 입력해주세요.');
-      hasError = true;
-    } else if (!ENGLISH_NAME_REGEX.test(accountOpenState.englishName.trim())) {
-      accountOpenState.setEnglishNameError('영문과 공백만 입력해주세요.');
       hasError = true;
     }
 
@@ -307,6 +290,11 @@ export function useAccountOpenFlow() {
     accountOpenState.setCurrentStep('verify');
   };
 
+  const proceedToProfileStep = () => {
+    accountOpenState.setCurrentStep('profile');
+    router.push('/account-open-profile' as never);
+  };
+
   const completeAccountCreation = async () => {
     if (!accountOpenState.selectedAccountTypeUniqueNo) {
       accountOpenState.setErrorMessage('계좌 상품 정보를 찾을 수 없습니다. 처음부터 다시 시도해주세요.');
@@ -392,8 +380,6 @@ export function useAccountOpenFlow() {
 
       useAccountOpenStore.getState().setCustomerName(verifiedName);
       useAccountOpenStore.getState().setPhoneNumber(verifiedPhoneNumber);
-      useAccountOpenStore.getState().setCurrentStep('profile');
-      router.push('/account-open-profile' as never);
       return true;
     } catch (error) {
       useAccountOpenStore.getState().setErrorMessage(getAccountOpenErrorMessage(error));
@@ -456,7 +442,6 @@ export function useAccountOpenFlow() {
     toggleOptionalTerms,
     submitTermsStep,
     updateCustomerName,
-    updateEnglishName,
     updatePhoneNumber,
     updateZipCode,
     updateAddress,
@@ -475,6 +460,7 @@ export function useAccountOpenFlow() {
     updateDailyTransferLimit,
     submitBankingStep,
     moveToVerifyStep,
+    proceedToProfileStep,
     completeVerificationFromCallbackUrl,
     submitVerifyStep,
   };

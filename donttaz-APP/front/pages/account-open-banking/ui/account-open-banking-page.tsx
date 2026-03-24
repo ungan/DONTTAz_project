@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { ScrollView, View, Text } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, PageHeader } from '@/shared/ui';
 import {
   AccountOpenBankingForm,
@@ -10,6 +11,7 @@ import {
 import { styles } from './account-open-banking-page.styles';
 
 export function AccountOpenBankingPage() {
+  const insets = useSafeAreaInsets();
   const {
     bankingId,
     bankingPassword,
@@ -39,34 +41,39 @@ export function AccountOpenBankingPage() {
   }, [emailLocalPart, emailDomain]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <PageHeader title="계좌정보 입력" onBack={() => router.replace('/account-open-profile' as never)} />
-
-      <AccountOpenProgress currentStep="banking" />
-
-      <View style={styles.heroSection}>
-        <Text style={styles.title}>전자금융 신청 정보를 입력해 주세요.</Text>
-        <Text style={styles.description}>
-          계좌 개설 후 사용할 뱅킹 ID와 비밀번호, 이체 한도를 설정한 뒤 바로 계좌를 생성합니다.
-        </Text>
+    <View style={styles.outerContainer}>
+      <View style={styles.headerBlock}>
+        <PageHeader title="전자금융 설정" onBack={() => router.replace('/account-open-profile' as never)} />
+        <AccountOpenProgress currentStep="banking" />
       </View>
 
-      <AccountOpenBankingForm
-        bankingId={bankingId}
-        bankingPassword={bankingPassword}
-        bankingPasswordConfirm={bankingPasswordConfirm}
-        dailyTransferLimit={dailyTransferLimit}
-        bankingIdError={bankingIdError}
-        bankingPasswordError={bankingPasswordError}
-        bankingPasswordConfirmError={bankingPasswordConfirmError}
-        dailyTransferLimitError={dailyTransferLimitError}
-        onBankingIdChange={updateBankingId}
-        onBankingPasswordChange={updateBankingPassword}
-        onBankingPasswordConfirmChange={updateBankingPasswordConfirm}
-        onDailyTransferLimitChange={updateDailyTransferLimit}
-      />
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.heroSection}>
+          <Text style={styles.title}>전자금융 설정</Text>
+          <Text style={styles.description}>
+            뱅킹 ID, 비밀번호, 이체 한도를 설정합니다.
+          </Text>
+        </View>
 
-      <Button label="계좌 개설하기" onPress={submitBankingStep} />
-    </ScrollView>
+        <AccountOpenBankingForm
+          bankingId={bankingId}
+          bankingPassword={bankingPassword}
+          bankingPasswordConfirm={bankingPasswordConfirm}
+          dailyTransferLimit={dailyTransferLimit}
+          bankingIdError={bankingIdError}
+          bankingPasswordError={bankingPasswordError}
+          bankingPasswordConfirmError={bankingPasswordConfirmError}
+          dailyTransferLimitError={dailyTransferLimitError}
+          onBankingIdChange={updateBankingId}
+          onBankingPasswordChange={updateBankingPassword}
+          onBankingPasswordConfirmChange={updateBankingPasswordConfirm}
+          onDailyTransferLimitChange={updateDailyTransferLimit}
+        />
+      </ScrollView>
+
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
+        <Button label="계좌 개설하기" onPress={submitBankingStep} />
+      </View>
+    </View>
   );
 }
