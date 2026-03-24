@@ -176,6 +176,53 @@ class AccountQueryServiceTest {
     }
 
     @Test
+    @DisplayName("getTransactions translates legacy english labels to korean")
+    void getTransactionsTranslatesLegacyEnglishLabels() {
+        Account account = createAccount();
+        ReflectionTestUtils.setField(account, "accountId", 10L);
+        Transaction transaction = Transaction.builder()
+                .account(account)
+                .userId(1L)
+                .source("FIN_API")
+                .sourceTxId("61")
+                .txType("WITHDRAWAL")
+                .txTypeName("WITHDRAWAL_TRANSFER")
+                .amount(10_000L)
+                .balanceSnapshot(89_900_000L)
+                .counterpartyName("TRANSFER")
+                .transactionSummary("TRANSFER")
+                .transactionAt(LocalDateTime.of(2024, 4, 1, 10, 32, 29))
+                .syncedAt(LocalDateTime.of(2024, 4, 1, 10, 33, 0))
+                .build();
+        ReflectionTestUtils.setField(transaction, "id", 701L);
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(1L);
+        given(accountRepository.findByAccountIdAndUserIdAndStatusAndIsDeletedFalse(10L, 1L, AccountStatus.ACTIVE))
+                .willReturn(Optional.of(account));
+        given(transactionSyncService.syncTransactions(account, LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31)))
+                .willReturn(List.of());
+        given(transactionRepository.search(eq(10L), eq(1L), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of(transaction)));
+        given(paymentRepository.findAllByUserIdAndWithdrawalTransactionIdIn(1L, List.of("61")))
+                .willReturn(List.of());
+        given(transactionAiMetadataRepository.findAllByTransactionIdIn(List.of(701L)))
+                .willReturn(List.of());
+
+        TransactionListResponse response = accountQueryService.getTransactions(
+                10L,
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 12, 31),
+                "ALL",
+                0,
+                20
+        );
+
+        assertThat(response.transactions()).hasSize(1);
+        assertThat(response.transactions().get(0).counterpartyName()).isEqualTo("이체");
+        assertThat(response.transactions().get(0).category()).isEqualTo("이체 출금");
+    }
+
+    @Test
     @DisplayName("getTransactionDetail reads stored transaction and overlays merchant data")
     void getTransactionDetailSuccess() {
         Account account = createAccount();
@@ -218,6 +265,47 @@ class AccountQueryServiceTest {
         assertThat(response.counterpartyAccount()).isEqualTo("0204667768182760");
         assertThat(response.category()).isEqualTo("PAYMENT");
         assertThat(response.memo()).isEqualTo("EMART");
+    }
+
+    @Test
+    @DisplayName("getTransactionDetail translates legacy english labels to korean")
+    void getTransactionDetailTranslatesLegacyEnglishLabels() {
+        Account account = createAccount();
+        ReflectionTestUtils.setField(account, "accountId", 10L);
+        Transaction transaction = Transaction.builder()
+                .account(account)
+                .userId(1L)
+                .source("FIN_API")
+                .sourceTxId("61")
+                .txType("WITHDRAWAL")
+                .txTypeName("WITHDRAWAL_TRANSFER")
+                .amount(10_000L)
+                .balanceSnapshot(89_900_000L)
+                .counterpartyName("TRANSFER")
+                .counterpartyAccountNo("0204667768182760")
+                .transactionSummary("TRANSFER")
+                .transactionAt(LocalDateTime.of(2024, 4, 1, 10, 32, 29))
+                .syncedAt(LocalDateTime.of(2024, 4, 1, 10, 33, 0))
+                .build();
+        ReflectionTestUtils.setField(transaction, "id", 701L);
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(1L);
+        given(accountRepository.findByAccountIdAndUserIdAndStatusAndIsDeletedFalse(10L, 1L, AccountStatus.ACTIVE))
+                .willReturn(Optional.of(account));
+        given(transactionRepository.findByIdAndAccountAccountIdAndAccountUserId(61L, 10L, 1L))
+                .willReturn(Optional.empty());
+        given(transactionRepository.findByAccountAccountIdAndAccountUserIdAndSourceTxId(10L, 1L, "61"))
+                .willReturn(Optional.of(transaction));
+        given(paymentRepository.findByUserIdAndWithdrawalTransactionId(1L, "61"))
+                .willReturn(Optional.empty());
+        given(transactionAiMetadataRepository.findByTransactionId(701L))
+                .willReturn(Optional.empty());
+
+        TransactionDetailResponse response = accountQueryService.getTransactionDetail(10L, "61");
+
+        assertThat(response.counterpartyName()).isEqualTo("이체");
+        assertThat(response.category()).isEqualTo("이체 출금");
+        assertThat(response.memo()).isEqualTo("이체");
     }
 
     private Account createAccount() {

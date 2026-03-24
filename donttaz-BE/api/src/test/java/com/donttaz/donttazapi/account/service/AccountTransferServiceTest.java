@@ -103,6 +103,8 @@ class AccountTransferServiceTest {
         assertThat(transactionCaptor.getValue().getUserId()).isEqualTo(1L);
         assertThat(transactionCaptor.getValue().getSourceTxId()).isEqualTo("59");
         assertThat(transactionCaptor.getValue().getAmount()).isEqualTo(100000000L);
+        assertThat(transactionCaptor.getValue().getTxTypeName()).isEqualTo("입금");
+        assertThat(transactionCaptor.getValue().getCounterpartyName()).isEqualTo("본인");
         assertThat(response.transactionUniqueNo()).isEqualTo("59");
         assertThat(response.transactionDate()).isEqualTo("20240401");
     }
@@ -150,6 +152,8 @@ class AccountTransferServiceTest {
         assertThat(commandCaptor.getValue().transactionSummary()).isEqualTo("withdrawal");
         assertThat(transactionCaptor.getValue().getUserId()).isEqualTo(1L);
         assertThat(transactionCaptor.getValue().getSourceTxId()).isEqualTo("60");
+        assertThat(transactionCaptor.getValue().getTxTypeName()).isEqualTo("출금");
+        assertThat(transactionCaptor.getValue().getCounterpartyName()).isEqualTo("본인");
         assertThat(response.transactionUniqueNo()).isEqualTo("60");
         assertThat(response.transactionDate()).isEqualTo("20240401");
     }
@@ -190,7 +194,10 @@ class AccountTransferServiceTest {
         assertThat(commandCaptor.getValue().transactionBalance()).isEqualTo("10000000");
         assertThat(transactionCaptor.getAllValues())
                 .extracting(Transaction::getCounterpartyName)
-                .containsOnly("TRANSFER");
+                .containsOnly("이체");
+        assertThat(transactionCaptor.getAllValues())
+                .extracting(Transaction::getTxTypeName)
+                .containsExactlyInAnyOrder("이체 출금", "이체 입금");
         assertThat(response.transactions()).hasSize(2);
     }
 
