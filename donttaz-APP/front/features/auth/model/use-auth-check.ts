@@ -13,7 +13,9 @@ export function useAuthCheck(): 'loading' | 'authenticated' | 'unauthenticated' 
         new Promise(resolve => setTimeout(resolve, 800)),
       ]);
 
-      setStatus(accessToken ? 'authenticated' : 'unauthenticated');
+      const nextStatus = accessToken ? 'authenticated' : 'unauthenticated';
+
+      setStatus(nextStatus);
     };
 
     void check();
