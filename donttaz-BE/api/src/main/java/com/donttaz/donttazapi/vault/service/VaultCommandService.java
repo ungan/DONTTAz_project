@@ -131,10 +131,19 @@ public class VaultCommandService {
                         com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest request) {
                 Long userId = currentUserProvider.getCurrentUserId();
 
+                // 대표계좌 조회
+                com.donttaz.donttazapi.account.domain.Account primaryAccount = accountRepository
+                                .findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(userId,
+                                                com.donttaz.donttazapi.account.domain.AccountStatus.ACTIVE)
+                                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND,
+                                                "대표계좌를 찾을 수 없습니다."));
+
+                String accountNo = primaryAccount.getAccountNumber();
+
                 if (kind == VaultKind.DEFAULT) {
                         DefaultVault vault = defaultVaultRepository.findByUserIdAndStatus(userId, VaultStatus.LOCKED)
                                         .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
-                        depositToDefault(vault, request.amount(), request.accountNo());
+                        depositToDefault(vault, request.amount(), accountNo);
                         return VaultDepositResponse.builder()
                                         .vaultId(vault.getId())
                                         .depositedAmount(request.amount())
@@ -149,7 +158,7 @@ public class VaultCommandService {
                                                 "입금 이후 금액이 위시리스트 목표 금액을 초과할 수 없습니다.");
                         }
 
-                        depositToWishlist(vault, request.amount(), request.accountNo());
+                        depositToWishlist(vault, request.amount(), accountNo);
                         return VaultDepositResponse.builder()
                                         .vaultId(vault.getId())
                                         .depositedAmount(request.amount())

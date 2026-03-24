@@ -79,7 +79,9 @@ public interface VaultSwagger {
         ResponseEntity<VaultDepositResponse> deposit(
                         @Parameter(description = "금고 종류", example = "DEFAULT") @PathVariable VaultKind kind,
                         @Parameter(description = "금고 ID", example = "1") @PathVariable Long vaultId,
-                        @RequestBody VaultDepositRequest request);
+                        @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = "application/json", examples = {
+                                        @ExampleObject(name = "금고 입금 요청", value = "{\"amount\": 100000}")
+                        })) @RequestBody VaultDepositRequest request);
 
         @Operation(summary = "금고 긴급 출금", description = "특정 유형의 금고에서 자금을 긴급 출금합니다. 위시리스트는 최대 3회 제한이 적용됩니다.")
         @ApiResponses({
