@@ -28,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CompanySalaryService {
 
-        private static final String DEFAULT_COMPANY_ACCOUNT_TYPE = "001-1-1"; // 수시입출금 상품 번호임
+        private static final String COMPANY_SALARY_ACCOUNT_TYPE = "003-1-befca2dba9314d"; // 월급지급 전용 맞춤 계좌 상품 번호
 
         private final CompanyRepository companyRepository;
         private final CompanyAccountRepository companyAccountRepository;
@@ -54,8 +54,8 @@ public class CompanySalaryService {
                 Company company = companyRepository.findById(companyId)
                                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_REQUEST, "존재하지 않는 기업임."));
 
-                // 금융 API 통해 계좌 개설
-                String accountNumber = bankingClient.createDemandDepositAccount(userId, DEFAULT_COMPANY_ACCOUNT_TYPE)
+                // 금융 API 통해 사용자가 지정한 월급 전용 계좌 상품으로 개설
+                String accountNumber = bankingClient.createDemandDepositAccount(userId, COMPANY_SALARY_ACCOUNT_TYPE)
                                 .accountNo();
 
                 CompanyAccount companyAccount = CompanyAccount.builder()
