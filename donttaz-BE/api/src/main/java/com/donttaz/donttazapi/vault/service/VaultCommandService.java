@@ -46,10 +46,10 @@ public class VaultCommandService {
         @Value("${vault.admin-user-id:1}")
         private Long adminUserId;
 
-        @Value("${vault.admin-account-no:0018888888888888}")
+        @Value("${vault.admin-account-no:9993479974590214}")
         private String adminAccountNo;
 
-        @Value("${vault.team-account-no:0018888888888888}")
+        @Value("${vault.team-account-no:9993479974590214}")
         private String teamAccountNo;
 
         public VaultCommandService(
@@ -142,7 +142,7 @@ public class VaultCommandService {
                                                 "대표계좌를 찾을 수 없습니다."));
 
                 String accountNo = primaryAccount.getAccountNumber();
-                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? teamAccountNo
+                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? "9993479974590214"
                                 : adminAccountNo;
 
                 if (kind == VaultKind.DEFAULT) {
