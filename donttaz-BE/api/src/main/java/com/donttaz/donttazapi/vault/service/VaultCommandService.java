@@ -43,14 +43,11 @@ public class VaultCommandService {
         private final RabbitTemplate rabbitTemplate;
         private final AccountRepository accountRepository;
 
-        @Value("${vault.admin-user-id:1}")
+        @Value("${vault.admin-user-id}")
         private Long adminUserId;
 
-        @Value("${vault.admin-account-no:9993479974590214}")
+        @Value("${vault.admin-account-no}")
         private String adminAccountNo;
-
-        @Value("${vault.team-account-no:9993479974590214}")
-        private String teamAccountNo;
 
         public VaultCommandService(
                         DefaultVaultRepository defaultVaultRepository,
@@ -134,12 +131,19 @@ public class VaultCommandService {
                         com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest request) {
                 Long userId = currentUserProvider.getCurrentUserId();
 
-                // 대표계좌 조회
+                // 대표계좌 조회 (없을 경우 첫 번째 계좌를 Fallback으로 사용)
                 com.donttaz.donttazapi.account.domain.Account primaryAccount = accountRepository
                                 .findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(userId,
                                                 com.donttaz.donttazapi.account.domain.AccountStatus.ACTIVE)
+                                .or(() -> {
+                                        List<com.donttaz.donttazapi.account.domain.Account> accounts = accountRepository
+                                                        .findAllByUserIdAndStatusAndIsDeletedFalse(userId,
+                                                                        com.donttaz.donttazapi.account.domain.AccountStatus.ACTIVE);
+                                        return accounts.isEmpty() ? java.util.Optional.empty()
+                                                        : java.util.Optional.of(accounts.get(0));
+                                })
                                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND,
-                                                "대표계좌를 찾을 수 없습니다."));
+                                                "사용 가능한 활동 계좌가 하나도 없습니다."));
 
                 String accountNo = primaryAccount.getAccountNumber();
                 String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? "9993479974590214"
@@ -231,7 +235,7 @@ public class VaultCommandService {
         }
 
         private void depositToWishlistInternal(WishlistVault vault, Long amount, String accountNo) {
-                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? teamAccountNo
+                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? "9993479974590214"
                                 : adminAccountNo;
                 bankingClient.transfer(vault.getUserId(), new TransferCommand(
                                 targetAdminAccountNo, "금고 자동 입금(배치)", String.valueOf(amount), accountNo, "금고 자동 입금"));
@@ -244,7 +248,7 @@ public class VaultCommandService {
         }
 
         private void depositToDefaultInternal(DefaultVault vault, Long amount, String accountNo) {
-                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? teamAccountNo
+                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? "9993479974590214"
                                 : adminAccountNo;
                 bankingClient.transfer(vault.getUserId(), new TransferCommand(
                                 targetAdminAccountNo, "금고 자동 입금(배치)", String.valueOf(amount), accountNo, "금고 자동 입금"));
@@ -274,7 +278,7 @@ public class VaultCommandService {
                 vault.withdraw(request.amount());
                 Long totalTransferAmount = request.amount() + interest;
 
-                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? teamAccountNo
+                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? "9993479974590214"
                                 : adminAccountNo;
                 Long targetAdminUserId = (adminUserId == null) ? 1L : adminUserId;
 
@@ -301,7 +305,7 @@ public class VaultCommandService {
                 vault.withdraw(request.amount());
                 Long totalTransferAmount = request.amount() + interest;
 
-                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? teamAccountNo
+                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? "9993479974590214"
                                 : adminAccountNo;
                 Long targetAdminUserId = (adminUserId == null) ? 1L : adminUserId;
 
@@ -352,7 +356,7 @@ public class VaultCommandService {
                                 .findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(userId, AccountStatus.ACTIVE)
                                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
 
-                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? teamAccountNo
+                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? "9993479974590214"
                                 : adminAccountNo;
                 Long targetAdminUserId = (adminUserId == null) ? 1L : adminUserId;
 
