@@ -101,7 +101,7 @@ class AccountTransferServiceTest {
         ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
         verify(bankingClient).deposit(org.mockito.ArgumentMatchers.eq(1L), commandCaptor.capture());
         verify(transactionRepository).save(transactionCaptor.capture());
-        verify(pushNotificationService).sendDepositNotification(1L, "0016174648358792", 100000000L, "deposit");
+        verify(pushNotificationService).sendDepositNotification(1L, 100000000L, "deposit");
         assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0016174648358792");
         assertThat(commandCaptor.getValue().transactionBalance()).isEqualTo("100000000");
         assertThat(commandCaptor.getValue().transactionSummary()).isEqualTo("deposit");
@@ -134,7 +134,7 @@ class AccountTransferServiceTest {
         ArgumentCaptor<AccountDepositCommand> commandCaptor = ArgumentCaptor.forClass(AccountDepositCommand.class);
         verify(bankingClient).deposit(org.mockito.ArgumentMatchers.eq(7L), commandCaptor.capture());
         verify(accountSyncService).syncAccountSnapshot(7L, "0016174648358792");
-        verify(pushNotificationService).sendDepositNotification(7L, "0016174648358792", 50000L, "deposit");
+        verify(pushNotificationService).sendDepositNotification(7L, 50000L, "deposit");
         assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0016174648358792");
         assertThat(response.transactionUniqueNo()).isEqualTo("77");
     }
@@ -160,6 +160,7 @@ class AccountTransferServiceTest {
         assertThat(transactionCaptor.getValue().getSourceTxId()).isEqualTo("60");
         assertThat(transactionCaptor.getValue().getTxTypeName()).isEqualTo("출금");
         assertThat(transactionCaptor.getValue().getCounterpartyName()).isEqualTo("본인");
+        verify(pushNotificationService).sendWithdrawalNotification(1L, 100000L, "withdrawal");
         assertThat(response.transactionUniqueNo()).isEqualTo("60");
         assertThat(response.transactionDate()).isEqualTo("20240401");
     }
@@ -204,6 +205,7 @@ class AccountTransferServiceTest {
         assertThat(transactionCaptor.getAllValues())
                 .extracting(Transaction::getTxTypeName)
                 .containsExactlyInAnyOrder("이체 출금", "이체 입금");
+        verify(pushNotificationService).sendTransferNotification(1L, 10000000L, "withdrawal transfer");
         assertThat(response.transactions()).hasSize(2);
     }
 
@@ -242,7 +244,36 @@ class AccountTransferServiceTest {
         ArgumentCaptor<TransferCommand> commandCaptor = ArgumentCaptor.forClass(TransferCommand.class);
         verify(bankingClient).transfer(org.mockito.ArgumentMatchers.eq(9L), commandCaptor.capture());
         assertThat(commandCaptor.getValue().withdrawalAccountNo()).isEqualTo("0016174648358792");
+        verify(pushNotificationService).sendTransferNotification(9L, 10000000L, "withdrawal transfer");
         assertThat(response.transactions()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("transfer sends payment notification when payment settlement summary is used")
+    void transferSendsPaymentNotification() {
+        AccountTransferRequest request = new AccountTransferRequest(
+                "0204667768182760",
+                "PAYMENT_SETTLEMENT",
+                "10000",
+                "0016174648358792",
+                "EMART"
+        );
+        Account withdrawalAccount = createAccount("0016174648358792", 490000L, 1L);
+        TransferResult result = new TransferResult(
+                List.of(
+                        new TransferTransactionResult("61", "0016174648358792", "20240401", "2", "WITHDRAWAL_TRANSFER", "0204667768182760")
+                )
+        );
+        given(currentUserProvider.getCurrentUserId()).willReturn(1L);
+        given(bankingClient.transfer(any(Long.class), any(TransferCommand.class))).willReturn(result);
+        given(accountSyncService.syncAccountSnapshot(1L, "0016174648358792")).willReturn(withdrawalAccount);
+        given(accountRepository.findByUserIdAndAccountNumberAndIsDeletedFalse(1L, "0204667768182760"))
+                .willReturn(Optional.empty());
+
+        AccountTransferResponse response = accountTransferService.transfer(request);
+
+        verify(pushNotificationService).sendPaymentNotification(1L, 10000L, "EMART");
+        assertThat(response.transactions()).hasSize(1);
     }
 
     @Test
@@ -348,4 +379,3 @@ class AccountTransferServiceTest {
                 .build();
     }
 }
-
