@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { NumericKeypad } from '@/shared/ui';
+import { PageHeader, NumericKeypad } from '@/shared/ui';
 import { useDepositAmount } from '@/features/vault-deposit';
 import { useMyAccounts } from '@/entities/account';
 import { depositVaultApi } from '@/entities/vault';
@@ -30,15 +30,11 @@ export function VaultDepositPage() {
       return;
     }
     const requestBody = { amount };
-    console.log('[deposit] kind:', kind, '| vaultId:', vaultId);
-    console.log('[deposit] request body:', JSON.stringify(requestBody));
     setIsSubmitting(true);
     try {
-      const result = await depositVaultApi(kind as VaultKind, Number(vaultId), requestBody);
-      console.log('[deposit] success:', JSON.stringify(result));
+      await depositVaultApi(kind as VaultKind, Number(vaultId), requestBody);
       router.back();
-    } catch (e) {
-      console.error('[deposit] error:', e);
+    } catch {
       Alert.alert('오류', '입금 중 문제가 발생했습니다.');
     } finally {
       setIsSubmitting(false);

@@ -26,8 +26,7 @@ export function useVault() {
       ]);
       setTransactions(dvTx.data);
       setWishlistTransactions(wvTx.data);
-    } catch (e) {
-      console.error('[useVault] error:', e);
+    } catch {
       setError('가상금고 정보를 불러오지 못했습니다.');
     } finally {
       setIsPending(false);

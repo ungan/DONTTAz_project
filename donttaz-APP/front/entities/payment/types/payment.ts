@@ -1,4 +1,4 @@
-export type TransactionType = 'ALL' | 'DEPOSIT' | 'WITHDRAWAL';
+export type TransactionType = 'ALL' | 'DEPOSIT' | 'WITHDRAWAL' | 1 | 2;
 
 export interface Transaction {
   transactionId: number;

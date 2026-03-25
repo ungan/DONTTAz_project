@@ -2,11 +2,11 @@ import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   bottomArea: {
-    gap: 8,
+    gap: 12,
+    paddingBottom: 16,
   },
   footer: {
     paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 32,
+    paddingTop: 4,
   },
 });

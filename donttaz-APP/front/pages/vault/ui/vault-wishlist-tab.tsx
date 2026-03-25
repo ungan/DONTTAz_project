@@ -1,16 +1,18 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Entypo from '@expo/vector-icons/Entypo';
 import { useRouter } from 'expo-router';
 import BottomSheet from '@gorhom/bottom-sheet';
 import type { Vault, VaultTransaction } from '@/entities/vault';
 import { createWishlistVaultApi } from '@/entities/vault';
 import { WishlistBottomSheet } from '@/features/vault-wishlist';
 import { WithdrawWarningModal } from '@/features/vault-withdraw';
-import { VaultBalance } from '@/widgets/vault-balance';
 import { VaultNotice } from '@/widgets/vault-notice';
 import { VaultHistory } from '@/widgets/vault-history';
 import { styles, wishlistStyles } from './vault-page.styles';
+
+const vaultFishImage = require('@/shared/assets/images/vault-fish.jpg');
 
 interface VaultWishlistTabProps {
   vault: Vault | null;
@@ -26,8 +28,7 @@ export function VaultWishlistTab({ vault, transactions }: VaultWishlistTabProps)
     try {
       const res = await createWishlistVaultApi({ wishName, goalAmount });
       router.push(`/vault-memorandum?vaultId=${res.vaultId}`);
-    } catch (e: any) {
-      console.error('[vault-wishlist-tab] create error:', e?.response?.status, e?.response?.data);
+    } catch {
     }
   };
 
@@ -36,7 +37,7 @@ export function VaultWishlistTab({ vault, transactions }: VaultWishlistTabProps)
       <>
         <View style={styles.emptyContainer}>
           <View style={wishlistStyles.emptyIconWrapper}>
-            <Ionicons name="cart-outline" size={52} color="#6B7280" />
+            <Ionicons name="gift-outline" size={52} color="#6B7280" />
           </View>
           <Text style={styles.emptyTitle}>텅 비어 있는 위시리스트..</Text>
           <Text style={styles.emptyDesc}>
@@ -63,41 +64,71 @@ export function VaultWishlistTab({ vault, transactions }: VaultWishlistTabProps)
   return (
     <>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <VaultBalance
-          lockedAmount={vault.lockedAmount}
-          onDeposit={() => router.push(`/vault-deposit?kind=WISHLIST&vaultId=${vault.vaultId}&lockedAmount=${vault.lockedAmount}`)}
-          onWithdraw={() => setShowWithdrawModal(true)}
-        />
-
         <View style={wishlistStyles.progressSection}>
-          <View style={wishlistStyles.progressHeader}>
-            <Text style={wishlistStyles.wishName}>{vault.wishName}</Text>
-            <Text style={wishlistStyles.progressPercent}>{progressPercent}%</Text>
+          {/* 물고기 */}
+          <Image source={vaultFishImage} style={wishlistStyles.fishImage} resizeMode="contain" />
+
+          <View style={wishlistStyles.cardHeader}>
+            <Entypo name="shopping-cart" size={18} color="#111827" />
+            <Text style={wishlistStyles.cardTitle}>위시리스트</Text>
           </View>
+
+          {/* 위시 이름 */}
+          <Text style={wishlistStyles.wishName}>{vault.wishName}</Text>
+
+          {/* 현재 / 목표 금액 */}
+          <Text style={wishlistStyles.amountLine}>
+            {vault.lockedAmount.toLocaleString('ko-KR')} / {vault.goalAmount.toLocaleString('ko-KR')}원
+          </Text>
+
+          {/* 진행 바 */}
           <View style={wishlistStyles.progressTrack}>
-            <View style={[wishlistStyles.progressFill, { width: `${progressPercent}%` }]} />
+            <View style={[wishlistStyles.progressFill, { width: `${progressPercent}%` as any }]} />
           </View>
-          <View style={wishlistStyles.progressAmounts}>
-            <Text style={wishlistStyles.progressCurrent}>{vault.lockedAmount.toLocaleString('ko-KR')}원</Text>
-            <Text style={wishlistStyles.progressGoal}>목표 {vault.goalAmount.toLocaleString('ko-KR')}원</Text>
+
+          {/* % 레이블 */}
+          <View style={wishlistStyles.progressLabels}>
+            <View style={{ flex: progressPercent || 1, alignItems: 'flex-end' }}>
+              <Text style={wishlistStyles.progressLabelCurrent}>{progressPercent}%</Text>
+            </View>
+            <View style={{ flex: 100 - progressPercent || 1, alignItems: 'flex-end' }}>
+              <Text style={wishlistStyles.progressLabelGoal}>100%</Text>
+            </View>
+          </View>
+
+          <View style={wishlistStyles.buttonRow}>
+            <TouchableOpacity
+              style={[wishlistStyles.button, wishlistStyles.buttonPrimary]}
+              onPress={() => router.push(`/vault-deposit?kind=WISHLIST&vaultId=${vault.vaultId}&lockedAmount=${vault.lockedAmount}`)}
+              activeOpacity={0.8}
+            >
+              <Text style={wishlistStyles.buttonTextPrimary}>+ 넣기</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[wishlistStyles.button, wishlistStyles.buttonOutline]}
+              onPress={() => setShowWithdrawModal(true)}
+              activeOpacity={0.8}
+            >
+              <Text style={wishlistStyles.buttonTextOutline}>긴급 출금</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
         <VaultNotice
-          baseInterestRate={vault.baseInterestRate}
-          penaltyInterestRate={vault.penaltyInterestRate}
+          baseInterestRate={vault.baseInterestRate - vault.penaltyInterestRate}
+          penaltyInterestRate={-0.3}
         />
         <VaultHistory transactions={transactions} />
       </ScrollView>
 
       <WithdrawWarningModal
         visible={showWithdrawModal}
-        baseInterestRate={vault.baseInterestRate}
-        penaltyRate={vault.penaltyInterestRate}
+        baseInterestRate={vault.baseInterestRate - vault.penaltyInterestRate}
+        penaltyRate={0.3}
         onCancel={() => setShowWithdrawModal(false)}
         onConfirm={() => {
           setShowWithdrawModal(false);
-          // TODO: 긴급 출금 API 연결
+          router.push(`/vault-withdraw?kind=WISHLIST&vaultId=${vault.vaultId}&lockedAmount=${vault.lockedAmount}`);
         }}
       />
     </>

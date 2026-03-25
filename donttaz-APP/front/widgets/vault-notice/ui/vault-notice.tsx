@@ -17,7 +17,7 @@ export function VaultNotice({ baseInterestRate, penaltyInterestRate }: VaultNoti
         </Text>
         <Text style={styles.text}>
           중도 출금 시, 패널티 이자율{' '}
-          <Text style={styles.bold}>{penaltyInterestRate}%</Text>이 적용됩니다.
+          <Text style={styles.bold}>{penaltyInterestRate}%</Text>가 적용됩니다.
         </Text>
       </View>
     </View>

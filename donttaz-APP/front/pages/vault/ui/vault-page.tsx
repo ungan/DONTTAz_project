@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { PageHeader } from '@/shared/ui';
 import { useVault } from '@/entities/vault';
 import { VaultTabBar } from './vault-tab-bar';
@@ -12,8 +13,15 @@ import { styles } from './vault-page.styles';
 
 export function VaultPage() {
   const router = useRouter();
-  const { defaultVault, wishlistVault, transactions, wishlistTransactions, isPending } = useVault();
-  const [activeTab, setActiveTab] = useState<VaultTab>('default');
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
+  const { defaultVault, wishlistVault, transactions, wishlistTransactions, isPending, refetch } = useVault();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
+  const [activeTab, setActiveTab] = useState<VaultTab>(tab === 'wishlist' ? 'wishlist' : 'default');
 
   return (
     <SafeAreaView style={styles.container}>

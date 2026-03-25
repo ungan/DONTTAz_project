@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useBankAccountStore } from '@/entities/bank-account';
 import { transferApi } from '../api/transfer';
 import { useTransferStore } from './transfer-store';
+import { saveRecentAccount } from './recent-accounts';
 import type { TransferResult } from '../types/transfer';
 
 function sanitizeAccountNumber(accountNumber: string | null | undefined) {
@@ -65,6 +66,7 @@ export function useTransferSubmit() {
       });
 
       const result: TransferResult = response.data;
+      saveRecentAccount({ bankName, accountNumber: sanitizedDepositAccountNumber });
       clear();
 
       router.push({

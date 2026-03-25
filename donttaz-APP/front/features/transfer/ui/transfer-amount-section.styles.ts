@@ -10,15 +10,14 @@ export const styles = StyleSheet.create({
   quickButton: {
     flex: 1,
     height: 40,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Primary,
+    borderRadius: 999,
+    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
   quickButtonLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
-    color: Primary,
+    color: '#374151',
   },
 });

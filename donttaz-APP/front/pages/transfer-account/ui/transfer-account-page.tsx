@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import BottomSheet from '@gorhom/bottom-sheet';
 import { useMyAccounts } from '@/entities/account';
 import { useBankAccountStore } from '@/entities/bank-account';
 import { PageHeader, Button } from '@/shared/ui';
@@ -11,6 +12,7 @@ import {
   useTransferForm,
   useTransferStore,
 } from '@/features/transfer';
+import { BankBottomSheet } from '@/features/transfer/ui/bank-bottom-sheet';
 import type { AccountSummary } from '@/entities/account';
 import { styles } from './transfer-account-page.styles';
 
@@ -58,14 +60,13 @@ function resolveTransferableAccountNo(account: AccountSummary, storedAccountNo: 
 
 export function TransferAccountPage() {
   const router = useRouter();
+  const bankSheetRef = useRef<BottomSheet>(null);
   const { form, setBank, setAccountNumber, isValid } = useTransferForm();
   const {
     setAccountInfo,
     setWithdrawalAccount,
     withdrawalAccountNo,
     withdrawalAccountLabel,
-    withdrawalBankName,
-    withdrawalAccountName,
   } = useTransferStore();
   const {
     accountNo: storedAccountNo,
@@ -181,7 +182,7 @@ export function TransferAccountPage() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={styles.question}>어느 계좌에서 보내고 어디로 입금할까요?</Text>
+          <Text style={styles.question}>어디로 보낼까요?</Text>
 
           <TransferSourceAccountSection
             accounts={accountOptions}
@@ -191,26 +192,28 @@ export function TransferAccountPage() {
             onSelect={handleSelectWithdrawalAccount}
           />
 
-          {withdrawalAccountNo ? (
-            <View style={styles.selectedAccountBox}>
-              <Text style={styles.selectedAccountLabel}>선택된 출금 계좌</Text>
-              <Text
-                style={styles.selectedAccountValue}
-              >{`${withdrawalBankName} ${withdrawalAccountName}`}</Text>
-              <Text style={styles.selectedAccountSubValue}>{withdrawalAccountLabel}</Text>
-            </View>
-          ) : null}
+          <View style={styles.divider} />
 
-          <View style={styles.formAndButton}>
+          <View style={styles.formSection}>
             <TransferFormSection
               form={form}
               onBankChange={setBank}
               onAccountNumberChange={setAccountNumber}
+              onOpenBankPicker={() => bankSheetRef.current?.expand()}
             />
-            <Button label="다음" disabled={!isReadyToProceed} onPress={handleConfirm} />
           </View>
         </ScrollView>
+
+        <View style={styles.footer}>
+          <Button label="다음" disabled={!isReadyToProceed} onPress={handleConfirm} />
+        </View>
       </KeyboardAvoidingView>
+
+      <BankBottomSheet
+        ref={bankSheetRef}
+        selected={form.bankName}
+        onSelect={setBank}
+      />
     </SafeAreaView>
   );
 }

@@ -61,53 +61,93 @@ export const wishlistStyles = StyleSheet.create({
     marginBottom: 20,
   },
   progressSection: {
-    marginHorizontal: 20,
+    width: '100%',
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 24,
     marginBottom: 8,
-    padding: 16,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
+    backgroundColor: '#F9F9F9',
+    overflow: 'visible',
   },
-  progressHeader: {
+  fishImage: {
+    position: 'absolute',
+    top: -16,
+    right: 25,
+    width: 110,
+    height: 130,
+  },
+  cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    gap: 6,
   },
-  wishName: {
-    fontSize: 15,
+  cardTitle: {
+    fontSize: 16,
     fontWeight: '600',
     color: '#111827',
-    flexShrink: 1,
-    marginRight: 8,
   },
-  progressPercent: {
-    fontSize: 15,
+  wishName: {
+    fontSize: 26,
     fontWeight: '700',
-    color: '#4F46E5',
+    color: '#000000',
+    marginTop: 65,
+    marginBottom: 6,
+  },
+  amountLine: {
+    fontSize: 18,
+    color: '#545454',
+    marginBottom: 16,
   },
   progressTrack: {
-    height: 8,
+    height: 28,
     backgroundColor: '#E5E7EB',
-    borderRadius: 4,
+    borderRadius: 8,
     overflow: 'hidden',
-    marginBottom: 8,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#4F46E5',
-    borderRadius: 4,
+    backgroundColor: '#868686',
+    borderRadius: 8,
   },
-  progressAmounts: {
+  progressLabels: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginTop: 6,
+    marginBottom: 4,
   },
-  progressCurrent: {
+  progressLabelCurrent: {
     fontSize: 13,
-    color: '#4F46E5',
     fontWeight: '600',
+    color: '#9CA3AF',
   },
-  progressGoal: {
+  progressLabelGoal: {
     fontSize: 13,
     color: '#9CA3AF',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 10,
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  button: {
+    paddingVertical: 9,
+    paddingHorizontal: 24,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+  },
+  buttonPrimary: {},
+  buttonOutline: {},
+  buttonTextPrimary: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#111827',
+  },
+  buttonTextOutline: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#111827',
   },
 });

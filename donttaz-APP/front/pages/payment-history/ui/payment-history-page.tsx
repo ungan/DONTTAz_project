@@ -20,6 +20,17 @@ const CATEGORY_ICON_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; 
 
 const DEFAULT_ICON = { icon: 'card-outline' as keyof typeof Ionicons.glyphMap, color: '#6B7280' };
 
+const COUNTERPARTY_NAME_MAP: Record<string, string> = {
+  SELF: '본인',
+  TRANSFER: '이체',
+  본인: '본인',
+  이체: '이체',
+};
+
+function resolveCounterpartyName(name: string) {
+  return COUNTERPARTY_NAME_MAP[name] ?? name;
+}
+
 function formatDate(dateStr: string) {
   const d = new Date(dateStr);
   return `${d.getMonth() + 1}.${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
@@ -27,7 +38,7 @@ function formatDate(dateStr: string) {
 
 function TransactionItem({ item }: { item: Transaction }) {
   const { icon, color } = CATEGORY_ICON_MAP[item.category] ?? DEFAULT_ICON;
-  const isWithdrawal = item.type === 'WITHDRAWAL';
+  const isWithdrawal = item.type === 'WITHDRAWAL' || item.type === 2;
 
   return (
     <View style={styles.item}>
@@ -35,7 +46,7 @@ function TransactionItem({ item }: { item: Transaction }) {
         <Ionicons name={icon} size={20} color={color} />
       </View>
       <View style={styles.infoGroup}>
-        <Text style={styles.counterparty}>{item.counterpartyName}</Text>
+        <Text style={styles.counterparty}>{resolveCounterpartyName(item.counterpartyName)}</Text>
         <Text style={styles.itemDate}>{formatDate(item.transactionDate)}</Text>
       </View>
       <View style={styles.amountGroup}>

@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { getMyAccountsApi } from '@/entities/account';
+import { getPrimaryAccountApi } from '@/entities/account';
 import { useSessionStore } from '@/entities/session';
 import { useBankAccountStore } from '@/entities/bank-account';
 import { syncPushTokenWithServer } from '@/features/push';
@@ -17,24 +17,19 @@ function resolveFallbackAccountId() {
 }
 
 async function syncPrimaryAccountFromApi() {
-  const response = await getMyAccountsApi();
-  const primaryAccount = response.data.accountList.find((account) => account.isPrimary) ?? response.data.accountList[0];
+  const account = await getPrimaryAccountApi();
 
-  if (!primaryAccount) {
-    return false;
-  }
-
-  const resolvedAccountId = primaryAccount.accountId ?? resolveFallbackAccountId();
+  const resolvedAccountId = account.accountId ?? resolveFallbackAccountId();
   if (!resolvedAccountId) {
     return false;
   }
 
   useBankAccountStore.getState().setAccount(
     resolvedAccountId,
-    primaryAccount.bankName,
-    parseBalance(primaryAccount.accountBalance),
-    primaryAccount.accountNo,
-    primaryAccount.accountName
+    account.bankName,
+    parseBalance(account.accountBalance),
+    account.accountNo,
+    account.accountName
   );
 
   return true;

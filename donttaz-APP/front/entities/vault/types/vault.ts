@@ -93,15 +93,34 @@ export interface DepositVaultRequest {
   amount: number;
 }
 
+export interface WithdrawVaultRequest {
+  accountNo: string;
+  amount: number;
+}
+
+export interface WithdrawVaultResponse {
+  vaultId: number;
+  withdrawnAmount: number;
+  interestPaid: number;
+  totalRefundAmount: number;
+  withdrawalCount: number;
+}
+
 export interface DepositVaultResponse {
   vaultId: number;
   depositedAmount: number;
   lockedAmount: number;
 }
 
-export type WebhookPlatform = 'MATTERMOST' | 'KAKAO_TALK';
+export type PlatformType = 'MATTERMOST' | 'DISCORD';
 
-export interface WebhookConfig {
-  platform: WebhookPlatform;
-  message: string;
+export interface PenaltyWebhookRequest {
+  platformType: PlatformType;
+  shameMessage: string;
+}
+
+export interface PenaltyWebhookResponse {
+  webhookId: number;
+  platformType: PlatformType;
+  shameMessage: string;
 }
