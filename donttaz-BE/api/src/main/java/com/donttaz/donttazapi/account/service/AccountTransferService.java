@@ -186,7 +186,7 @@ public class AccountTransferService {
                     accountNo,
                     result.transactionUniqueNo(),
                     result.transactionDate());
-            sendDepositNotification(userId, accountNo, request);
+            sendDepositNotification(userId, request);
 
             return AccountDepositResponse.builder()
                     .transactionUniqueNo(result.transactionUniqueNo())
@@ -205,26 +205,19 @@ public class AccountTransferService {
         }
     }
 
-    private void sendDepositNotification(Long userId, String accountNo, AccountDepositRequest request) {
+    private void sendDepositNotification(Long userId, AccountDepositRequest request) {
         try {
-            log.info(
-                    "입금 푸시 요청이 발생했습니다. userId={} accountNo={} amount={} summary={}",
-                    userId,
-                    accountNo,
-                    request.transactionBalance(),
-                    request.transactionSummary()
-            );
             pushNotificationService.sendDepositNotification(
                     userId,
-                    accountNo,
                     toLong(request.transactionBalance()),
                     request.transactionSummary()
             );
         } catch (RuntimeException exception) {
             log.warn(
-                    "입금 푸시 처리 중 오류가 발생했습니다. userId={} accountNo={} message={}",
+                    "deposit notification failed userId={} amount={} summary={} message={}",
                     userId,
-                    accountNo,
+                    request.transactionBalance(),
+                    request.transactionSummary(),
                     exception.getMessage()
             );
         }
@@ -246,6 +239,7 @@ public class AccountTransferService {
                 )
         );
         persistTransferTransactions(userId, request, result);
+        sendTransferNotification(userId, request);
 
         return AccountTransferResponse.builder()
                 .transactions(
@@ -253,6 +247,31 @@ public class AccountTransferService {
                                 .map(this::toAccountTransferItemResponse)
                                 .toList())
                 .build();
+    }
+
+    private void sendTransferNotification(Long userId, AccountTransferRequest request) {
+        try {
+            Long amount = toLong(request.transactionBalance());
+            if (isPaymentTransfer(request)) {
+                pushNotificationService.sendPaymentNotification(userId, amount, request.withdrawalTransactionSummary());
+                return;
+            }
+
+            pushNotificationService.sendTransferNotification(userId, amount, request.withdrawalTransactionSummary());
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "transfer notification failed userId={} amount={} withdrawalSummary={} depositSummary={} message={}",
+                    userId,
+                    request.transactionBalance(),
+                    request.withdrawalTransactionSummary(),
+                    request.depositTransactionSummary(),
+                    exception.getMessage()
+            );
+        }
+    }
+
+    private boolean isPaymentTransfer(AccountTransferRequest request) {
+        return PAYMENT_SETTLEMENT_SUMMARY.equals(request.depositTransactionSummary());
     }
 
     public AccountTransferLimitUpdateResponse updateTransferLimit(
@@ -296,11 +315,30 @@ public class AccountTransferService {
                 request.transactionBalance(),
                 request.transactionSummary(),
                 result.transactionDate());
+        sendWithdrawalNotification(userId, request);
 
         return AccountWithdrawalResponse.builder()
                 .transactionUniqueNo(result.transactionUniqueNo())
                 .transactionDate(result.transactionDate())
                 .build();
+    }
+
+    private void sendWithdrawalNotification(Long userId, AccountWithdrawalRequest request) {
+        try {
+            pushNotificationService.sendWithdrawalNotification(
+                    userId,
+                    toLong(request.transactionBalance()),
+                    request.transactionSummary()
+            );
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "withdrawal notification failed userId={} amount={} summary={} message={}",
+                    userId,
+                    request.transactionBalance(),
+                    request.transactionSummary(),
+                    exception.getMessage()
+            );
+        }
     }
 
     private void persistTransaction(
@@ -526,5 +564,3 @@ public class AccountTransferService {
                 .build();
     }
 }
-
-

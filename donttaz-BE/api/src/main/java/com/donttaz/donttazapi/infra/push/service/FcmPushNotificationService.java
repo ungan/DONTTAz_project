@@ -22,6 +22,9 @@ public class FcmPushNotificationService implements PushNotificationService {
     private static final Logger log = LoggerFactory.getLogger(FcmPushNotificationService.class);
     private static final String DEFAULT_ANDROID_CHANNEL_ID = "default";
     private static final String DEPOSIT_NOTIFICATION_TITLE = "입금 알림";
+    private static final String WITHDRAWAL_NOTIFICATION_TITLE = "출금 알림";
+    private static final String TRANSFER_NOTIFICATION_TITLE = "계좌이체 알림";
+    private static final String PAYMENT_NOTIFICATION_TITLE = "결제 알림";
 
     private final FcmTokenRepository fcmTokenRepository;
     private final Optional<FirebaseMessaging> firebaseMessaging;
@@ -35,38 +38,51 @@ public class FcmPushNotificationService implements PushNotificationService {
     }
 
     @Override
-    public void sendDepositNotification(Long userId, String accountNo, Long amount, String summary) {
+    public void sendDepositNotification(Long userId, Long amount, String summary) {
+        sendNotification(userId, "DEPOSIT", DEPOSIT_NOTIFICATION_TITLE, buildDepositMessage(amount, summary), amount, summary);
+    }
+
+    @Override
+    public void sendWithdrawalNotification(Long userId, Long amount, String summary) {
+        sendNotification(userId, "WITHDRAWAL", WITHDRAWAL_NOTIFICATION_TITLE, buildWithdrawalMessage(amount, summary), amount, summary);
+    }
+
+    @Override
+    public void sendTransferNotification(Long userId, Long amount, String summary) {
+        sendNotification(userId, "TRANSFER", TRANSFER_NOTIFICATION_TITLE, buildTransferMessage(amount, summary), amount, summary);
+    }
+
+    @Override
+    public void sendPaymentNotification(Long userId, Long amount, String merchantName) {
+        sendNotification(userId, "PAYMENT", PAYMENT_NOTIFICATION_TITLE, buildPaymentMessage(amount, merchantName), amount, merchantName);
+    }
+
+    private void sendNotification(Long userId, String type, String title, String body, Long amount, String summary) {
         List<String> tokens = fcmTokenRepository.findAllByUserUserId(userId).stream()
                 .map(FcmToken::getToken)
                 .filter(token -> token != null && !token.isBlank())
                 .distinct()
                 .toList();
-        String maskedAccountNo = maskAccountNumber(accountNo);
-        String notificationBody = buildDepositMessage(accountNo, amount, summary);
 
         if (tokens.isEmpty()) {
-            log.info(
-                    "입금 푸시를 건너뜁니다. 등록된 FCM 토큰이 없습니다. userId={} accountNo={}",
-                    userId,
-                    maskedAccountNo
-            );
+            log.info("Skipping {} push notification because no FCM tokens were found. userId={}", type, userId);
             return;
         }
 
         if (firebaseMessaging.isEmpty()) {
             log.info(
-                    "입금 푸시를 건너뜁니다. Firebase 설정이 없습니다. userId={} accountNo={} tokenCount={}",
+                    "Skipping {} push notification because Firebase is not configured. userId={} tokenCount={}",
+                    type,
                     userId,
-                    maskedAccountNo,
                     tokens.size()
             );
             return;
         }
 
         log.info(
-                "입금 푸시 발송을 시도합니다. userId={} accountNo={} amount={} tokenCount={} summary={}",
+                "Sending {} push notification. userId={} amount={} tokenCount={} summary={}",
+                type,
                 userId,
-                maskedAccountNo,
                 amount,
                 tokens.size(),
                 summary
@@ -75,8 +91,8 @@ public class FcmPushNotificationService implements PushNotificationService {
         MulticastMessage message = MulticastMessage.builder()
                 .addAllTokens(tokens)
                 .setNotification(Notification.builder()
-                        .setTitle(DEPOSIT_NOTIFICATION_TITLE)
-                        .setBody(notificationBody)
+                        .setTitle(title)
+                        .setBody(body)
                         .build())
                 .setAndroidConfig(AndroidConfig.builder()
                         .setPriority(AndroidConfig.Priority.HIGH)
@@ -87,46 +103,41 @@ public class FcmPushNotificationService implements PushNotificationService {
                                 .setDefaultVibrateTimings(true)
                                 .build())
                         .build())
-                .putData("type", "DEPOSIT")
-                .putData("accountNo", maskedAccountNo)
+                .putData("type", type)
                 .putData("amount", amount == null ? "0" : String.valueOf(amount))
+                .putData("summary", summary == null ? "" : summary)
                 .build();
 
         try {
             var response = firebaseMessaging.get().sendEachForMulticast(message);
             log.info(
-                    "입금 푸시 발송이 완료됐습니다. userId={} accountNo={} successCount={} failureCount={}",
+                    "{} push notification completed. userId={} successCount={} failureCount={}",
+                    type,
                     userId,
-                    maskedAccountNo,
                     response.getSuccessCount(),
                     response.getFailureCount()
             );
             if (response.getFailureCount() > 0) {
                 log.warn(
-                        "입금 푸시 발송 중 일부가 실패했습니다. userId={} accountNo={} successCount={} failureCount={}",
+                        "{} push notification partially failed. userId={} successCount={} failureCount={}",
+                        type,
                         userId,
-                        maskedAccountNo,
                         response.getSuccessCount(),
                         response.getFailureCount()
                 );
-                logFailureDetails(tokens, response.getResponses(), userId, maskedAccountNo);
+                logFailureDetails(type, tokens, response.getResponses(), userId);
             }
         } catch (FirebaseMessagingException exception) {
             log.warn(
-                    "입금 푸시 발송에 실패했습니다. userId={} accountNo={} message={}",
+                    "{} push notification failed. userId={} message={}",
+                    type,
                     userId,
-                    maskedAccountNo,
                     exception.getMessage()
             );
         }
     }
 
-    private void logFailureDetails(
-            List<String> tokens,
-            List<SendResponse> responses,
-            Long userId,
-            String maskedAccountNo
-    ) {
+    private void logFailureDetails(String type, List<String> tokens, List<SendResponse> responses, Long userId) {
         for (int i = 0; i < responses.size(); i++) {
             SendResponse sendResponse = responses.get(i);
             if (sendResponse.isSuccessful()) {
@@ -136,9 +147,9 @@ public class FcmPushNotificationService implements PushNotificationService {
             FirebaseMessagingException exception = sendResponse.getException();
             String maskedToken = i < tokens.size() ? maskToken(tokens.get(i)) : "unknown";
             log.warn(
-                    "FCM delivery failed userId={} accountNo={} token={} errorCode={} messagingErrorCode={} message={}",
+                    "FCM delivery failed type={} userId={} token={} errorCode={} messagingErrorCode={} message={}",
+                    type,
                     userId,
-                    maskedAccountNo,
                     maskedToken,
                     exception == null ? null : exception.getErrorCode(),
                     exception == null ? null : exception.getMessagingErrorCode(),
@@ -147,23 +158,37 @@ public class FcmPushNotificationService implements PushNotificationService {
         }
     }
 
-    private String buildDepositMessage(String accountNo, Long amount, String summary) {
-        String formattedAmount = amount == null ? "0원" : String.format("%,d원", amount);
-        String maskedAccountNo = maskAccountNumber(accountNo);
-
-        if (summary == null || summary.isBlank()) {
-            return maskedAccountNo + " 계좌로 " + formattedAmount + "이 입금됐어요.";
-        }
-
-        return summary + " - " + maskedAccountNo + " 계좌로 " + formattedAmount + "이 입금됐어요.";
+    private String buildDepositMessage(Long amount, String summary) {
+        return appendSummary(formatAmount(amount) + "이 입금됐어요.", summary);
     }
 
-    private String maskAccountNumber(String accountNo) {
-        if (accountNo == null || accountNo.length() < 6) {
-            return accountNo == null ? "" : accountNo;
+    private String buildWithdrawalMessage(Long amount, String summary) {
+        return appendSummary(formatAmount(amount) + "이 출금됐어요.", summary);
+    }
+
+    private String buildTransferMessage(Long amount, String summary) {
+        return appendSummary(formatAmount(amount) + "을 이체했어요.", summary);
+    }
+
+    private String buildPaymentMessage(Long amount, String merchantName) {
+        String formattedAmount = formatAmount(amount);
+        if (merchantName == null || merchantName.isBlank()) {
+            return formattedAmount + "이 결제됐어요.";
         }
 
-        return accountNo.substring(0, 3) + "-***-" + accountNo.substring(accountNo.length() - 6);
+        return merchantName.trim() + "에서 " + formattedAmount + "이 결제됐어요.";
+    }
+
+    private String appendSummary(String message, String summary) {
+        if (summary == null || summary.isBlank()) {
+            return message;
+        }
+
+        return message + " (" + summary.trim() + ")";
+    }
+
+    private String formatAmount(Long amount) {
+        return amount == null ? "0원" : String.format("%,d원", amount);
     }
 
     private String maskToken(String token) {
