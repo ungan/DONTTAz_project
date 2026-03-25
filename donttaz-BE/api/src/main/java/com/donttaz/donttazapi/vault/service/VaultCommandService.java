@@ -327,7 +327,7 @@ public class VaultCommandService {
                 // RabbitMQ 팬아웃 (수치심 메시지 비동기 처리 - 출금액 및 해지여부 포함)
                 boolean terminated = (vault.getStatus() == VaultStatus.BROKEN || (vault.getLockedAmount() == 0));
                 rabbitTemplate.convertAndSend(RabbitMQConfig.PENALTY_EXCHANGE, RabbitMQConfig.PENALTY_ROUTING_KEY,
-                                new VaultPenaltyEvent(vault.getId(), request.amount(), terminated));
+                                new VaultPenaltyEvent(vault.getId(), request.amount(), terminated, false));
 
                 return VaultWithdrawResponse.builder()
                                 .vaultId(vault.getId())
@@ -339,12 +339,67 @@ public class VaultCommandService {
         }
 
         @Transactional
-        public void achieveWishlist(Long vaultId) {
+        public VaultWithdrawResponse terminateWishlist(Long vaultId) {
                 Long userId = currentUserProvider.getCurrentUserId();
                 WishlistVault vault = wishlistVaultRepository.findByIdAndUserId(vaultId, userId)
                                 .orElseThrow(() -> new CustomException(ErrorCode.VAULT_NOT_FOUND));
 
-                processWishlistMaturity(vault, userId);
+                if (vault.getStatus() != VaultStatus.LOCKED) {
+                        throw new CustomException(ErrorCode.INVALID_REQUEST, "이미 해지되었거나 달성된 금고입니다.");
+                }
+
+                // 목표 달성 여부 판별
+                boolean isSuccess = vault.getLockedAmount() >= vault.getGoalAmount();
+                Long interest = vault.calculateInterest();
+                Long withdrawnAmount = vault.getLockedAmount();
+
+                String message;
+                TransactionType historyType;
+
+                if (isSuccess) {
+                        withdrawnAmount = vault.matureVault();
+                        message = "금고 목표 달성 환급";
+                        historyType = TransactionType.WITHDRAW_MATURED;
+                } else {
+                        vault.withdraw(withdrawnAmount);
+                        message = "금고 중도 해지 환급";
+                        historyType = TransactionType.WITHDRAW_BROKEN;
+                }
+
+                Long totalTransferAmount = withdrawnAmount + interest;
+
+                // 주계좌 정보 조회
+                Account primaryAccount = accountRepository
+                                .findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(userId, AccountStatus.ACTIVE)
+                                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
+
+                String targetAdminAccountNo = (adminAccountNo == null || adminAccountNo.isBlank()) ? "9993479974590214"
+                                : adminAccountNo;
+                Long targetAdminUserId = (adminUserId == null) ? 1L : adminUserId;
+
+                bankingClient.transfer(targetAdminUserId, new TransferCommand(
+                                primaryAccount.getAccountNumber(), message, String.valueOf(totalTransferAmount),
+                                targetAdminAccountNo,
+                                isSuccess ? "금고 정상 해지" : "금고 중도 해지"));
+
+                saveHistory(vault.getId(), VaultKind.WISHLIST, historyType, withdrawnAmount, interest);
+
+                // 해지 시 노출 로직 (중도 해지인 경우에만 각서 노출)
+                if (!isSuccess) {
+                        memorandumService.exposeByTerminate(vault.getId());
+                }
+
+                // RabbitMQ 팬아웃 (해지 여부 및 성공 여부 포함)
+                rabbitTemplate.convertAndSend(RabbitMQConfig.PENALTY_EXCHANGE, RabbitMQConfig.PENALTY_ROUTING_KEY,
+                                new VaultPenaltyEvent(vault.getId(), withdrawnAmount, true, isSuccess));
+
+                return VaultWithdrawResponse.builder()
+                                .vaultId(vault.getId())
+                                .withdrawnAmount(withdrawnAmount)
+                                .interestPaid(interest)
+                                .totalRefundAmount(totalTransferAmount)
+                                .withdrawalCount(vault.getWithdrawalCount())
+                                .build();
         }
 
         private void processWishlistMaturity(WishlistVault vault, Long userId) {

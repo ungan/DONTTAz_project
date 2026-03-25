@@ -167,6 +167,99 @@ class VaultCommandServiceTest {
                                 org.mockito.ArgumentMatchers.<com.donttaz.donttazapi.webhook.event.VaultPenaltyEvent>argThat(
                                                 penaltyEvent -> penaltyEvent.wishlistVaultId().equals(VAULT_ID) &&
                                                                 penaltyEvent.withdrawAmount().equals(50000L) &&
-                                                                !penaltyEvent.terminated()));
+                                                                !penaltyEvent.terminated() &&
+                                                                !penaltyEvent.success()));
+        }
+
+        @Test
+        @DisplayName("위시리스트 금고 중도 해지 시 전체 잔액이 인출되고 해지 이벤트가 발행된다.")
+        void terminate_wishlist_publishesEvent_and_setsStatusToBroken() {
+                // Given
+                WishlistVault vault = WishlistVault.builder()
+                                .userId(USER_ID)
+                                .wishName("아이패드")
+                                .goalAmount(1000000L)
+                                .lockedAmount(200000L)
+                                .status(VaultStatus.LOCKED)
+                                .build();
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "id", VAULT_ID);
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "penaltyInterestRate", 10.0);
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "baseInterestRate", 12.0);
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "withdrawalCount", 0);
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "createdAt",
+                                java.time.LocalDateTime.now().minusDays(10));
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "lastWithdrawalAt",
+                                java.time.LocalDateTime.now());
+
+                given(currentUserProvider.getCurrentUserId()).willReturn(USER_ID);
+                given(wishlistVaultRepository.findByIdAndUserId(VAULT_ID, USER_ID)).willReturn(Optional.of(vault));
+                given(accountRepository.findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(any(), any()))
+                                .willReturn(Optional.of(Account.builder()
+                                                .accountNumber("1000000000")
+                                                .status(AccountStatus.ACTIVE)
+                                                .build()));
+
+                // When
+                vaultCommandService.terminateWishlist(VAULT_ID);
+
+                // Then
+                org.assertj.core.api.Assertions.assertThat(vault.getStatus()).isEqualTo(VaultStatus.BROKEN);
+                org.assertj.core.api.Assertions.assertThat(vault.getLockedAmount()).isEqualTo(0L);
+
+                verify(rabbitTemplate).convertAndSend(
+                                org.mockito.ArgumentMatchers.eq(
+                                                com.donttaz.donttazapi.common.config.RabbitMQConfig.PENALTY_EXCHANGE),
+                                org.mockito.ArgumentMatchers.eq(
+                                                com.donttaz.donttazapi.common.config.RabbitMQConfig.PENALTY_ROUTING_KEY),
+                                org.mockito.ArgumentMatchers.<com.donttaz.donttazapi.webhook.event.VaultPenaltyEvent>argThat(
+                                                penaltyEvent -> penaltyEvent.wishlistVaultId().equals(VAULT_ID) &&
+                                                                penaltyEvent.withdrawAmount().equals(200000L) &&
+                                                                penaltyEvent.terminated() &&
+                                                                !penaltyEvent.success()));
+        }
+
+        @Test
+        @DisplayName("위시리스트 금고 목표 달성 후 해지 시 정상 해지되고 축하 이벤트가 발행된다.")
+        void terminate_wishlist_success_publishesCongratsEvent() {
+                // Given
+                WishlistVault vault = WishlistVault.builder()
+                                .userId(USER_ID)
+                                .wishName("아이패드")
+                                .goalAmount(200000L) // 목표 금액
+                                .lockedAmount(200000L) // 달성 상태
+                                .status(VaultStatus.LOCKED)
+                                .build();
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "id", VAULT_ID);
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "penaltyInterestRate", 10.0);
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "baseInterestRate", 12.0);
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "withdrawalCount", 0);
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "createdAt",
+                                java.time.LocalDateTime.now().minusDays(10));
+
+                given(currentUserProvider.getCurrentUserId()).willReturn(USER_ID);
+                given(wishlistVaultRepository.findByIdAndUserId(VAULT_ID, USER_ID)).willReturn(Optional.of(vault));
+                given(accountRepository.findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(any(), any()))
+                                .willReturn(Optional.of(Account.builder()
+                                                .accountNumber("1000000000")
+                                                .status(AccountStatus.ACTIVE)
+                                                .build()));
+
+                // When
+                vaultCommandService.terminateWishlist(VAULT_ID);
+
+                // Then
+                org.assertj.core.api.Assertions.assertThat(vault.getStatus()).isEqualTo(VaultStatus.MATURED);
+                org.assertj.core.api.Assertions.assertThat(vault.getLockedAmount()).isEqualTo(0L);
+
+                verify(rabbitTemplate).convertAndSend(
+                                org.mockito.ArgumentMatchers.eq(
+                                                com.donttaz.donttazapi.common.config.RabbitMQConfig.PENALTY_EXCHANGE),
+                                org.mockito.ArgumentMatchers.eq(
+                                                com.donttaz.donttazapi.common.config.RabbitMQConfig.PENALTY_ROUTING_KEY),
+                                org.mockito.ArgumentMatchers.<com.donttaz.donttazapi.webhook.event.VaultPenaltyEvent>argThat(
+                                                penaltyEvent -> penaltyEvent.wishlistVaultId().equals(VAULT_ID) &&
+                                                                penaltyEvent.withdrawAmount().equals(202000L) &&
+                                                                penaltyEvent.terminated() &&
+                                                                penaltyEvent.success()));
         }
 }
