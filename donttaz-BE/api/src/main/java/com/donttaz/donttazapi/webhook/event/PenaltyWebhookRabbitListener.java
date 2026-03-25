@@ -1,7 +1,7 @@
 package com.donttaz.donttazapi.webhook.event;
 
 import com.donttaz.donttazapi.common.config.RabbitMQConfig;
-import com.donttaz.donttazapi.user.domain.User;
+
 import com.donttaz.donttazapi.user.repository.UserRepository;
 import com.donttaz.donttazapi.vault.domain.WishlistVault;
 import com.donttaz.donttazapi.vault.repository.WishlistVaultRepository;
@@ -48,21 +48,25 @@ public class PenaltyWebhookRabbitListener {
                         return;
                 }
 
-                // 상세 정보 조회 (사용자 닉네임, 금고 명, 인출 횟수 등)
-                WishlistVault vault = wishlistVaultRepository
-                                .findById(event.wishlistVaultId())
+                WishlistVault vault = wishlistVaultRepository.findById(event.wishlistVaultId())
                                 .orElse(null);
-                String nickname = "알 수 없는 사용자";
-                String wishName = "알 수 없는 금고";
-                int withdrawalCount = 0;
 
-                if (vault != null) {
-                        wishName = vault.getWishName();
-                        withdrawalCount = vault.getWithdrawalCount();
-                        nickname = userRepository.findById(vault.getUserId())
-                                        .map(User::getNickname)
-                                        .orElse("알 수 없는 사용자");
+                if (vault == null) {
+                        log.warn("WishlistVault not found for ID: {}", event.wishlistVaultId());
+                        return;
                 }
+
+                String userName = userRepository.findById(vault.getUserId())
+                                .map(com.donttaz.donttazapi.user.domain.User::getName)
+                                .orElse(null);
+
+                if (userName == null) {
+                        log.warn("User not found for vault ID: {}", event.wishlistVaultId());
+                        return;
+                }
+
+                String wishName = vault.getWishName();
+                int withdrawalCount = vault.getWithdrawalCount();
 
                 String statusHeader = event.terminated() ? "금고 해지 (규칙 위반)" : "부분 출금";
 
@@ -76,7 +80,7 @@ public class PenaltyWebhookRabbitListener {
                                                 "⚠️ **상태**: %s\n\n" +
                                                 "💬 **수치심 메시지**:\n" +
                                                 "> %s",
-                                nickname,
+                                userName,
                                 wishName,
                                 event.withdrawAmount(),
                                 withdrawalCount,

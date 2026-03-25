@@ -67,7 +67,7 @@ class PenaltyWebhookRabbitListenerTest {
                 org.springframework.test.util.ReflectionTestUtils.setField(vault, "withdrawalCount", 1);
 
                 com.donttaz.donttazapi.user.domain.User user = com.donttaz.donttazapi.user.domain.User.builder()
-                                .nickname("홍길동")
+                                .name("짱구")
                                 .build();
 
                 given(penaltyWebhookRepository.findByWishlistVaultId(vaultId)).willReturn(Optional.of(webhook));
@@ -107,7 +107,7 @@ class PenaltyWebhookRabbitListenerTest {
                 org.springframework.test.util.ReflectionTestUtils.setField(vault, "withdrawalCount", 1);
 
                 com.donttaz.donttazapi.user.domain.User user = com.donttaz.donttazapi.user.domain.User.builder()
-                                .nickname("홍길동")
+                                .name("짱구")
                                 .build();
 
                 given(penaltyWebhookRepository.findByWishlistVaultId(vaultId)).willReturn(Optional.of(webhook));
@@ -121,7 +121,7 @@ class PenaltyWebhookRabbitListenerTest {
                 verify(webhookDispatcher).dispatch(
                                 org.mockito.ArgumentMatchers.eq(PlatformType.MATTERMOST),
                                 org.mockito.ArgumentMatchers.eq("https://test-mattermost.com"),
-                                org.mockito.ArgumentMatchers.contains("홍길동"));
+                                org.mockito.ArgumentMatchers.contains("짱구"));
                 verify(webhookDispatcher).dispatch(
                                 org.mockito.ArgumentMatchers.eq(PlatformType.MATTERMOST),
                                 org.mockito.ArgumentMatchers.anyString(),
@@ -138,6 +138,46 @@ class PenaltyWebhookRabbitListenerTest {
                 // Given
                 VaultPenaltyEvent event = new VaultPenaltyEvent(2L, 10000L, true, true);
                 given(penaltyWebhookRepository.findByWishlistVaultId(anyLong())).willReturn(Optional.empty());
+
+                // When
+                penaltyWebhookRabbitListener.receivePenaltyEvent(event);
+
+                // Then
+                verifyNoInteractions(webhookDispatcher);
+        }
+
+        @Test
+        @DisplayName("금고 정보를 찾을 수 없으면 디스패처를 호출하지 않는다.")
+        void receivePenaltyEvent_SkipsWhenNoVault() {
+                // Given
+                Long vaultId = 999L;
+                VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 10000L, true, true);
+                PenaltyWebhook webhook = PenaltyWebhook.builder().wishlistVaultId(vaultId).build();
+
+                given(penaltyWebhookRepository.findByWishlistVaultId(vaultId)).willReturn(Optional.of(webhook));
+                given(wishlistVaultRepository.findById(vaultId)).willReturn(Optional.empty());
+
+                // When
+                penaltyWebhookRabbitListener.receivePenaltyEvent(event);
+
+                // Then
+                verifyNoInteractions(webhookDispatcher);
+        }
+
+        @Test
+        @DisplayName("사용자 정보를 찾을 수 없으면 디스패처를 호출하지 않는다.")
+        void receivePenaltyEvent_SkipsWhenNoUser() {
+                // Given
+                Long vaultId = 1L;
+                Long userId = 100L;
+                VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 10000L, true, true);
+                PenaltyWebhook webhook = PenaltyWebhook.builder().userId(userId).wishlistVaultId(vaultId).build();
+                com.donttaz.donttazapi.vault.domain.WishlistVault vault = com.donttaz.donttazapi.vault.domain.WishlistVault
+                                .builder().userId(userId).build();
+
+                given(penaltyWebhookRepository.findByWishlistVaultId(vaultId)).willReturn(Optional.of(webhook));
+                given(wishlistVaultRepository.findById(vaultId)).willReturn(Optional.of(vault));
+                given(userRepository.findById(userId)).willReturn(Optional.empty());
 
                 // When
                 penaltyWebhookRabbitListener.receivePenaltyEvent(event);
