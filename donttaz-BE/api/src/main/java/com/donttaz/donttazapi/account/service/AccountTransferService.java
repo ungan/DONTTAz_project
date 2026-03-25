@@ -39,6 +39,7 @@ import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
 import com.donttaz.donttazapi.infra.banking.client.BankingClient;
 import com.donttaz.donttazapi.infra.banking.config.FinApiProperties;
+import com.donttaz.donttazapi.notification.service.PushNotificationService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -71,6 +72,7 @@ public class AccountTransferService {
     private final TransactionRepository transactionRepository;
     private final CurrentUserProvider currentUserProvider;
     private final FinApiProperties finApiProperties;
+    private final PushNotificationService pushNotificationService;
 
     public AccountTransferService(
             BankingClient bankingClient,
@@ -79,7 +81,8 @@ public class AccountTransferService {
             AccountVerificationRepository accountVerificationRepository,
             TransactionRepository transactionRepository,
             CurrentUserProvider currentUserProvider,
-            FinApiProperties finApiProperties) {
+            FinApiProperties finApiProperties,
+            PushNotificationService pushNotificationService) {
         this.bankingClient = bankingClient;
         this.accountSyncService = accountSyncService;
         this.accountRepository = accountRepository;
@@ -87,6 +90,7 @@ public class AccountTransferService {
         this.transactionRepository = transactionRepository;
         this.currentUserProvider = currentUserProvider;
         this.finApiProperties = finApiProperties;
+        this.pushNotificationService = pushNotificationService;
     }
 
     public OneWonVerificationRequestResponse requestOneWonVerification(OneWonVerificationRequest request) {
@@ -182,6 +186,7 @@ public class AccountTransferService {
                     accountNo,
                     result.transactionUniqueNo(),
                     result.transactionDate());
+            sendDepositNotification(userId, accountNo, request);
 
             return AccountDepositResponse.builder()
                     .transactionUniqueNo(result.transactionUniqueNo())
@@ -197,6 +202,31 @@ public class AccountTransferService {
                     exception.getMessage(),
                     exception);
             throw exception;
+        }
+    }
+
+    private void sendDepositNotification(Long userId, String accountNo, AccountDepositRequest request) {
+        try {
+            log.info(
+                    "입금 푸시 요청이 발생했습니다. userId={} accountNo={} amount={} summary={}",
+                    userId,
+                    accountNo,
+                    request.transactionBalance(),
+                    request.transactionSummary()
+            );
+            pushNotificationService.sendDepositNotification(
+                    userId,
+                    accountNo,
+                    toLong(request.transactionBalance()),
+                    request.transactionSummary()
+            );
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "입금 푸시 처리 중 오류가 발생했습니다. userId={} accountNo={} message={}",
+                    userId,
+                    accountNo,
+                    exception.getMessage()
+            );
         }
     }
 
@@ -496,3 +526,5 @@ public class AccountTransferService {
                 .build();
     }
 }
+
+

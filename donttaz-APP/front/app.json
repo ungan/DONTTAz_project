@@ -2,7 +2,6 @@
   "expo": {
     "name": "DONTTAz",
     "slug": "DONTTAz",
-    "owner": "cnchoo25",
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "front",
@@ -18,7 +17,8 @@
     "android": {
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.hoein.front"
+      "package": "com.hoein.front",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static"
@@ -27,6 +27,7 @@
       "expo-router",
       "expo-secure-store",
       "@react-native-community/datetimepicker",
+      "expo-notifications",
       "expo-font"
     ],
     "experiments": {
@@ -36,14 +37,15 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "8cb413da-2c46-4b3c-9e77-d1969ceeb594"
+        "projectId": "a895a1b4-a282-466e-a78c-870a452993ce"
       }
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/8cb413da-2c46-4b3c-9e77-d1969ceeb594"
-    }
+      "url": "https://u.expo.dev/a895a1b4-a282-466e-a78c-870a452993ce"
+    },
+    "owner": "ratatouille104"
   }
 }

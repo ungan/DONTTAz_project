@@ -38,3 +38,4 @@ out/
 
 ### Env ###
 .env
+/src/main/resources/donttaz-fb22-firebase-adminsdk-fbsvc-e1a7c33750.json
