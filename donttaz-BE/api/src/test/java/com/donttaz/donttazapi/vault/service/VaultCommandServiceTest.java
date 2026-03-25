@@ -24,7 +24,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -52,11 +51,30 @@ class VaultCommandServiceTest {
         @Mock
         private AccountRepository accountRepository;
 
-        @InjectMocks
+        @Mock
+        private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
+
         private VaultCommandService vaultCommandService;
 
         private static final Long USER_ID = 1L;
         private static final Long VAULT_ID = 10L;
+
+        @org.junit.jupiter.api.BeforeEach
+        void setUp() {
+                vaultCommandService = new VaultCommandService(
+                                defaultVaultRepository,
+                                wishlistVaultRepository,
+                                vaultHistoryRepository,
+                                bankingClient,
+                                currentUserProvider,
+                                memorandumService,
+                                rabbitTemplate,
+                                accountRepository);
+
+                org.springframework.test.util.ReflectionTestUtils.setField(vaultCommandService, "adminUserId", 1L);
+                org.springframework.test.util.ReflectionTestUtils.setField(vaultCommandService, "adminAccountNo",
+                                "9993479974590214");
+        }
 
         @Test
         @DisplayName("위시리스트 금고를 성공적으로 생성한다.")
