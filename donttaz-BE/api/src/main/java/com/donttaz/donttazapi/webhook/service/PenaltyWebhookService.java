@@ -6,7 +6,6 @@ import com.donttaz.donttazapi.common.security.CurrentUserProvider;
 import com.donttaz.donttazapi.vault.domain.WishlistVault;
 import com.donttaz.donttazapi.vault.repository.WishlistVaultRepository;
 import com.donttaz.donttazapi.webhook.domain.PenaltyWebhook;
-import com.donttaz.donttazapi.webhook.domain.PlatformType;
 import com.donttaz.donttazapi.webhook.dto.request.PenaltyWebhookRequest;
 import com.donttaz.donttazapi.webhook.dto.response.PenaltyWebhookResponse;
 import com.donttaz.donttazapi.webhook.repository.PenaltyWebhookRepository;
@@ -42,13 +41,13 @@ public class PenaltyWebhookService {
         if (existingWebhook.isPresent()) {
             webhook = existingWebhook.get();
             webhook.updateWebhookSettings(
-                    PlatformType.MATTERMOST,
+                    request.platformType(),
                     request.shameMessage());
         } else {
             webhook = PenaltyWebhook.builder()
                     .userId(userId)
                     .wishlistVaultId(wishlistVaultId)
-                    .platformType(PlatformType.MATTERMOST)
+                    .platformType(request.platformType())
                     .shameMessage(request.shameMessage())
                     .build();
         }

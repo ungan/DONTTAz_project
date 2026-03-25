@@ -8,6 +8,7 @@ import com.donttaz.donttazapi.vault.repository.WishlistVaultRepository;
 import com.donttaz.donttazapi.webhook.domain.PenaltyWebhook;
 import com.donttaz.donttazapi.webhook.repository.PenaltyWebhookRepository;
 import com.donttaz.donttazapi.webhook.sender.WebhookDispatcher;
+import com.donttaz.donttazapi.webhook.domain.PlatformType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -26,7 +27,10 @@ public class PenaltyWebhookRabbitListener {
         private final WishlistVaultRepository wishlistVaultRepository;
 
         @Value("${webhook.mattermost.url}")
-        private String fixedWebhookUrl;
+        private String mattermostUrl;
+
+        @Value("${webhook.discord.url:}")
+        private String discordUrl;
 
         /**
          * 외부 메시지 큐(RabbitMQ)에서 이벤트를 구독하여 수치심 메시지 알림을 비동기로 전송합니다.
@@ -60,41 +64,37 @@ public class PenaltyWebhookRabbitListener {
                                         .orElse("알 수 없는 사용자");
                 }
 
-                String statusHeader = event.success() ? "금고 목표 달성" : (event.terminated() ? "금고 중도 해지" : "부분 출금");
-                String messageTitle = event.success() ? "🎉 위시리스트 목표 달성 축하 알림" : "🚨 위시리스트 규칙 위반 알림";
-                String contentLabel = event.success() ? "💸 **최종 환급 금액**" : "💰 **이번 출금 금액**";
+                String statusHeader = event.terminated() ? "금고 해지 (규칙 위반)" : "부분 출금";
 
                 // 상세 마크다운 템플릿 생성
-                String detailedMessage;
-                if (event.success()) {
-                        detailedMessage = String.format(
-                                        "### [%s님 수신] %s\n" +
-                                                        "축하합니다! 목표하셨던 위시리스트를 마침내 달성하셨습니다. 🥳\n\n" +
-                                                        "📌 **대상 위시리스트**: %s\n" +
-                                                        "%s: %,d원\n" +
-                                                        "🔢 **총 출금 횟수**: %d회\n" +
-                                                        "✨ **상태**: %s\n\n" +
-                                                        "앞으로도 절약하는 습관 잊지 마세요! 화이팅!",
-                                        nickname, messageTitle, wishName, contentLabel, event.withdrawAmount(),
-                                        withdrawalCount, statusHeader);
-                } else {
-                        detailedMessage = String.format(
-                                        "### [%s님 수신] %s\n" +
-                                                        "📌 **대상 위시리스트**: %s\n" +
-                                                        "%s: %,d원\n" +
-                                                        "🔢 **현재 인출 횟수**: %d회\n" +
-                                                        "⚠️ **상태**: %s\n\n" +
-                                                        "💬 **수치심 메시지**:\n" +
-                                                        "> %s",
-                                        nickname, messageTitle, wishName, contentLabel, event.withdrawAmount(),
-                                        withdrawalCount, statusHeader,
-                                        webhook.getShameMessage());
+                // 디스코드는 마크다운 헤더 형식이 다를 수 있으나, 여기서는 공통 마크다운 사용
+                String detailedMessage = String.format(
+                                "### [%s님 수신] 🚨 위시리스트 규칙 위반 알림\n" +
+                                                "📌 **대상 위시리스트**: %s\n" +
+                                                "💰 **이번 출금 금액**: %,d원\n" +
+                                                "🔢 **현재 인출 횟수**: %d회\n" +
+                                                "⚠️ **상태**: %s\n\n" +
+                                                "💬 **수치심 메시지**:\n" +
+                                                "> %s",
+                                nickname,
+                                wishName,
+                                event.withdrawAmount(),
+                                withdrawalCount,
+                                statusHeader,
+                                webhook.getShameMessage());
+
+                // 플랫폼에 따라 URL 선택
+                String targetUrl = webhook.getPlatformType() == PlatformType.DISCORD ? discordUrl : mattermostUrl;
+
+                if (targetUrl == null || targetUrl.isBlank()) {
+                        log.warn("Webhook URL for platform {} is not configured", webhook.getPlatformType());
+                        return;
                 }
 
-                // 고정 웹훅 URL로 발송
+                // 선택된 웹훅 URL로 발송
                 webhookDispatcher.dispatch(
                                 webhook.getPlatformType(),
-                                fixedWebhookUrl,
+                                targetUrl,
                                 detailedMessage);
         }
 }
