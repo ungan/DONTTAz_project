@@ -1,11 +1,11 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useRef, useState, useEffect } from 'react';
+import { View, Text, Image, ScrollView, TouchableOpacity, Alert, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useRouter } from 'expo-router';
 import BottomSheet from '@gorhom/bottom-sheet';
 import type { Vault, VaultTransaction } from '@/entities/vault';
-import { createWishlistVaultApi } from '@/entities/vault';
+import { createWishlistVaultApi, terminateVaultApi } from '@/entities/vault';
 import { WishlistBottomSheet } from '@/features/vault-wishlist';
 import { WithdrawWarningModal } from '@/features/vault-withdraw';
 import { VaultNotice } from '@/widgets/vault-notice';
@@ -17,12 +17,23 @@ const vaultFishImage = require('@/shared/assets/images/vault-fish.jpg');
 interface VaultWishlistTabProps {
   vault: Vault | null;
   transactions: VaultTransaction[];
+  onRefetch?: () => void;
 }
 
-export function VaultWishlistTab({ vault, transactions }: VaultWishlistTabProps) {
+export function VaultWishlistTab({ vault, transactions, onRefetch }: VaultWishlistTabProps) {
   const router = useRouter();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const floatAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, { toValue: -8, duration: 1800, useNativeDriver: true }),
+        Animated.timing(floatAnim, { toValue: 0, duration: 1800, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [floatAnim]);
 
   const handleSubmit = async (wishName: string, goalAmount: number) => {
     try {
@@ -66,7 +77,11 @@ export function VaultWishlistTab({ vault, transactions }: VaultWishlistTabProps)
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={wishlistStyles.progressSection}>
           {/* 물고기 */}
-          <Image source={vaultFishImage} style={wishlistStyles.fishImage} resizeMode="contain" />
+          <Animated.Image
+            source={vaultFishImage}
+            style={[wishlistStyles.fishImage, { transform: [{ translateY: floatAnim }] }]}
+            resizeMode="contain"
+          />
 
           <View style={wishlistStyles.cardHeader}>
             <Entypo name="shopping-cart" size={18} color="#111827" />
@@ -88,12 +103,8 @@ export function VaultWishlistTab({ vault, transactions }: VaultWishlistTabProps)
 
           {/* % 레이블 */}
           <View style={wishlistStyles.progressLabels}>
-            <View style={{ flex: progressPercent || 1, alignItems: 'flex-end' }}>
-              <Text style={wishlistStyles.progressLabelCurrent}>{progressPercent}%</Text>
-            </View>
-            <View style={{ flex: 100 - progressPercent || 1, alignItems: 'flex-end' }}>
-              <Text style={wishlistStyles.progressLabelGoal}>100%</Text>
-            </View>
+            <Text style={wishlistStyles.progressLabelCurrent}>{progressPercent}%</Text>
+            <Text style={wishlistStyles.progressLabelGoal}>100%</Text>
           </View>
 
           <View style={wishlistStyles.buttonRow}>
@@ -120,6 +131,34 @@ export function VaultWishlistTab({ vault, transactions }: VaultWishlistTabProps)
         />
         <VaultHistory transactions={transactions} />
       </ScrollView>
+
+      <TouchableOpacity
+        style={wishlistStyles.terminateButton}
+        activeOpacity={0.7}
+        onPress={() => {
+          Alert.alert(
+            '중도 해지',
+            '금고를 해지하면 이자 혜택이 사라지고 수치심 메세지가 즉시 발송됩니다. \n\n정말 해지하시겠습니까?',
+            [
+              { text: '취소', style: 'cancel' },
+              {
+                text: '해지하기',
+                style: 'destructive',
+                onPress: async () => {
+                  try {
+                    await terminateVaultApi(vault.vaultId);
+                    onRefetch?.();
+                  } catch {
+                    Alert.alert('오류', '해지 중 문제가 발생했습니다.');
+                  }
+                },
+              },
+            ]
+          );
+        }}
+      >
+        <Text style={wishlistStyles.terminateButtonText}>위시리스트 해지</Text>
+      </TouchableOpacity>
 
       <WithdrawWarningModal
         visible={showWithdrawModal}

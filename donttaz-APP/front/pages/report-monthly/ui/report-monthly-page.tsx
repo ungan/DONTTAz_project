@@ -10,7 +10,7 @@ export function ReportMonthlyPage() {
   const { yearMonth } = useLocalSearchParams<{ yearMonth: string }>();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['bottom']} style={styles.container}>
       <PageHeader title="월별 리포트" />
       <View style={styles.content}>
         <MonthlyReport yearMonth={yearMonth} />

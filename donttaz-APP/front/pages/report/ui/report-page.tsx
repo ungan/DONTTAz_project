@@ -6,7 +6,7 @@ import { styles } from './report-page.styles';
 
 export function ReportPage() {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['bottom']} style={styles.container}>
       <PageHeader title="리포트" />
       <YearlyReport />
     </SafeAreaView>

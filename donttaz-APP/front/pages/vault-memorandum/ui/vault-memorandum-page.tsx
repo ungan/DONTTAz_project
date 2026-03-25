@@ -35,7 +35,8 @@ const ARTICLES: { title: string; prefix: string; emphasis: string }[] = [
 
 export function VaultMemorandumPage() {
   const router = useRouter();
-  const { vaultId } = useLocalSearchParams<{ vaultId: string }>();
+  const { vaultId, readonly } = useLocalSearchParams<{ vaultId: string; readonly?: string }>();
+  const isReadonly = readonly === 'true';
   const { name } = useSessionStore();
   const [showStamp, setShowStamp] = useState(false);
 
@@ -51,9 +52,10 @@ export function VaultMemorandumPage() {
 
   useFocusEffect(
     React.useCallback(() => {
+      if (isReadonly) return;
       const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
       return () => sub.remove();
-    }, [])
+    }, [isReadonly])
   );
 
   const today = new Date();
@@ -101,13 +103,23 @@ export function VaultMemorandumPage() {
         pointerEvents="none"
       />
 
-      <TouchableOpacity
-        style={styles.signButton}
-        onPress={handleSign}
-        activeOpacity={0.85}
-      >
-        <Text style={styles.signButtonText}>돌이킬 수 없는 서명하기</Text>
-      </TouchableOpacity>
+      {isReadonly ? (
+        <TouchableOpacity
+          style={styles.signButton}
+          onPress={() => router.back()}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.signButtonText}>뒤로가기</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={styles.signButton}
+          onPress={handleSign}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.signButtonText}>돌이킬 수 없는 서명하기</Text>
+        </TouchableOpacity>
+      )}
 
       <SignStampOverlay
         visible={showStamp}

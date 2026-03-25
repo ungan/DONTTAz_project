@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, View, Text, ScrollView, TextInput, TouchableOpacity, BackHandler } from 'react-native';
+import { Alert, View, Text, ScrollView, TextInput, TouchableOpacity, BackHandler, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -10,9 +10,12 @@ import { postPenaltyWebhookApi, getPenaltyWebhookApi, getVaultApi } from '@/enti
 import type { PlatformType } from '@/entities/vault';
 import { styles } from './vault-webhook-page.styles';
 
-const PLATFORMS: { id: PlatformType; label: string; color: string; bg: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { id: 'MATTERMOST', label: 'Mattermost', color: '#1B5299', bg: '#E8EEF7', icon: 'chatbubbles-outline' },
-  { id: 'DISCORD',    label: 'Discord',    color: '#5865F2', bg: '#EEEEFF', icon: 'logo-discord' },
+const mattermostLogo = require('@/shared/assets/logo/mattermost-logo.png');
+const discordLogo = require('@/shared/assets/logo/discord-logo.jpg');
+
+const PLATFORMS: { id: PlatformType; label: string; color: string; bg: string; logo: ReturnType<typeof require> }[] = [
+  { id: 'MATTERMOST', label: 'Mattermost', color: '#1B5299', bg: '#E8EEF7', logo: mattermostLogo },
+  { id: 'DISCORD',    label: 'Discord',    color: '#5865F2', bg: '#EEEEFF', logo: discordLogo },
 ];
 
 export function VaultWebhookPage() {
@@ -85,7 +88,7 @@ export function VaultWebhookPage() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['bottom']} style={styles.safeArea}>
       <PageHeader title="수치심 메세지 설정" onBack={() => {}} />
 
       <ScrollView
@@ -109,13 +112,11 @@ export function VaultWebhookPage() {
               return (
                 <TouchableOpacity
                   key={p.id}
-                  style={[styles.platformCard, selected && styles.platformCardSelected]}
+                  style={[styles.platformCard, selected && styles.platformCardSelected, { gap: p.id === 'MATTERMOST' ? 4 : 9 }]}
                   onPress={() => setPlatform(p.id)}
                   activeOpacity={0.7}
                 >
-                  <View style={[styles.platformIconBox, { backgroundColor: p.bg }]}>
-                    <Ionicons name={p.icon} size={22} color={p.color} />
-                  </View>
+                  <Image source={p.logo} style={{ width: p.id === 'MATTERMOST' ? 48 : 40, height: p.id === 'MATTERMOST' ? 48 : 40, borderRadius: 4, marginTop: p.id === 'DISCORD' ? 2 : 0 }} resizeMode="contain" />
                   <Text style={[styles.platformLabel, selected && styles.platformLabelSelected]}>
                     {p.label}
                   </Text>

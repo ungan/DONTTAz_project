@@ -26,7 +26,7 @@ export function PlanPage() {
   const showEmpty = hasFetched && noPlan;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['bottom']} style={styles.container}>
       <PageHeader title="소비 플랜" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {showLoading && <ActivityIndicator color="#5899FD" style={styles.loader} />}

@@ -89,12 +89,12 @@ export function MenuPage() {
       icon: 'document-text-outline',
       label: '각서 작성',
       description: '소비 절제 각서 설정',
-      onPress: () => router.push('/vault-memorandum'),
+      onPress: () => router.push('/vault-memorandum?readonly=true'),
     },
     {
       icon: 'chatbubble-ellipses-outline',
       label: '수치심 메세지 설정',
-      description: '카카오톡 수치심 메세지 관리',
+      description: 'Mattermost·Discord 메세지 관리',
       onPress: async () => {
         try {
           const { vaults } = await getVaultApi();

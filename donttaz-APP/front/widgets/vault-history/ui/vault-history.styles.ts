@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
     borderTopColor: '#F3F4F6',
   },
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: '600',
     color: '#111827',
     paddingTop: 20,

@@ -24,7 +24,7 @@ export function VaultPage() {
   const [activeTab, setActiveTab] = useState<VaultTab>(tab === 'wishlist' ? 'wishlist' : 'default');
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['bottom']} style={styles.container}>
       <PageHeader title="금고" onBack={() => router.replace('/(tabs)/home')} />
       <VaultTabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -36,7 +36,7 @@ export function VaultPage() {
         ) : activeTab === 'default' ? (
           <VaultDefaultTab vault={defaultVault} transactions={transactions} />
         ) : (
-          <VaultWishlistTab vault={wishlistVault} transactions={wishlistTransactions} />
+          <VaultWishlistTab vault={wishlistVault} transactions={wishlistTransactions} onRefetch={refetch} />
         )}
       </View>
     </SafeAreaView>

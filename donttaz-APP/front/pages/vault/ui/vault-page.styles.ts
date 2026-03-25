@@ -39,7 +39,7 @@ export const styles = StyleSheet.create({
     marginTop: 8,
     paddingVertical: 12,
     paddingHorizontal: 32,
-    borderRadius: 999,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#D1D5DB',
   },
@@ -111,6 +111,7 @@ export const wishlistStyles = StyleSheet.create({
   },
   progressLabels: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 6,
     marginBottom: 4,
   },
@@ -132,7 +133,7 @@ export const wishlistStyles = StyleSheet.create({
   button: {
     paddingVertical: 9,
     paddingHorizontal: 24,
-    borderRadius: 999,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#D1D5DB',
     backgroundColor: '#FFFFFF',
@@ -149,5 +150,19 @@ export const wishlistStyles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#111827',
+  },
+  terminateButton: {
+    marginHorizontal: 24,
+    marginVertical: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    alignItems: 'center',
+  },
+  terminateButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#EF4444',
   },
 });

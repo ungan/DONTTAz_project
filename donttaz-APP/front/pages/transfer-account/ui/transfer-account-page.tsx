@@ -174,7 +174,7 @@ export function TransferAccountPage() {
   const isReadyToProceed = isValid && !!withdrawalAccountNo;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['bottom']} style={styles.container}>
       <PageHeader title="이체" />
 
       <KeyboardAvoidingView
