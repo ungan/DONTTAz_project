@@ -29,6 +29,11 @@ class PenaltyWebhookRabbitListenerTest {
     @InjectMocks
     private PenaltyWebhookRabbitListener penaltyWebhookRabbitListener;
 
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        org.springframework.test.util.ReflectionTestUtils.setField(penaltyWebhookRabbitListener, "fixedWebhookUrl", "https://test-webhook.com");
+    }
+
     @Test
     @DisplayName("금고 패널티 이벤트 수신 시 설정이 있으면 디스패처를 호출한다.")
     void receivePenaltyEvent_SendsWebhook() {
@@ -49,7 +54,10 @@ class PenaltyWebhookRabbitListenerTest {
         penaltyWebhookRabbitListener.receivePenaltyEvent(event);
 
         // Then
-        verify(webhookDispatcher).dispatch(PlatformType.MATTERMOST, "url", "message");
+        verify(webhookDispatcher).dispatch(
+                org.mockito.ArgumentMatchers.eq(PlatformType.MATTERMOST),
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.eq("야식 그만"));
     }
 
     @Test
