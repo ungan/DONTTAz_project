@@ -50,7 +50,7 @@ class PenaltyWebhookRabbitListenerTest {
                 // Given
                 Long vaultId = 1L;
                 Long userId = 100L;
-                VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 50000L, false);
+                VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 50000L, false, true);
 
                 PenaltyWebhook webhook = PenaltyWebhook.builder()
                                 .userId(userId)
@@ -90,7 +90,7 @@ class PenaltyWebhookRabbitListenerTest {
                 // Given
                 Long vaultId = 1L;
                 Long userId = 100L;
-                VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 50000L, false);
+                VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 50000L, false, true);
 
                 PenaltyWebhook webhook = PenaltyWebhook.builder()
                                 .userId(userId)
@@ -136,7 +136,7 @@ class PenaltyWebhookRabbitListenerTest {
         @DisplayName("설정이 없으면 디스패처를 호출하지 않는다.")
         void receivePenaltyEvent_SkipsWhenNoConfig() {
                 // Given
-                VaultPenaltyEvent event = new VaultPenaltyEvent(2L, 10000L, true);
+                VaultPenaltyEvent event = new VaultPenaltyEvent(2L, 10000L, true, true);
                 given(penaltyWebhookRepository.findByWishlistVaultId(anyLong())).willReturn(Optional.empty());
 
                 // When
