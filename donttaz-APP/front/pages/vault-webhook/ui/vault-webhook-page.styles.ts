@@ -62,7 +62,6 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
   },
   platformCardSelected: {
     borderColor: '#3B82F6',
@@ -77,7 +76,7 @@ export const styles = StyleSheet.create({
   },
   platformLabel: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '700',
     color: '#6B7280',
   },
   platformLabelSelected: {

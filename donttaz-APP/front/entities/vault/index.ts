@@ -5,6 +5,7 @@ export { getPenaltyWebhookApi } from './api/get-penalty-webhook';
 export { signMemorandumApi } from './api/sign-memorandum';
 export { depositVaultApi } from './api/deposit-vault';
 export { withdrawVaultApi } from './api/withdraw-vault';
+export { terminateVaultApi } from './api/terminate-vault';
 export { createWishlistVaultApi } from './api/create-wishlist-vault';
 export { createDefaultVaultApi } from './api/create-default-vault';
 export { useWishlist } from './model/use-wishlist';

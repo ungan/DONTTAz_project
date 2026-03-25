@@ -51,7 +51,7 @@ export const styles = StyleSheet.create({
   button: {
     paddingVertical: 9,
     paddingHorizontal: 24,
-    borderRadius: 999,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#D1D5DB',
     backgroundColor: '#FFFFFF',
