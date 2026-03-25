@@ -61,6 +61,7 @@ class VaultCommandServiceTest {
 
         @org.junit.jupiter.api.BeforeEach
         void setUp() {
+                org.mockito.MockitoAnnotations.openMocks(this);
                 vaultCommandService = new VaultCommandService(
                                 defaultVaultRepository,
                                 wishlistVaultRepository,
@@ -127,5 +128,45 @@ class VaultCommandServiceTest {
 
                 assertThat(response.depositedAmount()).isEqualTo(100000L);
                 assertThat(response.lockedAmount()).isEqualTo(100000L);
+        }
+
+        @Test
+        @DisplayName("위시리스트 금고 출금 시 패널티 이벤트가 발행된다.")
+        void withdraw_wishlist_publishesEvent() {
+                // Given
+                given(currentUserProvider.getCurrentUserId()).willReturn(USER_ID);
+
+                WishlistVault vault = WishlistVault.builder()
+                                .userId(USER_ID)
+                                .wishName("애플워치")
+                                .goalAmount(500000L)
+                                .lockedAmount(100000L)
+                                .status(VaultStatus.LOCKED)
+                                .build();
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "id", VAULT_ID);
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "penaltyInterestRate", 10.0);
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "baseInterestRate", 12.0);
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "withdrawalCount", 0);
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "createdAt",
+                                java.time.LocalDateTime.now().minusDays(10));
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "lastWithdrawalAt",
+                                java.time.LocalDateTime.now());
+                given(wishlistVaultRepository.findByIdAndUserId(VAULT_ID, USER_ID)).willReturn(Optional.of(vault));
+
+                // When
+                com.donttaz.donttazapi.vault.dto.request.VaultWithdrawRequest request = new com.donttaz.donttazapi.vault.dto.request.VaultWithdrawRequest(
+                                "1000000000", 50000L);
+                vaultCommandService.withdraw(VAULT_ID, VaultKind.WISHLIST, request);
+
+                // Then
+                verify(rabbitTemplate).convertAndSend(
+                                org.mockito.ArgumentMatchers.eq(
+                                                com.donttaz.donttazapi.common.config.RabbitMQConfig.PENALTY_EXCHANGE),
+                                org.mockito.ArgumentMatchers.eq(
+                                                com.donttaz.donttazapi.common.config.RabbitMQConfig.PENALTY_ROUTING_KEY),
+                                org.mockito.ArgumentMatchers.<com.donttaz.donttazapi.webhook.event.VaultPenaltyEvent>argThat(
+                                                penaltyEvent -> penaltyEvent.wishlistVaultId().equals(VAULT_ID) &&
+                                                                penaltyEvent.withdrawAmount().equals(50000L) &&
+                                                                !penaltyEvent.terminated()));
         }
 }

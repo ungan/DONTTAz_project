@@ -29,9 +29,4 @@ public class PenaltyWebhookController implements PenaltyWebhookSwagger {
         return penaltyWebhookService.getWebhookByVaultId(vaultId);
     }
 
-    @Override
-    @PostMapping("/{vaultId}/test")
-    public void sendTestMessage(@PathVariable Long vaultId) {
-        penaltyWebhookService.sendTestMessage(vaultId);
-    }
 }

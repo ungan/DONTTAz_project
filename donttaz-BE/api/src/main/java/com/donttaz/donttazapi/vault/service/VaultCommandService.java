@@ -324,9 +324,10 @@ public class VaultCommandService {
                         memorandumService.exposeByWithdraw(vault.getId());
                 }
 
-                // RabbitMQ 팬아웃 (수치심 메시지 비동기 처리)
+                // RabbitMQ 팬아웃 (수치심 메시지 비동기 처리 - 출금액 및 해지여부 포함)
+                boolean terminated = (vault.getStatus() == VaultStatus.BROKEN || (vault.getLockedAmount() == 0));
                 rabbitTemplate.convertAndSend(RabbitMQConfig.PENALTY_EXCHANGE, RabbitMQConfig.PENALTY_ROUTING_KEY,
-                                new VaultPenaltyEvent(vault.getId()));
+                                new VaultPenaltyEvent(vault.getId(), request.amount(), terminated));
 
                 return VaultWithdrawResponse.builder()
                                 .vaultId(vault.getId())
