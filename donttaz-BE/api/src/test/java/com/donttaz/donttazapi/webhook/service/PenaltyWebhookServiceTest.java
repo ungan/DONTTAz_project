@@ -56,18 +56,13 @@ class PenaltyWebhookServiceTest {
         PenaltyWebhook savedWebhook = PenaltyWebhook.builder()
                 .userId(userId)
                 .wishlistVaultId(vaultId)
-                .platformType(PlatformType.KAKAOTALK)
-                .webhookToken("token123")
-                .refreshToken("refresh123")
-                .accessTokenExpiresAt(java.time.LocalDateTime.now().plusHours(1))
-                .receiverUuuids("uuid1,uuid2")
+                .platformType(PlatformType.MATTERMOST)
                 .shameMessage("야식 그만")
                 .build();
         ReflectionTestUtils.setField(savedWebhook, "id", 100L);
         given(penaltyWebhookRepository.save(any(PenaltyWebhook.class))).willReturn(savedWebhook);
 
-        PenaltyWebhookRequest request = new PenaltyWebhookRequest(PlatformType.KAKAOTALK, "token123", "refresh123",
-                3600L, java.util.Arrays.asList("uuid1", "uuid2"), "야식 그만");
+        PenaltyWebhookRequest request = new PenaltyWebhookRequest("야식 그만");
 
         // When
         PenaltyWebhookResponse response = penaltyWebhookService.saveOrUpdateWebhook(vaultId, request);
@@ -91,8 +86,7 @@ class PenaltyWebhookServiceTest {
         ReflectionTestUtils.setField(otherVault, "id", vaultId);
         given(wishlistVaultRepository.findById(vaultId)).willReturn(Optional.of(otherVault));
 
-                
-        PenaltyWebhookRequest request = new PenaltyWebhookRequest(PlatformType.KAKAOTALK, "token123", "refresh123", 3600L, java.util.Arrays.asList("uuid1", "uuid2"), "야식 그만");
+        PenaltyWebhookRequest request = new PenaltyWebhookRequest("야식 그만");
 
         // When & Then
         assertThrows(CustomException.class, () -> penaltyWebhookService.saveOrUpdateWebhook(vaultId, request));

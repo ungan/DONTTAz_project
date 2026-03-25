@@ -14,12 +14,16 @@ import jakarta.validation.Valid;
 @SecurityRequirement(name = "bearerAuth")
 public interface PenaltyWebhookSwagger {
 
-    @Operation(summary = "수치심 메시지 설정 저장 및 수정", description = "위시리스트 금고에 연결된 수치심 메시지와 카카오톡 웹훅 정보를 저장하거나 수정합니다.")
-    PenaltyWebhookResponse saveOrUpdateWebhook(
-            @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId,
-            @RequestBody @Valid PenaltyWebhookRequest request);
+        @Operation(summary = "수치심 메시지 설정 저장 및 수정", description = "위시리스트 금고에 연결된 수치심 메시지와 카카오톡 웹훅 정보를 저장하거나 수정합니다.")
+        PenaltyWebhookResponse saveOrUpdateWebhook(
+                        @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId,
+                        @RequestBody @Valid PenaltyWebhookRequest request);
 
-    @Operation(summary = "수치심 메시지 설정 조회", description = "위시리스트 금고에 연결된 수치심 메시지 설정 정보를 조회합니다.")
-    PenaltyWebhookResponse getWebhook(
-            @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId);
+        @Operation(summary = "수치심 메시지 설정 조회", description = "위시리스트 금고에 연결된 수치심 메시지 설정 정보를 조회합니다.")
+        PenaltyWebhookResponse getWebhook(
+                        @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId);
+
+        @Operation(summary = "메터모스트 테스트 메시지 발송", description = "위시리스트 금고에 설정된 메터모스트 웹훅으로 테스트 메시지를 즉시 발송합니다.")
+        void sendTestMessage(
+                        @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId);
 }
