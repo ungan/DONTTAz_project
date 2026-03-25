@@ -13,7 +13,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,33 +21,55 @@ class PenaltyWebhookRabbitListenerTest {
 
     @Mock
     private PenaltyWebhookRepository penaltyWebhookRepository;
-
     @Mock
     private WebhookDispatcher webhookDispatcher;
+    @Mock
+    private com.donttaz.donttazapi.user.repository.UserRepository userRepository;
+    @Mock
+    private com.donttaz.donttazapi.vault.repository.WishlistVaultRepository wishlistVaultRepository;
 
-    @InjectMocks
     private PenaltyWebhookRabbitListener penaltyWebhookRabbitListener;
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
-        org.springframework.test.util.ReflectionTestUtils.setField(penaltyWebhookRabbitListener, "fixedWebhookUrl", "https://test-webhook.com");
+        penaltyWebhookRabbitListener = new PenaltyWebhookRabbitListener(
+                penaltyWebhookRepository,
+                webhookDispatcher,
+                userRepository,
+                wishlistVaultRepository
+        );org.springframework.test.util.ReflectionTestUtils.setField(penaltyWebhookRabbitListener, "fixedWebhookUrl",
+                "https://test-webhook.com");
     }
 
     @Test
-    @DisplayName("금고 패널티 이벤트 수신 시 설정이 있으면 디스패처를 호출한다.")
-    void receivePenaltyEvent_SendsWebhook() {
+    @DisplayName("금고 패널티 이벤트 수신 시 상세 마크다운 템플릿을 생성하여 전송한다.")
+    void receivePenaltyEvent_SendsDetailedWebhook() {
         // Given
         Long vaultId = 1L;
-        VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId);
+        Long userId = 100L;
+        VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 50000L, false);
 
         PenaltyWebhook webhook = PenaltyWebhook.builder()
-                .userId(1L)
+                .userId(userId)
                 .wishlistVaultId(vaultId)
                 .platformType(PlatformType.MATTERMOST)
                 .shameMessage("야식 그만")
                 .build();
 
+        com.donttaz.donttazapi.vault.domain.WishlistVault vault = com.donttaz.donttazapi.vault.domain.WishlistVault
+                .builder()
+                .userId(userId)
+                .wishName("맥북 사기")
+                .build();
+        org.springframework.test.util.ReflectionTestUtils.setField(vault, "withdrawalCount", 1);
+
+        com.donttaz.donttazapi.user.domain.User user = com.donttaz.donttazapi.user.domain.User.builder()
+                .nickname("홍길동")
+                .build();
+
         given(penaltyWebhookRepository.findByWishlistVaultId(vaultId)).willReturn(Optional.of(webhook));
+        given(wishlistVaultRepository.findById(vaultId)).willReturn(Optional.of(vault));
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
         // When
         penaltyWebhookRabbitListener.receivePenaltyEvent(event);
@@ -56,15 +77,23 @@ class PenaltyWebhookRabbitListenerTest {
         // Then
         verify(webhookDispatcher).dispatch(
                 org.mockito.ArgumentMatchers.eq(PlatformType.MATTERMOST),
+                org.mockito.ArgumentMatchers.eq("https://test-webhook.com"),
+                org.mockito.ArgumentMatchers.contains("홍길동"));
+        verify(webhookDispatcher).dispatch(
+                org.mockito.ArgumentMatchers.eq(PlatformType.MATTERMOST),
                 org.mockito.ArgumentMatchers.anyString(),
-                org.mockito.ArgumentMatchers.eq("야식 그만"));
+                org.mockito.ArgumentMatchers.contains("맥북 사기"));
+        verify(webhookDispatcher).dispatch(
+                org.mockito.ArgumentMatchers.eq(PlatformType.MATTERMOST),
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.contains("1회"));
     }
 
     @Test
     @DisplayName("설정이 없으면 디스패처를 호출하지 않는다.")
     void receivePenaltyEvent_SkipsWhenNoConfig() {
         // Given
-        VaultPenaltyEvent event = new VaultPenaltyEvent(2L);
+        VaultPenaltyEvent event = new VaultPenaltyEvent(2L, 10000L, true);
         given(penaltyWebhookRepository.findByWishlistVaultId(anyLong())).willReturn(Optional.empty());
 
         // When

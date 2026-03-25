@@ -23,7 +23,4 @@ public interface PenaltyWebhookSwagger {
         PenaltyWebhookResponse getWebhook(
                         @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId);
 
-        @Operation(summary = "메터모스트 테스트 메시지 발송", description = "위시리스트 금고에 설정된 메터모스트 웹훅으로 테스트 메시지를 즉시 발송합니다.")
-        void sendTestMessage(
-                        @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId);
 }
