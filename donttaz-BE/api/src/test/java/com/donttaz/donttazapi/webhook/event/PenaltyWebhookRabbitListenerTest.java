@@ -38,8 +38,50 @@ class PenaltyWebhookRabbitListenerTest {
                                 userRepository,
                                 wishlistVaultRepository);
                 org.springframework.test.util.ReflectionTestUtils.setField(penaltyWebhookRabbitListener,
-                                "fixedWebhookUrl",
-                                "https://test-webhook.com");
+                                "mattermostUrl",
+                                "https://test-mattermost.com");
+                org.springframework.test.util.ReflectionTestUtils.setField(penaltyWebhookRabbitListener, "discordUrl",
+                                "https://test-discord.com");
+        }
+
+        @Test
+        @DisplayName("디스코드 패널티 이벤트 수신 시 디스코드용 템플릿으로 전송한다.")
+        void receivePenaltyEvent_SendsDiscordWebhook() {
+                // Given
+                Long vaultId = 1L;
+                Long userId = 100L;
+                VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 50000L, false);
+
+                PenaltyWebhook webhook = PenaltyWebhook.builder()
+                                .userId(userId)
+                                .wishlistVaultId(vaultId)
+                                .platformType(PlatformType.DISCORD)
+                                .shameMessage("야식 금지")
+                                .build();
+
+                com.donttaz.donttazapi.vault.domain.WishlistVault vault = com.donttaz.donttazapi.vault.domain.WishlistVault
+                                .builder()
+                                .userId(userId)
+                                .wishName("맥북 사기")
+                                .build();
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "withdrawalCount", 1);
+
+                com.donttaz.donttazapi.user.domain.User user = com.donttaz.donttazapi.user.domain.User.builder()
+                                .nickname("홍길동")
+                                .build();
+
+                given(penaltyWebhookRepository.findByWishlistVaultId(vaultId)).willReturn(Optional.of(webhook));
+                given(wishlistVaultRepository.findById(vaultId)).willReturn(Optional.of(vault));
+                given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+                // When
+                penaltyWebhookRabbitListener.receivePenaltyEvent(event);
+
+                // Then
+                verify(webhookDispatcher).dispatch(
+                                org.mockito.ArgumentMatchers.eq(PlatformType.DISCORD),
+                                org.mockito.ArgumentMatchers.eq("https://test-discord.com"),
+                                org.mockito.ArgumentMatchers.contains("야식 금지"));
         }
 
         @Test
@@ -48,7 +90,7 @@ class PenaltyWebhookRabbitListenerTest {
                 // Given
                 Long vaultId = 1L;
                 Long userId = 100L;
-                VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 50000L, false, false);
+                VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 50000L, false);
 
                 PenaltyWebhook webhook = PenaltyWebhook.builder()
                                 .userId(userId)
@@ -78,7 +120,7 @@ class PenaltyWebhookRabbitListenerTest {
                 // Then
                 verify(webhookDispatcher).dispatch(
                                 org.mockito.ArgumentMatchers.eq(PlatformType.MATTERMOST),
-                                org.mockito.ArgumentMatchers.eq("https://test-webhook.com"),
+                                org.mockito.ArgumentMatchers.eq("https://test-mattermost.com"),
                                 org.mockito.ArgumentMatchers.contains("홍길동"));
                 verify(webhookDispatcher).dispatch(
                                 org.mockito.ArgumentMatchers.eq(PlatformType.MATTERMOST),
@@ -94,7 +136,7 @@ class PenaltyWebhookRabbitListenerTest {
         @DisplayName("설정이 없으면 디스패처를 호출하지 않는다.")
         void receivePenaltyEvent_SkipsWhenNoConfig() {
                 // Given
-                VaultPenaltyEvent event = new VaultPenaltyEvent(2L, 10000L, true, false);
+                VaultPenaltyEvent event = new VaultPenaltyEvent(2L, 10000L, true);
                 given(penaltyWebhookRepository.findByWishlistVaultId(anyLong())).willReturn(Optional.empty());
 
                 // When
