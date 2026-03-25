@@ -65,6 +65,7 @@ pipeline {
                             echo "ADMIN_ACCOUNT_NO=${ADMIN_ACCOUNT_NO}" >> .env
                             echo "MATTERMOST_WEBHOOK_URL=${MATTERMOST_WEBHOOK_URL}" >> .env
                             echo "DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}" >> .env
+                            echo "FIREBASE_SERVICE_ACCOUNT_PATH=classpath:firebase-service-account.json" >> .env
                             """
                             echo "🔐 .env file created securely."
                         }
