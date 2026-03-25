@@ -95,8 +95,16 @@ public interface VaultSwagger {
                         @Parameter(description = "금고 ID", example = "10") @PathVariable Long vaultId,
                         @RequestBody VaultWithdrawRequest request);
 
-        @Operation(summary = "위시리스트 목표 달성 (정상 해지) 처리", description = "위시리스트 금고를 정상적으로 해지 처리합니다. 무출금 시 1% 보너스가 지급됩니다.")
-        ResponseEntity<VaultSummaryResponse> achieveWishlist(
+        @Operation(summary = "위시리스트 해지 처리 (자동 판별)", description = "위시리스트 금고를 해지 처리합니다. 목표 금액 달성 여부에 따라 정상 해지(축하) 또는 중도 해지(수치심)로 자동 판별되어 처리됩니다.")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "금고 해지 성공", content = @Content(mediaType = "application/json", examples = {
+                                        @ExampleObject(name = "정상 해지 결과", value = "{\"vaultId\": 10, \"withdrawnAmount\": 1000000, \"interestPaid\": 12000, \"totalRefundAmount\": 1012000, \"withdrawalCount\": 0}"),
+                                        @ExampleObject(name = "중도 해지 결과", value = "{\"vaultId\": 10, \"withdrawnAmount\": 500000, \"interestPaid\": 1500, \"totalRefundAmount\": 501500, \"withdrawalCount\": 1}")
+                        })),
+                        @ApiResponse(responseCode = "400", description = "이미 해지된 금고"),
+                        @ApiResponse(responseCode = "404", description = "금고를 찾을 수 없음")
+        })
+        ResponseEntity<VaultWithdrawResponse> terminateWishlist(
                         @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId);
 
         @Operation(summary = "금고 거래 내역 조회", description = "특정 유형의 금고 거래 내역을 조회합니다.")

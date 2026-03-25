@@ -114,7 +114,7 @@ public class WishlistVault extends BaseEntity {
         }
     }
 
-    public void matureVault() {
+    public long matureVault() {
         if (this.status != VaultStatus.LOCKED) {
             throw new CustomException(ErrorCode.INVALID_REQUEST, "이미 해지된 금고입니다.");
         }
@@ -124,7 +124,10 @@ public class WishlistVault extends BaseEntity {
             this.lockedAmount += bonus;
         }
 
+        long finalBalance = this.lockedAmount;
+        this.lockedAmount = 0L;
         this.status = VaultStatus.MATURED;
+        return finalBalance;
     }
 
     public long calculateInterest() {

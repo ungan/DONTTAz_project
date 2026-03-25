@@ -80,11 +80,10 @@ public class VaultController implements VaultSwagger {
         }
 
         @Override
-        @PostMapping("/wishlist/{vaultId}/achieve")
-        public ResponseEntity<VaultSummaryResponse> achieveWishlist(
+        @PostMapping("/wishlist/{vaultId}/terminate")
+        public ResponseEntity<VaultWithdrawResponse> terminateWishlist(
                         @PathVariable Long vaultId) {
-                vaultCommandService.achieveWishlist(vaultId);
-                return ResponseEntity.ok(vaultQueryService.getVaultDetail(vaultId, VaultKind.WISHLIST));
+                return ResponseEntity.ok(vaultCommandService.terminateWishlist(vaultId));
         }
 
         @Override
