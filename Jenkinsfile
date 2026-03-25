@@ -42,7 +42,8 @@ pipeline {
                             string(credentialsId: 'KAKAO_CLIENT_SECRET', variable: 'KAKAO_CLIENT_SECRET'),
                             string(credentialsId: 'API_SECRET', variable: 'API_SECRET'),
                             string(credentialsId: 'ADMIN_USER_ID', variable: 'ADMIN_USER_ID'),
-                            string(credentialsId: 'ADMIN_ACCOUNT_NO', variable: 'ADMIN_ACCOUNT_NO')
+                            string(credentialsId: 'ADMIN_ACCOUNT_NO', variable: 'ADMIN_ACCOUNT_NO'),
+                            string(credentialsId: 'MATTERMOST_WEBHOOK_URL', variable: 'MATTERMOST_WEBHOOK_URL')
                         ]) {
                             sh """
                             echo "FIN_API_BASE_URL=${FIN_API_BASE_URL}" > .env
@@ -61,6 +62,7 @@ pipeline {
                             echo "API_SECRET=${API_SECRET}" >> .env
                             echo "ADMIN_USER_ID=${ADMIN_USER_ID}" >> .env
                             echo "ADMIN_ACCOUNT_NO=${ADMIN_ACCOUNT_NO}" >> .env
+                            echo "MATTERMOST_WEBHOOK_URL=${MATTERMOST_WEBHOOK_URL}" >> .env
                             """
                             echo "🔐 .env file created securely."
                         }

@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum PlatformType {
-    KAKAOTALK("카카오톡");
+    MATTERMOST("메터모스트");
 
     private final String description;
 }
