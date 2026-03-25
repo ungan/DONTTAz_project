@@ -32,7 +32,6 @@ public class UserCommandService {
     private final BankingClient bankingClient;
 
     public CreateUserResponse createUser(CreateUserRequest request) {
-        // ... (기존 코드와 동일)
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
@@ -65,7 +64,7 @@ public class UserCommandService {
 
         fcmTokenRepository.findByDeviceId(request.getDeviceId())
                 .ifPresentOrElse(
-                        existingToken -> existingToken.updateToken(request.getFcmToken()),
+                        existingToken -> existingToken.updateRegistration(user, request.getFcmToken(), request.getDeviceType()),
                         () -> fcmTokenRepository.save(FcmToken.builder()
                                 .user(user)
                                 .token(request.getFcmToken())
@@ -95,10 +94,7 @@ public class UserCommandService {
             throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
-        // 1. 논리적 삭제 처리
         user.withdraw(request.getReason());
-
-        // 2. 연관된 FCM 토큰 모두 삭제 (푸시 알림 중단)
         fcmTokenRepository.deleteByUser(user);
     }
 }

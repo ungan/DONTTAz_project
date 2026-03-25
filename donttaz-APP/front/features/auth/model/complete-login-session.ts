@@ -2,10 +2,10 @@ import { router } from 'expo-router';
 import { getMyAccountsApi } from '@/entities/account';
 import { useSessionStore } from '@/entities/session';
 import { useBankAccountStore } from '@/entities/bank-account';
+import { syncPushTokenWithServer } from '@/features/push';
 import { storeAuthTokens } from '@/shared/api/auth-storage';
 import type { LoginResponseData } from '../types/login';
 import { useAuthRuntimeStore } from './auth-runtime-store';
-
 
 function parseBalance(balance: string | number | null | undefined) {
   const numericBalance = typeof balance === 'number' ? balance : Number(balance ?? 0);
@@ -63,6 +63,8 @@ export async function completeLoginSession(data: LoginResponseData) {
       }
     }
   }
+
+  void syncPushTokenWithServer();
 
   router.replace('/(tabs)/home');
 }

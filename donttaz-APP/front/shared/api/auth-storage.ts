@@ -3,6 +3,11 @@ import * as SecureStore from 'expo-secure-store';
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 const DEVICE_PIN_KEY = 'devicePin';
+const PUSH_DEVICE_ID_KEY = 'pushDeviceId';
+
+function generatePushDeviceId() {
+  return `push-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 export async function storeAuthTokens(accessToken: string, refreshToken: string) {
   await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken);
@@ -32,4 +37,15 @@ export async function getStoredDevicePin() {
 
 export async function clearStoredDevicePin() {
   await SecureStore.deleteItemAsync(DEVICE_PIN_KEY);
+}
+
+export async function getOrCreatePushDeviceId() {
+  const storedDeviceId = await SecureStore.getItemAsync(PUSH_DEVICE_ID_KEY);
+  if (storedDeviceId) {
+    return storedDeviceId;
+  }
+
+  const generatedDeviceId = generatePushDeviceId();
+  await SecureStore.setItemAsync(PUSH_DEVICE_ID_KEY, generatedDeviceId);
+  return generatedDeviceId;
 }

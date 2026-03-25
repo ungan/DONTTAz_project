@@ -43,6 +43,7 @@ import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
 import com.donttaz.donttazapi.infra.banking.client.BankingClient;
 import com.donttaz.donttazapi.infra.banking.config.FinApiProperties;
+import com.donttaz.donttazapi.notification.service.PushNotificationService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -78,6 +79,9 @@ class AccountTransferServiceTest {
     @Mock
     private FinApiProperties finApiProperties;
 
+    @Mock
+    private PushNotificationService pushNotificationService;
+
     @InjectMocks
     private AccountTransferService accountTransferService;
 
@@ -97,6 +101,7 @@ class AccountTransferServiceTest {
         ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
         verify(bankingClient).deposit(org.mockito.ArgumentMatchers.eq(1L), commandCaptor.capture());
         verify(transactionRepository).save(transactionCaptor.capture());
+        verify(pushNotificationService).sendDepositNotification(1L, "0016174648358792", 100000000L, "deposit");
         assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0016174648358792");
         assertThat(commandCaptor.getValue().transactionBalance()).isEqualTo("100000000");
         assertThat(commandCaptor.getValue().transactionSummary()).isEqualTo("deposit");
@@ -129,6 +134,7 @@ class AccountTransferServiceTest {
         ArgumentCaptor<AccountDepositCommand> commandCaptor = ArgumentCaptor.forClass(AccountDepositCommand.class);
         verify(bankingClient).deposit(org.mockito.ArgumentMatchers.eq(7L), commandCaptor.capture());
         verify(accountSyncService).syncAccountSnapshot(7L, "0016174648358792");
+        verify(pushNotificationService).sendDepositNotification(7L, "0016174648358792", 50000L, "deposit");
         assertThat(commandCaptor.getValue().accountNo()).isEqualTo("0016174648358792");
         assertThat(response.transactionUniqueNo()).isEqualTo("77");
     }
@@ -342,3 +348,4 @@ class AccountTransferServiceTest {
                 .build();
     }
 }
+
