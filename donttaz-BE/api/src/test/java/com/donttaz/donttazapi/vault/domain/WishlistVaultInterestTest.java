@@ -37,9 +37,9 @@ class WishlistVaultInterestTest {
                 .status(VaultStatus.LOCKED)
                 .build();
 
-        vault.matureVault();
-
-        assertThat(vault.getLockedAmount()).isEqualTo(1010000L); // 1.01M
+        long refundAmount = vault.matureVault();
+        assertThat(refundAmount).isEqualTo(1010000L); // 1.01M
+        assertThat(vault.getLockedAmount()).isEqualTo(0L);
         assertThat(vault.getStatus()).isEqualTo(VaultStatus.MATURED);
     }
 
@@ -52,8 +52,8 @@ class WishlistVaultInterestTest {
                 .build();
 
         vault.withdraw(10000L);
-        vault.matureVault();
-
-        assertThat(vault.getLockedAmount()).isEqualTo(990000L); // 1M - 10k
+        long refundAmount = vault.matureVault();
+        assertThat(refundAmount).isEqualTo(990000L); // 1M - 10k
+        assertThat(vault.getLockedAmount()).isEqualTo(0L);
     }
 }
