@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { styles } from './withdraw-warning-modal.styles';
 
 interface WithdrawWarningModalProps {
@@ -32,25 +33,25 @@ export function WithdrawWarningModal({
               <Text style={styles.rateLabel}>현재 이율</Text>
               <Text style={styles.rateValue}>{baseInterestRate.toFixed(1)}%</Text>
             </View>
-            <Text style={styles.arrow}>→</Text>
+            <Ionicons name="arrow-forward" size={20} color="#D1D5DB" style={{ marginTop: 16 }} />
             <View style={styles.rateBox}>
               <Text style={styles.rateLabel}>출금 후</Text>
               <Text style={[styles.rateValue, styles.rateValueAfter]}>{afterRate}%</Text>
             </View>
           </View>
 
-          <Text style={styles.penaltyBadge}>-{penaltyRate}%p 손해</Text>
-
           <Text style={styles.bonusHint}>
-            참으면 최대 <Text style={styles.bonusHighlight}>연 6.0%</Text>까지 올라가요
+            참으면 최대 <Text style={styles.bonusHighlight}>연 {baseInterestRate.toFixed(1)}%</Text>를 받을 수 있어요
           </Text>
 
           <View style={styles.buttonArea}>
             <TouchableOpacity style={styles.cancelButton} onPress={onCancel} activeOpacity={0.85}>
-              <Text style={styles.cancelLabel}>😊  휴, 참는다</Text>
+              <Ionicons name="shield-checkmark-outline" size={18} color="#FFFFFF" />
+              <Text style={styles.cancelLabel}>휴, 참는다</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.confirmButton} onPress={onConfirm} activeOpacity={0.7}>
-              <Text style={styles.confirmLabel}>그래도 출금하기 →</Text>
+              <Text style={styles.confirmLabel}>그래도 출금하기</Text>
+              <Ionicons name="chevron-forward" size={14} color="#9CA3AF" />
             </TouchableOpacity>
           </View>
 

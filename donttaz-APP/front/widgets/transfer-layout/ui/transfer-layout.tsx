@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { PageHeader, ConfirmModal } from '@/shared/ui';
+import { PageHeader } from '@/shared/ui';
 import { useTransferStore } from '@/features/transfer';
 import { styles } from './transfer-layout.styles';
 
@@ -12,47 +11,36 @@ interface TransferLayoutProps {
 }
 
 export function TransferLayout({ amount, children }: TransferLayoutProps) {
-  const router = useRouter();
-  const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const { bankName, depositAccountNumber } = useTransferStore();
 
   const isValid = amount >= 1;
   const formattedAmount = amount.toLocaleString('ko-KR');
 
-  const handleCancelConfirm = () => {
-    useTransferStore.getState().clear();
-    router.push('/(tabs)/home');
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-      <PageHeader
-        title="송금"
-        rightAction={
-          <TouchableOpacity onPress={() => setCancelModalVisible(true)} activeOpacity={0.7}>
-            <Text style={styles.cancelLabel}>취소</Text>
-          </TouchableOpacity>
-        }
-      />
+      <PageHeader title="송금" />
 
-      <Text style={styles.accountSummary}>{bankName} {depositAccountNumber}</Text>
+      <View style={styles.recipientRow}>
+        <Text style={styles.recipientBank}>{bankName}</Text>
+        <Text style={styles.recipientAccount}>{depositAccountNumber}</Text>
+      </View>
 
       <View style={styles.amountArea}>
-        <Text style={isValid ? styles.amountText : styles.amountPlaceholder}>
-          {isValid ? `${formattedAmount}원` : '보낼금액'}
-        </Text>
+        {isValid ? (
+          <View style={styles.amountRow}>
+            <Text style={styles.amountText}>{formattedAmount}</Text>
+            <Text style={styles.amountUnit}>원</Text>
+          </View>
+        ) : (
+          <View style={styles.amountRow}>
+            <Text style={styles.amountPlaceholder}>0</Text>
+            <Text style={styles.amountUnitPlaceholder}>원</Text>
+          </View>
+        )}
       </View>
 
       {children}
 
-      <ConfirmModal
-        visible={cancelModalVisible}
-        title="이체를 취소하겠습니까?"
-        confirmLabel="취소하기"
-        cancelLabel="계속하기"
-        onConfirm={handleCancelConfirm}
-        onCancel={() => setCancelModalVisible(false)}
-      />
     </SafeAreaView>
   );
 }

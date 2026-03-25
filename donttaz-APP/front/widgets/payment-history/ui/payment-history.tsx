@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
 import { usePayments } from '@/entities/payment';
 import { useBankAccountStore } from '@/entities/bank-account';
 import { styles } from './payment-history.styles';
@@ -17,13 +18,26 @@ const CATEGORY_ICON_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; 
 
 const DEFAULT_ICON = { icon: 'card-outline' as keyof typeof Ionicons.glyphMap, color: '#6B7280' };
 
+const COUNTERPARTY_NAME_MAP: Record<string, string> = {
+  SELF: '본인',
+  TRANSFER: '이체',
+  본인: '본인',
+  이체: '이체',
+};
+
+function resolveCounterpartyName(name: string) {
+  return COUNTERPARTY_NAME_MAP[name] ?? name;
+}
+
 interface PaymentHistoryProps {
   onViewAllPress?: () => void;
 }
 
 export function PaymentHistory({ onViewAllPress }: PaymentHistoryProps) {
   const { accountId } = useBankAccountStore();
-  const { transactions, isPending, error } = usePayments();
+  const { transactions, isPending, error, refetch } = usePayments();
+
+  useFocusEffect(useCallback(() => { refetch(); }, []));
 
   if (!accountId) {
     return (
@@ -62,9 +76,9 @@ export function PaymentHistory({ onViewAllPress }: PaymentHistoryProps) {
                 <View style={[styles.iconBox, { backgroundColor: `${color}1A` }]}>
                   <Ionicons name={icon} size={18} color={color} />
                 </View>
-                <Text style={styles.merchantName}>{item.counterpartyName}</Text>
+                <Text style={styles.merchantName}>{resolveCounterpartyName(item.counterpartyName)}</Text>
                 <Text style={styles.amount}>
-                  {item.type === 'WITHDRAWAL' ? '-' : '+'}
+                  {item.type === 'WITHDRAWAL' || item.type === 2 ? '-' : '+'}
                   {item.amount.toLocaleString()}원
                 </Text>
               </View>

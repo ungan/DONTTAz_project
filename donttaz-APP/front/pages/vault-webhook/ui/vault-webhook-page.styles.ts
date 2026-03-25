@@ -3,34 +3,32 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F9FAFB',
   },
   scrollContent: {
     flexGrow: 1,
-    paddingVertical: 20,
-    paddingBottom: 32,
-    gap: 12,
+    paddingVertical: 24,
+    paddingBottom: 40,
+    gap: 20,
   },
 
-  // 상단 타이틀 (카드 밖)
   heroSection: {
     paddingHorizontal: 20,
     paddingBottom: 8,
-    gap: 6,
+    gap: 8,
   },
   heroTitle: {
     fontSize: 22,
     fontWeight: '700',
     color: '#111827',
-    lineHeight: 30,
+    lineHeight: 32,
   },
   heroText: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#6B7280',
     lineHeight: 22,
   },
 
-  // 카드
   card: {
     marginHorizontal: 16,
     backgroundColor: '#FFFFFF',
@@ -39,102 +37,55 @@ export const styles = StyleSheet.create({
     gap: 14,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+  },
+  cardLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 
-  // 섹션 헤더 (카드 내부)
-  sectionHeader: {
+  // 플랫폼
+  platformGrid: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
-  sectionIconBox: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    backgroundColor: '#EFF6FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
-  },
-
-  // 플랫폼 카드
   platformCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 13,
+    flex: 1,
+    flexBasis: 0,
+    height: 96,
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
-    gap: 12,
+    backgroundColor: '#FAFAFA',
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
   },
   platformCardSelected: {
-    borderColor: '#5899FD',
-    backgroundColor: '#EFF6FF',
+    borderColor: '#3B82F6',
+    backgroundColor: '#F0F6FF',
   },
-  platformIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+  platformIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  mattermostIcon: {
-    backgroundColor: '#1A1A2E',
-  },
-  kakaoIcon: {
-    backgroundColor: '#FEE500',
-  },
-  platformIconText: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  kakaoIconText: {
-    color: '#3A1D00',
-  },
-  platformName: {
-    flex: 1,
-    fontSize: 15,
+  platformLabel: {
+    fontSize: 13,
     fontWeight: '500',
+    color: '#6B7280',
+  },
+  platformLabelSelected: {
     color: '#111827',
-  },
-  radioOuter: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#D1D5DB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioOuterSelected: {
-    borderColor: '#5899FD',
-  },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#5899FD',
+    fontWeight: '600',
   },
 
-  // 메세지 편집
-  sectionSubtitle: {
-    fontSize: 13,
-    color: '#9CA3AF',
-    lineHeight: 20,
-    marginTop: -6,
-  },
+  // 메세지
   messageInputWrapper: {
     borderWidth: 1,
     borderColor: '#E5E7EB',
@@ -161,25 +112,21 @@ export const styles = StyleSheet.create({
     color: '#EF4444',
   },
 
-  // 안내 박스
   infoBox: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#F0F9FF',
-    borderRadius: 10,
-    padding: 12,
-    gap: 8,
+    alignItems: 'center',
+    gap: 6,
   },
   infoText: {
-    flex: 1,
     fontSize: 12,
-    color: '#0EA5E9',
-    lineHeight: 19,
+    color: '#9CA3AF',
   },
 
-  // 버튼
   buttonWrapper: {
-    marginHorizontal: 16,
-    marginTop: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    backgroundColor: '#F9FAFB',
   },
 });

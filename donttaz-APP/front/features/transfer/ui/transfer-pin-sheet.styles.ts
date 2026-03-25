@@ -18,4 +18,15 @@ export const styles = StyleSheet.create({
     marginBottom: 32,
     paddingHorizontal: 24,
   },
+  loadingArea: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 48,
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
+  },
 });

@@ -1,26 +1,28 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, BackHandler } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, View, Text, ScrollView, TextInput, TouchableOpacity, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { PageHeader, Button } from '@/shared/ui';
 import { useWebhookForm, WEBHOOK_MESSAGE_MAX_LENGTH } from '@/features/vault-webhook';
-import type { WebhookPlatform } from '@/entities/vault';
+import { postPenaltyWebhookApi, getPenaltyWebhookApi, getVaultApi } from '@/entities/vault';
+import type { PlatformType } from '@/entities/vault';
 import { styles } from './vault-webhook-page.styles';
 
-const PLATFORMS: { id: WebhookPlatform; label: string }[] = [
-  { id: 'MATTERMOST', label: 'Mattermost' },
-  { id: 'KAKAO_TALK', label: 'KakaoTalk' },
+const PLATFORMS: { id: PlatformType; label: string; color: string; bg: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { id: 'MATTERMOST', label: 'Mattermost', color: '#1B5299', bg: '#E8EEF7', icon: 'chatbubbles-outline' },
+  { id: 'DISCORD',    label: 'Discord',    color: '#5865F2', bg: '#EEEEFF', icon: 'logo-discord' },
 ];
 
 export function VaultWebhookPage() {
   const router = useRouter();
+  const { vaultId } = useLocalSearchParams<{ vaultId: string }>();
   const { platform, setPlatform, message, setMessage, isValid } = useWebhookForm();
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const isOver = message.length > WEBHOOK_MESSAGE_MAX_LENGTH;
 
-  // Android 물리 백버튼 차단
   useFocusEffect(
     React.useCallback(() => {
       const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
@@ -28,78 +30,110 @@ export function VaultWebhookPage() {
     }, [])
   );
 
-  const handleSave = () => {
-    router.replace('/(tabs)/vault');
+  useEffect(() => {
+    const loadExisting = async () => {
+      const id = vaultId && !isNaN(Number(vaultId)) ? Number(vaultId) : null;
+      if (!id) return;
+      const existing = await getPenaltyWebhookApi(id);
+      if (existing?.shameMessage) {
+        setPlatform(existing.platformType);
+        setMessage(existing.shameMessage);
+        setIsEditMode(true);
+      }
+    };
+    void loadExisting();
+  }, []);
+
+  const resolveVaultId = async (): Promise<number | null> => {
+    if (vaultId && !isNaN(Number(vaultId))) return Number(vaultId);
+    try {
+      const vaults = await getVaultApi();
+      const wishlist = vaults.vaults.find((v) => v.vaultKind === 'WISHLIST');
+      return wishlist?.vaultId ?? null;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleSave = async () => {
+    console.log('[WebhookSave] handleSave called', { platform, message });
+    const id = await resolveVaultId();
+    console.log('[WebhookSave] resolved vaultId', id);
+    if (!id) {
+      Alert.alert(
+        '위시금고 필요',
+        '수치심 메세지를 설정하려면 먼저 위시금고를 만들어야 합니다.',
+        [
+          {
+            text: '위시금고 만들기',
+            onPress: () => router.replace('/(tabs)/vault?tab=wishlist'),
+          },
+        ]
+      );
+      return;
+    }
+    try {
+      await postPenaltyWebhookApi(id, {
+        platformType: platform,
+        shameMessage: message,
+      });
+      console.log('[WebhookSave] success, navigating');
+      router.back();
+    } catch (e) {
+      console.log('[WebhookSave] error', e);
+    }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <PageHeader title="수치심 메세지 설정" onBack={() => {}} />
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* 상단 타이틀 */}
         <View style={styles.heroSection}>
-          <Text style={styles.heroTitle}>목표를 지키는{'\n'}가장 강력한 방법</Text>
+          <Text style={styles.heroTitle}>지인에게 메세지 전송</Text>
           <Text style={styles.heroText}>
-            중도 인출 시 등록된 플랫폼으로 메시지가 자동 발송됩니다.{'\n'}
-            부끄러움이 클수록, 포기하기 더 어려워집니다.
+            긴급 출금·중도 해지 시 즉시 전송됩니다
           </Text>
         </View>
 
-        {/* 플랫폼 선택 카드 */}
+        {/* 플랫폼 선택 */}
         <View style={styles.card}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionIconBox}>
-              <Ionicons name="share-social-outline" size={15} color="#3B82F6" />
-            </View>
-            <Text style={styles.sectionTitle}>웹훅 등록 플랫폼 선택</Text>
-          </View>
-
-          {PLATFORMS.map(({ id, label }) => {
-            const selected = platform === id;
-            return (
-              <TouchableOpacity
-                key={id}
-                style={[styles.platformCard, selected && styles.platformCardSelected]}
-                onPress={() => setPlatform(id)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.platformIcon, id === 'MATTERMOST' ? styles.mattermostIcon : styles.kakaoIcon]}>
-                  <Text style={[styles.platformIconText, id === 'KAKAO_TALK' && styles.kakaoIconText]}>
-                    {id === 'MATTERMOST' ? 'M' : '💬'}
+          <Text style={styles.cardLabel}>발송 채널</Text>
+          <View style={styles.platformGrid}>
+            {PLATFORMS.map((p) => {
+              const selected = platform === p.id;
+              return (
+                <TouchableOpacity
+                  key={p.id}
+                  style={[styles.platformCard, selected && styles.platformCardSelected]}
+                  onPress={() => setPlatform(p.id)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.platformIconBox, { backgroundColor: p.bg }]}>
+                    <Ionicons name={p.icon} size={22} color={p.color} />
+                  </View>
+                  <Text style={[styles.platformLabel, selected && styles.platformLabelSelected]}>
+                    {p.label}
                   </Text>
-                </View>
-                <Text style={styles.platformName}>{label}</Text>
-                <View style={[styles.radioOuter, selected && styles.radioOuterSelected]}>
-                  {selected && <View style={styles.radioInner} />}
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
-        {/* 메세지 편집 카드 */}
+        {/* 메세지 */}
         <View style={styles.card}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionIconBox}>
-              <Ionicons name="mail-outline" size={15} color="#3B82F6" />
-            </View>
-            <Text style={styles.sectionTitle}>수치심 메세지 편집</Text>
-          </View>
-
-          <Text style={styles.sectionSubtitle}>
-            예산을 초과하면 등록된 플랫폼으로 다음 메시지를 발송합니다.
-          </Text>
-
+          <Text style={styles.cardLabel}>전송 메세지</Text>
           <View style={styles.messageInputWrapper}>
             <TextInput
               style={styles.messageInput}
               value={message}
               onChangeText={setMessage}
-              placeholder="예: 나는 의지박약입니다. 계획한 예산도 못 지키는 사람입니다..."
+              placeholder="예: 방금 야식 결제해 버렸습니다. 한마디씩 부탁드립니다."
               placeholderTextColor="#9CA3AF"
               multiline
               maxLength={WEBHOOK_MESSAGE_MAX_LENGTH + 10}
@@ -108,24 +142,20 @@ export function VaultWebhookPage() {
               {message.length} / {WEBHOOK_MESSAGE_MAX_LENGTH}
             </Text>
           </View>
-
           <View style={styles.infoBox}>
-            <Ionicons name="information-circle-outline" size={15} color="#0EA5E9" />
-            <Text style={styles.infoText}>
-              메시지는 중도 인출 시 즉시 발송되며, 취소할 수 없습니다. 신중하게 작성해 주세요.
-            </Text>
+            <Ionicons name="information-circle-outline" size={14} color="#9CA3AF" />
+            <Text style={styles.infoText}>메시지는 향후 수정 가능합니다.</Text>
           </View>
         </View>
-
-        {/* 저장 버튼 */}
-        <View style={styles.buttonWrapper}>
-          <Button
-            label="설정 저장하기"
-            disabled={!isValid || isOver}
-            onPress={handleSave}
-          />
-        </View>
       </ScrollView>
+
+      <View style={styles.buttonWrapper}>
+        <Button
+          label={isEditMode ? '수정하기' : '저장하기'}
+          disabled={!isValid || isOver}
+          onPress={handleSave}
+        />
+      </View>
     </SafeAreaView>
   );
 }

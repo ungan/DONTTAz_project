@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useBankAccountStore } from '@/entities/bank-account';
 import { getPaymentsApi } from '../api/get-payments';
 import type { Transaction, TransactionType } from '../types/payment';
@@ -16,6 +16,8 @@ export function usePayments(params?: UsePaymentsParams) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tick, setTick] = useState(0);
+
   const requestParams = {
     page: 0,
     size: 3,
@@ -40,7 +42,9 @@ export function usePayments(params?: UsePaymentsParams) {
         setError('거래내역을 불러오지 못했습니다.');
       })
       .finally(() => setIsPending(false));
-  }, [accountId, requestParams.endDate, requestParams.page, requestParams.size, requestParams.startDate, requestParams.type,]);
+  }, [accountId, tick, requestParams.endDate, requestParams.page, requestParams.size, requestParams.startDate, requestParams.type]);
 
-  return { transactions, isPending, error };
+  const refetch = useCallback(() => setTick((t) => t + 1), []);
+
+  return { transactions, isPending, error, refetch };
 }

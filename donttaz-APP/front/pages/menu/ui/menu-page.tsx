@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { ScrollView, Text, View, TouchableOpacity } from 'react-native';
+import { Alert, ScrollView, Text, View, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSessionStore } from '@/entities/session';
 import { useLogout } from '@/features/auth';
+import { useBankAccountStore } from '@/entities/bank-account';
+import { getVaultApi } from '@/entities/vault';
 import { ConfirmModal } from '@/shared/ui';
 import { styles } from './menu-page.styles';
 
@@ -20,6 +22,7 @@ export function MenuPage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { name } = useSessionStore();
+  const { accountId } = useBankAccountStore();
   const { logout, isPending, error, resetError } = useLogout();
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
 
@@ -52,12 +55,12 @@ export function MenuPage() {
       description: '다른 계좌로 송금하기',
       onPress: () => router.push('/transfer-account'),
     },
-    {
-      icon: 'wallet-outline',
+    ...(!accountId ? [{
+      icon: 'wallet-outline' as const,
       label: '계좌 개설',
       description: '새 입출금 통장 만들기',
       onPress: () => router.push('/account-open-terms'),
-    },
+    }] : []),
   ];
 
   const planItems: MenuItem[] = [
@@ -87,6 +90,34 @@ export function MenuPage() {
       label: '각서 작성',
       description: '소비 절제 각서 설정',
       onPress: () => router.push('/vault-memorandum'),
+    },
+    {
+      icon: 'chatbubble-ellipses-outline',
+      label: '수치심 메세지 설정',
+      description: '카카오톡 수치심 메세지 관리',
+      onPress: async () => {
+        try {
+          const { vaults } = await getVaultApi();
+          const wishlist = vaults.find((v) => v.vaultKind === 'WISHLIST');
+          if (!wishlist) {
+            Alert.alert(
+              '위시금고 필요',
+              '수치심 메세지를 설정하려면 먼저 위시금고를 만들어야 합니다.',
+              [
+                { text: '취소', style: 'cancel' },
+                {
+                  text: '위시금고 만들기',
+                  onPress: () => router.push('/(tabs)/vault?tab=wishlist'),
+                },
+              ]
+            );
+            return;
+          }
+          router.push(`/vault-webhook?vaultId=${wishlist.vaultId}`);
+        } catch {
+          router.push('/vault-webhook');
+        }
+      },
     },
   ];
 

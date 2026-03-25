@@ -4,9 +4,9 @@ export const styles = StyleSheet.create({
   container: {
     backgroundColor: '#F9F9F9',
     width: '100%',
-    height: 339,
     paddingHorizontal: 24,
     paddingTop: 24,
+    paddingBottom: 24,
   },
   labelRow: {
     flexDirection: 'row',

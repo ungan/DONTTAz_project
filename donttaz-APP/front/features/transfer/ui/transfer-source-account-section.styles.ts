@@ -3,71 +3,66 @@ import { Primary } from '@/shared/constants/theme';
 
 export const styles = StyleSheet.create({
   container: {
-    gap: 12,
+    gap: 10,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '600',
     color: '#111827',
-  },
-  helper: {
-    fontSize: 14,
-    color: '#6B7280',
-    lineHeight: 20,
+    letterSpacing: 0.3,
   },
   cardList: {
-    gap: 12,
+    gap: 10,
   },
   card: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: 1.5,
+    borderColor: '#F3F4F6',
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAFAFA',
     padding: 16,
-    gap: 10,
+    gap: 6,
   },
   selectedCard: {
     borderColor: Primary,
-    backgroundColor: '#F8FBFF',
+    backgroundColor: '#F0F6FF',
   },
   unavailableCard: {
-    opacity: 0.55,
+    opacity: 0.45,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 12,
   },
   bankName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: '#111827',
   },
   badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 999,
     backgroundColor: '#E8F1FF',
   },
   badgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: Primary,
   },
   accountName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  accountNumber: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#6B7280',
   },
+  accountNumber: {
+    fontSize: 13,
+    color: '#9CA3AF',
+  },
   balance: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     color: '#111827',
+    marginTop: 4,
   },
   emptyText: {
     fontSize: 14,

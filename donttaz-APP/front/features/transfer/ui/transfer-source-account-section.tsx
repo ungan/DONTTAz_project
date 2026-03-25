@@ -29,8 +29,7 @@ export function TransferSourceAccountSection({
 }: TransferSourceAccountSectionProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>내 출금 계좌</Text>
-      <Text style={styles.helper}>보낼 계좌를 먼저 선택해 주세요.</Text>
+      <Text style={styles.title}>출금계좌</Text>
 
       {isPending ? <Text style={styles.emptyText}>내 계좌를 불러오는 중...</Text> : null}
       {!isPending && error ? <Text style={styles.warningText}>{error}</Text> : null}
@@ -63,7 +62,6 @@ export function TransferSourceAccountSection({
                 ) : null}
               </View>
 
-              <Text style={styles.accountName}>{account.accountName}</Text>
               <Text style={styles.accountNumber}>{account.accountLabel}</Text>
               <Text style={styles.balance}>{account.balanceLabel}</Text>
               {!account.isSelectable ? (

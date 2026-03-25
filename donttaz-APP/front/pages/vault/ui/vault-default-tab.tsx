@@ -34,20 +34,20 @@ export function VaultDefaultTab({ vault, transactions }: VaultDefaultTabProps) {
           onWithdraw={() => setShowWithdrawModal(true)}
         />
         <VaultNotice
-          baseInterestRate={vault.baseInterestRate}
-          penaltyInterestRate={vault.penaltyInterestRate}
+          baseInterestRate={vault.baseInterestRate - vault.penaltyInterestRate}
+          penaltyInterestRate={-0.1}
         />
         <VaultHistory transactions={transactions} />
       </ScrollView>
 
       <WithdrawWarningModal
         visible={showWithdrawModal}
-        baseInterestRate={vault.baseInterestRate}
-        penaltyRate={vault.penaltyInterestRate}
+        baseInterestRate={vault.baseInterestRate - vault.penaltyInterestRate}
+        penaltyRate={0.1}
         onCancel={() => setShowWithdrawModal(false)}
         onConfirm={() => {
           setShowWithdrawModal(false);
-          // TODO: 출금 API 연결
+          router.push(`/vault-withdraw?kind=DEFAULT&vaultId=${vault.vaultId}&lockedAmount=${vault.lockedAmount}`);
         }}
       />
     </>

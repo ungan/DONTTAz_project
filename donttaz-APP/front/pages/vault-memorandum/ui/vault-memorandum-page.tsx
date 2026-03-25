@@ -41,15 +41,11 @@ export function VaultMemorandumPage() {
 
   const handleSign = async () => {
     const id = Number(vaultId);
-    if (!vaultId || isNaN(id)) {
-      console.error('[memorandum] invalid vaultId:', vaultId);
-      return;
-    }
+    if (!vaultId || isNaN(id)) return;
     try {
       await signMemorandumApi(id);
       setShowStamp(true);
-    } catch (e: any) {
-      console.error('[memorandum] sign error:', e?.response?.status, e?.response?.data);
+    } catch {
     }
   };
 
@@ -115,7 +111,7 @@ export function VaultMemorandumPage() {
 
       <SignStampOverlay
         visible={showStamp}
-        onAnimationEnd={() => router.replace('/vault-webhook')}
+        onAnimationEnd={() => router.replace(`/vault-webhook?vaultId=${vaultId}`)}
       />
     </SafeAreaView>
   );

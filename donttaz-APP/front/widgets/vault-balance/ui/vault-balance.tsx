@@ -9,9 +9,12 @@ interface VaultBalanceProps {
   lockedAmount: number;
   onDeposit: () => void;
   onWithdraw: () => void;
+  variant?: 'default' | 'wishlist';
 }
 
-export function VaultBalance({ lockedAmount, onDeposit, onWithdraw }: VaultBalanceProps) {
+export function VaultBalance({ lockedAmount, onDeposit, onWithdraw, variant = 'default' }: VaultBalanceProps) {
+  if (variant === 'wishlist') return null;
+
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>

@@ -51,17 +51,6 @@ export const styles = StyleSheet.create({
     marginTop: 16,
   },
 
-  penaltyBadge: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#EF4444',
-    backgroundColor: '#FEF2F2',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
-
   bonusHint: {
     fontSize: 13,
     color: '#9CA3AF',
@@ -80,8 +69,10 @@ export const styles = StyleSheet.create({
     height: 52,
     borderRadius: 12,
     backgroundColor: Primary,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
   cancelLabel: {
     fontSize: 16,
@@ -89,8 +80,11 @@ export const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   confirmButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 8,
+    gap: 2,
   },
   confirmLabel: {
     fontSize: 14,

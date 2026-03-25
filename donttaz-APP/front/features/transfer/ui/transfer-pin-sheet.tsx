@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { NumericKeypad, PinIndicator, ConfirmModal } from '@/shared/ui';
 import { Primary } from '@/shared/constants/theme';
@@ -11,7 +11,6 @@ export const TransferPinSheet = forwardRef<BottomSheet>((_, ref) => {
   const { submit, isLoading, errorMessage, clearError } = useTransferSubmit();
 
   const handleComplete = useCallback((pin: string) => {
-    (ref as React.RefObject<BottomSheet>)?.current?.close();
     submit(pin);
   }, []);
 
@@ -23,23 +22,32 @@ export const TransferPinSheet = forwardRef<BottomSheet>((_, ref) => {
         ref={ref}
         index={-1}
         enableDynamicSizing
-        enablePanDownToClose
+        enablePanDownToClose={!isLoading}
         onClose={reset}
         backgroundStyle={{ backgroundColor: Primary }}
         handleIndicatorStyle={{ backgroundColor: 'rgba(255,255,255,0.6)' }}
       >
         <BottomSheetView style={styles.container}>
-          <Text style={styles.title}>PIN 번호 6자리를 입력해주세요</Text>
+          {isLoading ? (
+            <View style={styles.loadingArea}>
+              <ActivityIndicator size="large" color="#FFFFFF" />
+              <Text style={styles.loadingText}>송금 중...</Text>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.title}>PIN 번호 6자리를 입력해주세요</Text>
 
-          <View style={styles.pinArea}>
-            <PinIndicator
-              filledCount={filledCount}
-              filledColor="#FFFFFF"
-              emptyBorderColor="rgba(255,255,255,0.5)"
-            />
-          </View>
+              <View style={styles.pinArea}>
+                <PinIndicator
+                  filledCount={filledCount}
+                  filledColor="#FFFFFF"
+                  emptyBorderColor="rgba(255,255,255,0.5)"
+                />
+              </View>
 
-          <NumericKeypad onKeyPress={handleKeyPress} hiddenKeys={['00']} labelColor="#FFFFFF" />
+              <NumericKeypad onKeyPress={handleKeyPress} hiddenKeys={['00']} labelColor="#FFFFFF" />
+            </>
+          )}
         </BottomSheetView>
       </BottomSheet>
 
