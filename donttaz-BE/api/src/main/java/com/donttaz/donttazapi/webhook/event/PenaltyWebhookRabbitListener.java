@@ -27,7 +27,7 @@ public class PenaltyWebhookRabbitListener {
      * 외부 메시지 큐(RabbitMQ)에서 이벤트를 구독하여 수치심 메시지 알림을 비동기로 전송합니다.
      */
     @Transactional
-    @RabbitListener(queues = "penalty.webhook.queue")
+    @RabbitListener(queues = RabbitMQConfig.PENALTY_QUEUE)
     public void receivePenaltyEvent(VaultPenaltyEvent event) {
         log.info("Received penalty event for vault ID: {}", event.wishlistVaultId());
 

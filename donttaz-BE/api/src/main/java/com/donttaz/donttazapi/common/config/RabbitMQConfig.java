@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     public static final String PENALTY_EXCHANGE = "penalty.exchange";
-    public static final String PENALTY_QUEUE = "penalty.queue";
+    public static final String PENALTY_QUEUE = "penalty.webhook.queue";
     public static final String PENALTY_ROUTING_KEY = "penalty.routing.key";
 
     @Bean
