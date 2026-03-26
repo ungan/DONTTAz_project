@@ -6,18 +6,13 @@ from app.api.report import router as report_router
 from app.api.plan import router as plan_router
 from app.api.category import router as category_router
 from app.api.burndown import router as burndown_router
-from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI(
     title="Donttaz AI Service",
     description="Internal AI calculation service for Donttaz",
     version="1.1.0",
-    servers=[
-        {"url": "/", "description": "Default (Auto detected)"}
-    ]
 )
 
-Instrumentator().instrument(app).expose(app)
 
 @app.get("/")
 def read_root():

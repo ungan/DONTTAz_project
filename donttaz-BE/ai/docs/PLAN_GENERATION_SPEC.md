@@ -14,10 +14,11 @@
 3. 향후 7일 지출 예측 (ML)            (ForecastService — PatchTST 모델)
 4. 월급날까지 지출 예측 확장          (SealingService)
 5. 봉인금액 / 사용 가능 예산 산정     (SealingService)
-6. 카테고리별 예산 배분               (plan.py)
-7. 소비 추세 + 페르소나 + 요일 분석   (SpendingAnalysisService)
-8. LLM 카테고리 코멘트 + 개인화 추천  (LLMRecommendationService)
-9. LLM 실패 시 룰 기반 fallback      (RecommendationService)
+6. 카테고리별 예산 배분               (BudgetEstimationService)
+7. 최종 risk_score 계산 (3피처 가중합) (RiskScorer)
+8. 소비 추세 + 페르소나 + 요일 분석   (SpendingAnalysisService)
+9. LLM 카테고리 코멘트 + 개인화 추천  (LLMRecommendationService)
+10. LLM 실패 시 룰 기반 fallback     (RecommendationService)
 ```
 
 ---
@@ -48,26 +49,41 @@ PatchTST(시계열 예측 모델)를 사용해 최근 카드 거래 내역 기�
 
 #### Step 2. 월급날까지 예측 확장
 
-7일 이후~월급날까지는 요일별 평균 지출(`weekdayAvg`)로 채워 월급날까지의 예측 총 지출(`predictedSpendUntilPayday`)을 구합니다.
+처음 7일은 PatchTST 예측값을 사용하고, 7일 이후~월급날까지는 요일별 평균 지출(`weekdayAvg`)로 채워 월급날까지의 예측 총 지출(`predictedSpendUntilPayday`)을 구합니다.
+
+> **예측 실패 시**: `weekdayAvg`가 있으면 전체 구간을 요일 평균으로 대체합니다. `weekdayAvg`도 없으면 0으로 채웁니다.
 
 #### Step 3. 봉인금액 계산
 
 ```
-rollingStd     = 최근 일별 지출의 표준편차
-alpha          = max(0.10, 1.5 × 과거MAE비율)  ← 모델 오차율 기반
-riskBuffer     = alpha × predictedSpendUntilPayday + 1.2 × rollingStd
-requiredBudget = predictedSpendUntilPayday + riskBuffer
+preliminaryRisk = min(predictedSpendUntilPayday / (currentBalance + 1), 1.0)  ← ZeroDivision 방지
 
-usableBudget   = clamp(requiredBudget, currentBalance × 0.2, currentBalance)
-sealedAmount   = currentBalance - usableBudget
+rollingStd      = 입력된 카드 거래 전 기간 일별 지출 시계열의 표준편차
+alpha           = max(0.10, 1.5 × 과거MAE비율)  ← 과거 14일 rolling mean을 baseline으로 최근 7일 실제 지출과 비교한 MAE 비율 (데이터 14일 미만 시 0.15 고정)
+riskBuffer      = alpha × predictedSpendUntilPayday + 1.2 × rollingStd
+requiredBudget  = predictedSpendUntilPayday + riskBuffer
+
+usableBudget    = clamp(requiredBudget, currentBalance × 0.2, currentBalance)
+baseSealed      = currentBalance - usableBudget
+sealedAmount    = min(baseSealed × (1 + 0.3 × preliminaryRisk), currentBalance × 0.8)
+usableBudget    = currentBalance - sealedAmount
 ```
 
-#### Step 4. 상한선 적용 (소득 추정이 가능한 경우)
+> `preliminaryRisk`는 봉인 계산 전용 임시 위험도입니다. 응답의 `riskScore`와 다릅니다 (아래 참고).
+
+#### Step 4. 상한선 적용
+
+`잔액의 80%` 상한은 항상 적용됩니다.
+`처분가능소득의 30%` 상한은 **월 소득/고정지출 추정이 성공한 경우에만** 추가 적용됩니다.
 
 ```
+# 항상 적용 (sealing.py 내부)
+sealedAmount = min(sealedAmount, currentBalance × 0.8)
+
+# 소득 추정 성공 시에만 추가 적용 (plan_usecase.py)
 disposable   = max(월소득 - 고정지출, 0)
-sealedAmount = min(sealedAmount, disposable × 0.3)   # 가처분 소득의 30% 이하
-sealedAmount = min(sealedAmount, currentBalance × 0.8)  # 잔액의 80% 이하
+sealedAmount = min(sealedAmount, disposable × 0.3)
+sealedAmount = min(sealedAmount, currentBalance × 0.8)
 usableBudget = currentBalance - sealedAmount
 ```
 
@@ -75,8 +91,16 @@ usableBudget = currentBalance - sealedAmount
 
 ### `riskScore` / `budgetStrategy`
 
+카테고리 배분 완료 후 3개 피처의 가중합으로 계산됩니다.
+
 ```
-riskScore = min(predictedSpendUntilPayday / currentBalance, 1.0)
+predictedRatio         = min(predictedSpendUntilPayday / usableBudget, 1.0)
+categoryPressureScore  = max(카테고리별 실제지출 / 배정예산)   ← 현재 급여 주기, 가장 초과한 카테고리 기준
+burndownDeviationScore = clamp((이상적잔액 − 실제잔액) / usableBudget × 3)  ← 월초 5일간 완화 보정
+
+riskScore = 0.5 × predictedRatio
+          + 0.3 × categoryPressureScore
+          + 0.2 × burndownDeviationScore
 ```
 
 | `riskScore` 범위 | `budgetStrategy` |
@@ -85,8 +109,8 @@ riskScore = min(predictedSpendUntilPayday / currentBalance, 1.0)
 | ≥ 0.5           | `balanced`      |
 | < 0.5           | `safe`          |
 
-> `riskScore`는 **"현재 잔액 대비 월급날까지 예측 지출 비율"** 입니다.
-> 1.0에 가까울수록 잔액이 빠듯합니다.
+> 봉인금액 계산 시 사용하는 `preliminaryRisk`(단순 예측지출/잔액 비율)와 다릅니다.
+> 최종 `riskScore`는 예측 비율 외에 카테고리 압박과 번다운 이탈까지 반영합니다.
 
 **사용처:**
 1. `budgetStrategy` 결정
@@ -176,7 +200,7 @@ LLM이 위 신호를 기반으로 `recommendations` 배열을 생성합니다.
 
 ### `spendingPersona` — 소비 페르소나
 
-LDA 토픽 모델 기반으로 카드 거래 내역에서 소비 패턴을 분석해 도출합니다.
+카테고리별 지출 비중을 분석해 소비 패턴을 도출합니다.
 플랜 응답에도 포함되어 클라이언트가 사용자에게 바로 표시할 수 있습니다.
 
 | 페르소나 | 주요 소비 카테고리 | 설명 |
@@ -186,16 +210,16 @@ LDA 토픽 모델 기반으로 카드 거래 내역에서 소비 패턴을 분�
 | `생활밀착형` | 교통, 생활 | 교통·생활 필수 지출 중심 패턴 |
 | `여가충전형` | 여가 | 취미·엔터테인먼트 지출 비중이 높은 패턴 |
 | `자기계발형` | 의료/건강, 교육 | 건강·교육 투자 중심 패턴 |
-| `안정추구형` | 금융/보험 | 금융·보험 지출 비중이 높은 패턴 |
+| `재무관리형` | 금융/보험 | 금융·보험 지출 비중이 높은 패턴 |
 | `균형소비형` | (특정 카테고리 없음) | 특정 카테고리 집중 없이 고르게 소비 |
 
-> 데이터가 부족하거나 분석이 불가능한 경우 `null`이 반환됩니다.
+> 데이터가 부족하거나 분석이 불가능한 경우 `"데이터부족"` 또는 `"분석불가"` 문자열이 반환됩니다. 클라이언트는 이 두 값을 null과 동일하게 처리해야 합니다.
 
 ---
 
 ## 월소득 / 고정지출 추정 (`BudgetEstimationService`)
 
-Spring이 별도로 전달하지 않아도 AI가 계좌 거래 내역에서 자동 추정합니다.
+AI가 계좌 거래 내역에서 자동 추정합니다. 요청 스키마에 `monthlyIncome`, `fixedExpense` 필드가 존재하지만 **현재 구현에서는 사용되지 않으며**, 항상 거래 내역 기반 추정값이 우선 적용됩니다.
 
 ### 월소득 추정
 

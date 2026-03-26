@@ -9,4 +9,3 @@ openai
 python-dotenv
 gensim
 sentence-transformers
-prometheus-fastapi-instrumentator

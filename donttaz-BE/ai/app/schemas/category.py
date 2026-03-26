@@ -4,7 +4,7 @@ from typing import List, Optional
 
 class CategoryTransaction(BaseModel):
     transactionId: Optional[str] = None
-    merchantName: str = ""
+    counterpartyName: str = ""
     amount: int = 0
     category: Optional[str] = None
     description: Optional[str] = None
