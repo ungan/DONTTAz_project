@@ -1,5 +1,5 @@
 import { isAxiosError } from 'axios';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getBurndown } from '../api/get-burndown';
 import type { BurndownData } from './types';
 
@@ -24,20 +24,23 @@ function getBurndownErrorMessage(error: unknown) {
 }
 
 interface UseBurndownOptions {
+  enabled?: boolean;
   source?: string;
 }
 
 export function useBurndown(yearMonth: string, options?: UseBurndownOptions) {
+  const enabled = options?.enabled ?? true;
   const source = options?.source ?? 'unknown';
   const [data, setData] = useState<BurndownData | null>(null);
-  const [isPending, setIsPending] = useState(() => !!yearMonth);
+  const [isPending, setIsPending] = useState(() => !!yearMonth && enabled);
   const [error, setError] = useState<string | null>(null);
   const [noPlan, setNoPlan] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    if (!yearMonth) {
+    if (!yearMonth || !enabled) {
+      setIsPending(false);
       return;
     }
 
@@ -67,12 +70,16 @@ export function useBurndown(yearMonth: string, options?: UseBurndownOptions) {
     };
 
     void fetch();
-  }, [yearMonth, reloadKey, source]);
+  }, [yearMonth, reloadKey, enabled, source]);
 
-  const reload = () => {
+  const reload = useCallback(() => {
+    if (!enabled) {
+      return;
+    }
+
     setIsPending(true);
     setReloadKey((prev) => prev + 1);
-  };
+  }, [enabled]);
 
   return { data, isPending, error, noPlan, hasFetched, reload };
 }

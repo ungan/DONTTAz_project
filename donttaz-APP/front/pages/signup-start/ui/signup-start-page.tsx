@@ -18,13 +18,11 @@ export function SignupStartPage() {
     errorMessage,
     isStartingVerification,
     completeVerificationFromCallbackUrl,
-    resetFromStart,
     startVerification,
   } = useSignupFlow();
+  const completeVerificationFromCallbackUrlRef = useRef(completeVerificationFromCallbackUrl);
 
-  useEffect(() => {
-    resetFromStart();
-  }, []);
+  completeVerificationFromCallbackUrlRef.current = completeVerificationFromCallbackUrl;
 
   useEffect(() => {
     if (!callbackUrl || handledCallbackUrlRef.current === callbackUrl) {
@@ -36,8 +34,8 @@ export function SignupStartPage() {
     }
 
     handledCallbackUrlRef.current = callbackUrl;
-    void completeVerificationFromCallbackUrl(callbackUrl);
-  }, [callbackUrl, completeVerificationFromCallbackUrl]);
+    void completeVerificationFromCallbackUrlRef.current(callbackUrl);
+  }, [callbackUrl]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

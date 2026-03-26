@@ -141,6 +141,22 @@ export function BurndownChart({ data, yearMonth, vsIdealPercent, daysUntilBankru
           </TouchableOpacity>
         </View>
 
+        <View style={styles.legendWrap}>
+          <View style={styles.legendRow}>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendLine, { backgroundColor: accentColor }]} />
+              <Text style={styles.legendLabel}>실제 잔액선</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={styles.legendDashedLine} />
+              <Text style={styles.legendLabel}>권장 잔액선</Text>
+            </View>
+          </View>
+          <Text style={styles.legendDescription}>
+            실선은 실제 잔액, 점선은 권장 잔액 흐름을 뜻해요.
+          </Text>
+        </View>
+
         <View style={styles.chartContainer}>
           <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
             <Defs>

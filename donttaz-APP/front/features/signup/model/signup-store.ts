@@ -4,6 +4,7 @@ import type { SignupFormState, SignupStep } from '../types/signup';
 interface SignupStore extends SignupFormState {
   setCurrentStep: (step: SignupStep) => void;
   setErrorMessage: (message: string | null) => void;
+  setLastHandledIdentityVerificationId: (value: string | null) => void;
   setVerificationLoading: (value: boolean) => void;
   setSignupLoading: (value: boolean) => void;
   setAutoLoginLoading: (value: boolean) => void;
@@ -25,6 +26,7 @@ const initialState: SignupFormState = {
   currentStep: 'start',
   isSubmitting: false,
   errorMessage: null,
+  lastHandledIdentityVerificationId: null,
   verifiedName: '',
   verifiedPhoneNumber: '',
   isVerified: false,
@@ -47,6 +49,8 @@ export const useSignupStore = create<SignupStore>((set) => ({
   ...initialState,
   setCurrentStep: (currentStep) => set({ currentStep }),
   setErrorMessage: (errorMessage) => set({ errorMessage }),
+  setLastHandledIdentityVerificationId: (lastHandledIdentityVerificationId) =>
+    set({ lastHandledIdentityVerificationId }),
   setVerificationLoading: (isStartingVerification) => set({ isStartingVerification }),
   setSignupLoading: (isSigningUp) =>
     set((state) => ({ isSigningUp, isSubmitting: isSigningUp || state.isAutoLoggingIn })),
