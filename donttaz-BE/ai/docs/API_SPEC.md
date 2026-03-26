@@ -1,6 +1,6 @@
 # AI 서버 API 명세
 
-> Base URL: `http://[AI_SERVER_HOST]/api/v1`
+> Base URL (Spring 내부 호출): `http://donttaz-ai:8000/internal/ai`
 > Content-Type: `application/json`
 
 ---
@@ -108,7 +108,7 @@
 | `totalBudget` | int | 사용 가능 예산 |
 | `sealedAmount` | int | 봉인금액 (건드리지 말아야 할 예비비) |
 | `surplusAmount` | int | 잉여금 |
-| `riskScore` | float | 소비 위험도 0.0~1.0 |
+| `riskScore` | float | 소비 위험도 0.0~1.0. 예측지출 비율(0.5) + 카테고리 압박(0.3) + 번다운 이탈(0.2) 가중합 |
 | `budgetStrategy` | string | `safe` / `balanced` / `tight` |
 | `spendingPersona` | string\|null | 소비 페르소나 |
 | `categoryPlans[].categoryName` | string | 카테고리명 |
@@ -173,6 +173,7 @@
     "totalBudget": 620000,
     "totalSpent": 540000,
     "achievementRate": 87.1,
+    "spendingPersona": "식도락형",
     "aiOverallFeedback": "전체적으로 예산 범위 내에서 소비를 유지했습니다. 식비 지출이 다소 높으니 다음달에는 조정을 추천합니다.",
     "categoryReports": [
       {
@@ -208,7 +209,7 @@
 |------|------|------|
 | `totalSpent` | int | 해당 월 총 지출 |
 | `achievementRate` | float | 예산 달성률 (%) |
-| `spendingPersona` | string\|null | 소비 페르소나 (`식도락형` / `쇼핑족` / `생활밀착형` / `여가충전형` / `자기계발형` / `안정추구형` / `균형소비형`) |
+| `spendingPersona` | string\|null | 소비 페르소나 (`식도락형` / `쇼핑족` / `생활밀착형` / `여가충전형` / `자기계발형` / `재무관리형` / `균형소비형`) |
 | `aiOverallFeedback` | string | **LLM** 생성 전체 종합 피드백 한 단락 (페르소나 포함) |
 | `categoryReports[].categoryRate` | float | 전체 지출 중 해당 카테고리 비중 (%) |
 | `categoryReports[].feedback` | string | 룰 기반 예산 대비 피드백 ("계획 대비 초과 소비입니다." 등) |
@@ -227,7 +228,10 @@
 
 ### `POST /burndown/calculate`
 
-직전 월급일부터 다음 월급일까지의 잔액 소진 차트 데이터를 반환합니다.
+현재 시점 기준 급여 주기(last payday ~ next payday)의 잔액 소진 차트 데이터를 반환합니다.
+
+> `yearMonth`는 응답에 그대로 포함되는 표시용 필드이며, 실제 차트 범위 계산은 **현재 날짜 + 월급일** 기준으로 수행됩니다.
+> 또한 이 API는 다른 AI API와 달리 `status/message/data` 래핑 없이 결과 객체를 직접 반환합니다.
 
 #### Request Body
 
@@ -310,7 +314,7 @@
   "transactions": [
     {
       "transactionId": "tx_001",
-      "merchantName": "스타벅스",
+      "counterpartyName": "스타벅스",
       "amount": 5500,
       "category": null
     }
@@ -343,6 +347,20 @@
 | `confidenceScore` | float | 분류 신뢰도 0.0~1.0 |
 | `matchType` | string | `rule_exact` / `rule_partial` / `embedding` / `ssafy_category` / `default` |
 | `isModified` | bool | 사용자 수정 여부 (항상 false, 수정은 PATCH로) |
+
+---
+
+### `POST /categories/classify/ssafy`
+
+SSAFY **카드 거래** 응답 포맷을 입력받아 내부 분류 형식으로 변환한 뒤 카테고리 분류 결과를 반환합니다. 계좌 거래 등 다른 응답 포맷은 지원하지 않습니다.
+
+#### Request Body
+
+SSAFY 카드 거래 조회 API의 원본 JSON (`REC` 키 포함)을 그대로 전달합니다.
+
+#### Response Body
+
+`POST /categories/classify`와 동일한 형식으로 반환됩니다.
 
 ---
 

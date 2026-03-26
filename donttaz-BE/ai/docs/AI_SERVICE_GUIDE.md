@@ -45,7 +45,7 @@ Spring BE  →  AI 서버 (FastAPI)  →  응답 반환
 |------|------|
 | `totalBudget` | 사용 가능 예산 (잔액 - 봉인금액) |
 | `sealedAmount` | 봉인금액 (월급일까지 지출 예비비) |
-| `riskScore` | 위험도 0.0~1.0 (예측지출/잔액) |
+| `riskScore` | 위험도 0.0~1.0 (예측비율·카테고리압박·번다운이탈 가중합) |
 | `budgetStrategy` | `safe` / `balanced` / `tight` |
 | `categoryPlans` | 카테고리별 배정 금액 + AI 코멘트 |
 | `personalizedRecommendations` | 개인화 추천 3~4개 |
@@ -117,7 +117,9 @@ Spring BE  →  AI 서버 (FastAPI)  →  응답 반환
    - 3차: 기타 fallback (정확도 0.35)
 ```
 
-**`PATCH /categories`**: 사용자가 수정한 카테고리 반영 (이후 요청에서 해당 카테고리가 덮어씌워지지 않음)
+**`POST /categories/classify/ssafy`**: SSAFY 금융망 원본 응답을 그대로 전달하면 파싱 후 분류 결과 반환
+
+**`PATCH /categories`**: 카테고리명 정규화 후 반환. AI 서버 내부에 영속 저장하지 않으며, Spring BE(DB)가 결과를 저장하고 이후 요청 시 수정된 카테고리를 함께 전달해야 NLP가 덮어쓰지 않음
 
 ---
 
@@ -128,14 +130,18 @@ Spring BE  →  AI 서버 (FastAPI)  →  응답 반환
 > "월급일까지 쓸 돈은 미리 빼두고, 나머지만 자유롭게 쓰세요"
 
 ```
-봉인금액 = 잔액 - 사용가능예산
-사용가능예산 = 예측지출 + 리스크버퍼
-리스크버퍼  = (alpha × 예측지출) + (beta × 최근지출_표준편차)
+preliminaryRisk = min(예측지출 / 잔액, 1.0)
+
+riskBuffer      = (alpha × 예측지출) + (beta × 최근지출_표준편차)
+usableBudget    = clamp(예측지출 + riskBuffer, 잔액 × 0.2, 잔액)
+baseSealed      = 잔액 - usableBudget
+봉인금액         = min(baseSealed × (1 + gamma × preliminaryRisk), 잔액 × 0.8)
 ```
 
-- `alpha`: MAE 비율 기반 동적 계산 (최소 0.10)
-- `beta`: 1.2 고정
-- 상한선: 처분가능소득의 30%, 잔액의 80%
+- `alpha`: `max(0.10, 1.5 × MAE비율)` — 과거 14일 rolling mean을 baseline으로 최근 7일 실제 지출과 비교한 MAE 비율 기반 동적 계산 (데이터 14일 미만 시 0.15 고정)
+- `beta`: 1.2 고정 — 입력 카드 거래 전 기간 일별 지출 표준편차 증폭 계수
+- `gamma`: 0.3 고정 — preliminaryRisk 기반 봉인금액 추가 증폭 계수 (최대 +30%)
+- 상한선: 기본적으로 `잔액의 80%`. **월 소득/고정지출이 추정되는 경우에 한해** `처분가능소득의 30%` 상한 추가 적용
 
 ---
 
@@ -143,7 +149,7 @@ Spring BE  →  AI 서버 (FastAPI)  →  응답 반환
 
 - 사전학습된 **PatchTST 글로벌 모델** 사용 (`models/patchtst_global.pkl`)
 - 일별 지출 시계열로 변환 후 다음 7일 예측
-- 예측 실패 시 빈 배열 반환 → SealingService가 요일 평균으로 대체
+- 예측 실패 시 빈 배열 반환 → SealingService가 요일 평균(`weekdayAvg`)으로 전체 구간 대체. 요일 평균도 없으면 0으로 처리
 
 ---
 
@@ -160,12 +166,12 @@ Spring BE  →  AI 서버 (FastAPI)  →  응답 반환
 | 메서드 | 설명 |
 |--------|------|
 | `analyze_spending_trends()` | 카테고리별 전달 대비 증감률, 권장 비중 초과 여부 |
-| `extract_spending_persona()` | LDA 토픽 모델로 소비 페르소나 도출 |
+| `extract_spending_persona()` | 카테고리 지출 비중 기반 소비 페르소나 도출 |
 | `analyze_weekday_pattern()` | 요일별 지출 비중 전달 대비 변화 |
 | `analyze_persona_shift()` | 월별 페르소나 변화 감지 |
 | `analyze()` | 리포트용 종합 분석 (주차별, 충동지수, 위험도) |
 
-**소비 페르소나 종류**: 식도락형 / 쇼핑족 / 생활밀착형 / 여가충전형 / 자기계발형 / 안정추구형 / 균형소비형
+**소비 페르소나 종류**: 식도락형 / 쇼핑족 / 생활밀착형 / 여가충전형 / 자기계발형 / 재무관리형 / 균형소비형
 
 ---
 
@@ -200,5 +206,4 @@ Spring BE  →  AI 서버 (FastAPI)  →  응답 반환
 | `fastapi` | API 서버 |
 | `neuralforecast` | PatchTST 시계열 예측 |
 | `sentence-transformers` | SBERT 카테고리 분류 |
-| `gensim` | LDA 소비 토픽 분석 |
 | `openai` | GPT-4o-mini LLM 추천 |
