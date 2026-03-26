@@ -42,6 +42,7 @@ export interface SignupFormState {
   currentStep: SignupStep;
   isSubmitting: boolean;
   errorMessage: string | null;
+  lastHandledIdentityVerificationId: string | null;
   verifiedName: string;
   verifiedPhoneNumber: string;
   isVerified: boolean;

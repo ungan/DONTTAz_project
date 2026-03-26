@@ -88,6 +88,44 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  legendWrap: {
+    gap: 8,
+    marginBottom: 16,
+  },
+  legendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    flexWrap: 'wrap',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  legendLine: {
+    width: 22,
+    height: 2,
+    borderRadius: 999,
+  },
+  legendDashedLine: {
+    width: 22,
+    height: 2,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#9CA3AF',
+    borderStyle: 'dashed',
+  },
+  legendLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4B5563',
+  },
+  legendDescription: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#6B7280',
+  },
   chartContainer: {
     alignItems: 'flex-start',
   },

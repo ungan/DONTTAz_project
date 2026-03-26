@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { Primary } from '@/shared/constants/theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -6,14 +7,54 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   content: {
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 28,
+  },
+  tabRow: {
+    flexDirection: 'row',
+    marginBottom: 18,
+  },
+  tabButton: {
+    flex: 1,
+    alignItems: 'center',
+    paddingBottom: 10,
+    borderBottomWidth: 4,
+    borderBottomColor: '#E5E7EB',
+  },
+  tabButtonActive: {
+    borderBottomColor: Primary,
+  },
+  tabLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#D1D5DB',
+  },
+  tabLabelActive: {
+    color: '#111827',
+  },
+  firstSection: {
+    marginTop: 0,
+  },
+  section: {
+    marginTop: 16,
+  },
+  helperText: {
+    marginTop: 10,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  loaderWrap: {
+    paddingVertical: 48,
+    alignItems: 'center',
   },
   loader: {
-    marginTop: 40,
+    marginTop: 16,
   },
   previewSection: {
     position: 'relative',
-    marginTop: 8,
   },
   previewChartWrap: {
     opacity: 0.28,
@@ -43,8 +84,6 @@ export const styles = StyleSheet.create({
     elevation: 3,
   },
   stateCard: {
-    marginHorizontal: 16,
-    marginTop: 16,
     borderRadius: 20,
     backgroundColor: '#FFFFFF',
     paddingVertical: 28,
@@ -72,5 +111,19 @@ export const styles = StyleSheet.create({
   stateButtonWrap: {
     marginTop: 20,
     width: '100%',
+  },
+  dashboardHeading: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  dashboardDescription: {
+    marginTop: 6,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#6B7280',
+  },
+  ctaWrap: {
+    marginTop: 18,
   },
 });

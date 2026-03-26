@@ -69,6 +69,18 @@ export function useSignupFlow() {
   };
 
   const completeIdentityVerification = async (identityVerificationId: string) => {
+    if (signupState.lastHandledIdentityVerificationId === identityVerificationId) {
+      if (__DEV__) {
+        console.log('[SignupDebug][Flow] completeIdentityVerification:skipDuplicate', {
+          identityVerificationId,
+        });
+      }
+
+      return;
+    }
+
+    signupState.setLastHandledIdentityVerificationId(identityVerificationId);
+
     let verifiedData = getFallbackVerificationData();
 
     if (__DEV__) {
@@ -91,6 +103,7 @@ export function useSignupFlow() {
 
   const startVerification = async () => {
     signupState.setErrorMessage(null);
+    signupState.setLastHandledIdentityVerificationId(null);
     signupState.setVerificationLoading(true);
 
     if (__DEV__) {
@@ -143,6 +156,17 @@ export function useSignupFlow() {
     const { identityVerificationId, errorCode, errorMessage } = parsePortOneCallbackUrl(url);
 
     if (identityVerificationId && identityVerificationId.length > 0) {
+      if (signupState.lastHandledIdentityVerificationId === identityVerificationId) {
+        if (__DEV__) {
+          console.log('[SignupDebug][Flow] completeVerificationFromCallbackUrl:skipDuplicate', {
+            identityVerificationId,
+          });
+        }
+
+        signupState.setVerificationLoading(false);
+        return true;
+      }
+
       signupState.setErrorMessage(null);
       signupState.setVerificationLoading(true);
 
