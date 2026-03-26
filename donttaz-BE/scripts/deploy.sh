@@ -91,8 +91,18 @@ done
 
 if [ "$API_IS_READY" = false ] || [ "$AI_IS_READY" = false ]; then
     echo "❌ [$TARGET_ENV] 헬스 체크 실패. 배포를 중단하고 새로 띄운 컨테이너를 종료합니다."
-    echo "🔍 에러 원인 파악을 위해 멈춘 컨테이너의 로그(최근 100줄)를 확인합니다."
-    docker logs donttaz-api-${TARGET_ENV} --tail 100
+    echo "🔍 에러 원인 파악을 위해 실패한 컨테이너의 로그(최근 100줄)를 확인합니다."
+
+    if [ "$API_IS_READY" = false ]; then
+        echo "📝 [API 서버 로그]"
+        docker logs donttaz-api-${TARGET_ENV} --tail 100
+    fi
+
+    if [ "$AI_IS_READY" = false ]; then
+        echo "📝 [AI 서버 로그]"
+        docker logs donttaz-ai-${TARGET_ENV} --tail 100
+    fi
+
     docker compose -p donttaz-${TARGET_ENV} -f docker-compose.${TARGET_ENV}.yml down
     exit 1
 fi
