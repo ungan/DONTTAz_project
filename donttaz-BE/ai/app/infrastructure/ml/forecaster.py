@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-_model_path = Path(__file__).resolve().parent.parent.parent.parent / "models" / "patchtst_global.pkl"
+_model_path = Path(__file__).resolve().parent.parent.parent / "models" / "patchtst_global.pkl"
 with open(_model_path, "rb") as f:
     _global_model = pickle.load(f)
 
