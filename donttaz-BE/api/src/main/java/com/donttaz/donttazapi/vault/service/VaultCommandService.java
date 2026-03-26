@@ -422,12 +422,6 @@ public class VaultCommandService {
                                 "금고 자동 해지"));
 
                 saveHistory(vault.getId(), VaultKind.WISHLIST, TransactionType.WITHDRAW_MATURED, finalAmount, interest);
-
-                // RabbitMQ 팬아웃 (목표 달성 성공 이벤트)
-                rabbitTemplate.convertAndSend(com.donttaz.donttazapi.common.config.RabbitMQConfig.PENALTY_EXCHANGE,
-                                com.donttaz.donttazapi.common.config.RabbitMQConfig.PENALTY_ROUTING_KEY,
-                                new com.donttaz.donttazapi.webhook.event.VaultPenaltyEvent(vault.getId(), finalAmount, true,
-                                                true));
         }
 
         private void saveHistory(Long vaultId, VaultKind kind, TransactionType type, Long amount, Long interest) {

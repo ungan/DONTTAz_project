@@ -262,40 +262,4 @@ class VaultCommandServiceTest {
                                                                 penaltyEvent.terminated() &&
                                                                 penaltyEvent.success()));
         }
-
-        @Test
-        @DisplayName("입금 시 목표 금액에 도달하면 성공 이벤트를 발행한다.")
-        void deposit_reachesGoal_publishesSuccessEvent() {
-                // Given
-                given(currentUserProvider.getCurrentUserId()).willReturn(USER_ID);
-                WishlistVault vault = WishlistVault.builder()
-                                .userId(USER_ID)
-                                .wishName("테스트")
-                                .goalAmount(100000L)
-                                .lockedAmount(50000L)
-                                .status(VaultStatus.LOCKED)
-                                .build();
-                org.springframework.test.util.ReflectionTestUtils.setField(vault, "id", VAULT_ID);
-                org.springframework.test.util.ReflectionTestUtils.setField(vault, "createdAt", java.time.LocalDateTime.now().minusDays(10));
-
-                given(wishlistVaultRepository.findByIdAndUserId(VAULT_ID, USER_ID)).willReturn(java.util.Optional.of(vault));
-                given(accountRepository.findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(any(), any()))
-                                .willReturn(java.util.Optional.of(com.donttaz.donttazapi.account.domain.Account.builder()
-                                                .accountNumber("1000000000")
-                                                .status(com.donttaz.donttazapi.account.domain.AccountStatus.ACTIVE)
-                                                .build()));
-
-                // When
-                vaultCommandService.deposit(VAULT_ID, VaultKind.WISHLIST,
-                                new com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest(50000L));
-
-                // Then
-                verify(rabbitTemplate).convertAndSend(
-                                org.mockito.ArgumentMatchers.eq(com.donttaz.donttazapi.common.config.RabbitMQConfig.PENALTY_EXCHANGE),
-                                org.mockito.ArgumentMatchers.eq(com.donttaz.donttazapi.common.config.RabbitMQConfig.PENALTY_ROUTING_KEY),
-                                org.mockito.ArgumentMatchers.<com.donttaz.donttazapi.webhook.event.VaultPenaltyEvent>argThat(
-                                                event -> event.wishlistVaultId().equals(VAULT_ID) &&
-                                                                event.success() &&
-                                                                event.terminated()));
-        }
 }
