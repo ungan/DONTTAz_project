@@ -45,26 +45,24 @@ class PenaltyWebhookRabbitListenerTest {
         }
 
         @Test
-        @DisplayName("디스코드 패널티 이벤트 수신 시 디스코드용 템플릿으로 전송한다.")
-        void receivePenaltyEvent_SendsDiscordWebhook() {
+        @DisplayName("목표 달성 완료 시 축하 템플릿으로 전송한다.")
+        void receivePenaltyEvent_WhenSuccess_SendsCelebration() {
                 // Given
                 Long vaultId = 1L;
                 Long userId = 100L;
-                VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 50000L, false, true);
+                VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 1000000L, false, true);
 
                 PenaltyWebhook webhook = PenaltyWebhook.builder()
                                 .userId(userId)
                                 .wishlistVaultId(vaultId)
                                 .platformType(PlatformType.DISCORD)
-                                .shameMessage("야식 금지")
                                 .build();
 
                 com.donttaz.donttazapi.vault.domain.WishlistVault vault = com.donttaz.donttazapi.vault.domain.WishlistVault
                                 .builder()
                                 .userId(userId)
-                                .wishName("맥북 사기")
+                                .wishName("아이패드")
                                 .build();
-                org.springframework.test.util.ReflectionTestUtils.setField(vault, "withdrawalCount", 1);
 
                 com.donttaz.donttazapi.user.domain.User user = com.donttaz.donttazapi.user.domain.User.builder()
                                 .name("짱구")
@@ -80,34 +78,75 @@ class PenaltyWebhookRabbitListenerTest {
                 // Then
                 verify(webhookDispatcher).dispatch(
                                 org.mockito.ArgumentMatchers.eq(PlatformType.DISCORD),
-                                org.mockito.ArgumentMatchers.eq("https://test-discord.com"),
-                                org.mockito.ArgumentMatchers.contains("야식 금지"));
+                                org.mockito.ArgumentMatchers.anyString(),
+                                org.mockito.ArgumentMatchers.argThat(s -> s.contains("🎉") && s.contains("목표 달성 완료")
+                                                && s.contains("아이패드") && s.contains("1,000,000원") && !s.contains("출금")));
         }
 
         @Test
-        @DisplayName("금고 패널티 이벤트 수신 시 상세 마크다운 템플릿을 생성하여 전송한다.")
-        void receivePenaltyEvent_SendsDetailedWebhook() {
+        @DisplayName("완전 해지(파산) 시 의지 파산 템플릿으로 전송하며 출금 횟수는 제외한다.")
+        void receivePenaltyEvent_WhenTerminated_SendsFailureWithoutCount() {
                 // Given
                 Long vaultId = 1L;
-                Long userId = 100L;
-                VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 50000L, false, true);
+                Long userId = 1000L;
+                VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 50000L, true, false);
 
                 PenaltyWebhook webhook = PenaltyWebhook.builder()
                                 .userId(userId)
                                 .wishlistVaultId(vaultId)
-                                .platformType(PlatformType.MATTERMOST)
-                                .shameMessage("야식 그만")
+                                .platformType(PlatformType.DISCORD)
+                                .shameMessage("나는 의지 박약이다")
                                 .build();
 
                 com.donttaz.donttazapi.vault.domain.WishlistVault vault = com.donttaz.donttazapi.vault.domain.WishlistVault
                                 .builder()
                                 .userId(userId)
-                                .wishName("맥북 사기")
+                                .wishName("맥북")
                                 .build();
-                org.springframework.test.util.ReflectionTestUtils.setField(vault, "withdrawalCount", 1);
 
                 com.donttaz.donttazapi.user.domain.User user = com.donttaz.donttazapi.user.domain.User.builder()
-                                .name("짱구")
+                                .name("철수")
+                                .build();
+
+                given(penaltyWebhookRepository.findByWishlistVaultId(vaultId)).willReturn(Optional.of(webhook));
+                given(wishlistVaultRepository.findById(vaultId)).willReturn(Optional.of(vault));
+                given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+                // When
+                penaltyWebhookRabbitListener.receivePenaltyEvent(event);
+
+                // Then
+                verify(webhookDispatcher).dispatch(
+                                org.mockito.ArgumentMatchers.eq(PlatformType.DISCORD),
+                                org.mockito.ArgumentMatchers.anyString(),
+                                org.mockito.ArgumentMatchers.argThat(s -> s.contains("💀") && s.contains("의지 완전 파산")
+                                                && s.contains("피 같은 내 돈") && s.contains("50,000원") && !s.contains("출금 누적 횟수")));
+        }
+
+        @Test
+        @DisplayName("부분 출금 시 주의보 템플릿으로 전송하며 출금 횟수를 포함한다.")
+        void receivePenaltyEvent_WhenPartialWithdrawal_SendsWarningWithCount() {
+                // Given
+                Long vaultId = 1L;
+                Long userId = 1000L;
+                VaultPenaltyEvent event = new VaultPenaltyEvent(vaultId, 20000L, false, false);
+
+                PenaltyWebhook webhook = PenaltyWebhook.builder()
+                                .userId(userId)
+                                .wishlistVaultId(vaultId)
+                                .platformType(PlatformType.MATTERMOST)
+                                .shameMessage("야식 참자")
+                                .build();
+
+                com.donttaz.donttazapi.vault.domain.WishlistVault vault = com.donttaz.donttazapi.vault.domain.WishlistVault
+                                .builder()
+                                .userId(userId)
+                                .wishName("플스5")
+                                .build();
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "withdrawalCount", 2);
+
+                com.donttaz.donttazapi.user.domain.User user = com.donttaz.donttazapi.user.domain.User.builder()
+                                .name("훈이")
                                 .build();
 
                 given(penaltyWebhookRepository.findByWishlistVaultId(vaultId)).willReturn(Optional.of(webhook));
@@ -120,16 +159,9 @@ class PenaltyWebhookRabbitListenerTest {
                 // Then
                 verify(webhookDispatcher).dispatch(
                                 org.mockito.ArgumentMatchers.eq(PlatformType.MATTERMOST),
-                                org.mockito.ArgumentMatchers.eq("https://test-mattermost.com"),
-                                org.mockito.ArgumentMatchers.contains("짱구"));
-                verify(webhookDispatcher).dispatch(
-                                org.mockito.ArgumentMatchers.eq(PlatformType.MATTERMOST),
                                 org.mockito.ArgumentMatchers.anyString(),
-                                org.mockito.ArgumentMatchers.contains("맥북 사기"));
-                verify(webhookDispatcher).dispatch(
-                                org.mockito.ArgumentMatchers.eq(PlatformType.MATTERMOST),
-                                org.mockito.ArgumentMatchers.anyString(),
-                                org.mockito.ArgumentMatchers.contains("1회"));
+                                org.mockito.ArgumentMatchers.argThat(s -> s.contains("의지박약")
+                                                && s.contains("멀어진 꿈") && s.contains("20,000") && s.contains("2회")));
         }
 
         @Test
