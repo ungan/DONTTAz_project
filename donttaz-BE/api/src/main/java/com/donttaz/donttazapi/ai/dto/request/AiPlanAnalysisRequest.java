@@ -3,12 +3,22 @@ package com.donttaz.donttazapi.ai.dto.request;
 import java.util.List;
 
 public record AiPlanAnalysisRequest(
+        String targetYearMonth,
         Integer monthlyIncome,
-        List<CategorySummary> history
+        Integer fixedExpense,
+        Long currentBalance,
+        Integer paydayDay,
+        List<AiTransactionItem> accountTransactions,
+        List<AiTransactionItem> cardTransactions
 ) {
-    public record CategorySummary(
+    public record AiTransactionItem(
+            String id,
+            String transactionDate,
+            Long amount,
+            String counterpartyName,
             String category,
-            Long totalAmount
+            String memo,
+            String type
     ) {
     }
 }
