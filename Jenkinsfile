@@ -47,7 +47,9 @@ pipeline {
                             string(credentialsId: 'DISCORD_WEBHOOK_URL', variable: 'DISCORD_WEBHOOK_URL'),
                             string(credentialsId: 'AI_SERVER_URL', variable: 'AI_SERVER_URL'),
                             string(credentialsId: 'AI_ANALYSIS_ENDPOINT', variable: 'AI_ANALYSIS_ENDPOINT'),
-                            string(credentialsId: 'AI_PLANNING_ENDPOINT', variable: 'AI_PLANNING_ENDPOINT')
+                            string(credentialsId: 'AI_PLANNING_ENDPOINT', variable: 'AI_PLANNING_ENDPOINT'),
+                            string(credentialsId: 'GMS_KEY', variable: 'GMS_KEY'),
+                            string(credentialsId: 'LLM_ENABLED', variable: 'LLM_ENABLED')
                         ]) {
                             sh """
                             echo "FIN_API_BASE_URL=${FIN_API_BASE_URL}" > .env
@@ -72,6 +74,8 @@ pipeline {
                             echo "AI_SERVER_URL=${AI_SERVER_URL}" >> .env
                             echo "AI_ANALYSIS_ENDPOINT=${AI_ANALYSIS_ENDPOINT}" >> .env
                             echo "AI_PLANNING_ENDPOINT=${AI_PLANNING_ENDPOINT}" >> .env
+                            echo "GMS_KEY=${GMS_KEY}" >> .env
+                            echo "LLM_ENABLED=${LLM_ENABLED}" >> .env
                             """
                             echo "🔐 .env file created securely."
                         }
