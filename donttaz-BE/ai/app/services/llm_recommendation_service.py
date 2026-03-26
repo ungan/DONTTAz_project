@@ -127,7 +127,6 @@ class LLMRecommendationService:
 - 소비 페르소나 특성에 맞는 절감 전략 1개 포함
 - recommendations는 3~4개, categoryComments는 지출이 있는 카테고리만 포함"""
 
-        try:
             response = self.client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
