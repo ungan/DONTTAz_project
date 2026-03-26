@@ -14,6 +14,7 @@ import com.donttaz.donttazapi.user.dto.response.CreateUserResponse;
 import com.donttaz.donttazapi.user.dto.response.UserUpdateResponse;
 import com.donttaz.donttazapi.user.repository.FcmTokenRepository;
 import com.donttaz.donttazapi.user.repository.UserRepository;
+import com.donttaz.donttazapi.vault.service.VaultCommandService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class UserCommandService {
     private final FcmTokenRepository fcmTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final BankingClient bankingClient;
+    private final VaultCommandService vaultCommandService;
 
     public CreateUserResponse createUser(CreateUserRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -50,6 +52,9 @@ public class UserCommandService {
             .build();
 
         User savedUser = userRepository.save(user);
+
+        // 회원가입 성공 시 기본 금고 자동 생성
+        vaultCommandService.createDefaultVault(savedUser.getUserId());
 
         return CreateUserResponse.builder()
             .userId(savedUser.getUserId())

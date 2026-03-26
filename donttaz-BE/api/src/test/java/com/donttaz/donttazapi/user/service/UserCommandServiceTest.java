@@ -11,6 +11,7 @@ import com.donttaz.donttazapi.user.dto.request.FcmTokenRegisterRequest;
 import com.donttaz.donttazapi.user.dto.response.CreateUserResponse;
 import com.donttaz.donttazapi.user.repository.FcmTokenRepository;
 import com.donttaz.donttazapi.user.repository.UserRepository;
+import com.donttaz.donttazapi.vault.service.VaultCommandService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,6 +53,9 @@ class UserCommandServiceTest {
     @Mock
     private BankingClient bankingClient;
 
+    @Mock
+    private VaultCommandService vaultCommandService;
+
     @InjectMocks
     private UserCommandService userCommandService;
 
@@ -75,6 +79,7 @@ class UserCommandServiceTest {
 
         verify(userRepository).save(any(User.class));
         verify(bankingClient).createUserKey(TEST_EMAIL);
+        verify(vaultCommandService).createDefaultVault(TEST_USER_ID);
     }
 
     @Test

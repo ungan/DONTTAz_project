@@ -18,6 +18,7 @@ import com.donttaz.donttazapi.user.dto.response.UserUpdateResponse;
 import com.donttaz.donttazapi.user.repository.FcmTokenRepository;
 import com.donttaz.donttazapi.user.repository.UserRepository;
 import com.donttaz.donttazapi.user.service.UserCommandService;
+import com.donttaz.donttazapi.vault.service.VaultCommandService;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -38,6 +39,7 @@ class UserCommandServiceTest {
     @Mock private FcmTokenRepository fcmTokenRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private BankingClient bankingClient;
+    @Mock private VaultCommandService vaultCommandService;
 
     @InjectMocks private UserCommandService userCommandService;
 
@@ -65,6 +67,7 @@ class UserCommandServiceTest {
         // [Then]
         assertThat(response.getUserId()).isEqualTo(TEST_USER_ID);
         verify(userRepository).save(any(User.class));
+        verify(vaultCommandService).createDefaultVault(TEST_USER_ID);
     }
 
     @Test
