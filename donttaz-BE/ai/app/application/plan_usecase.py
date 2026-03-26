@@ -114,13 +114,13 @@ def execute(request) -> dict:
     persona_shift = svc.analyze_persona_shift(card_transactions)
     llm_result = LLMRecommendationService().generate_recommendations(
         spending_analysis=spending_analysis,
-        spending_persona=spending_persona,
-        weekday_pattern=weekday_pattern,
-        persona_shift=persona_shift,
         risk_score=risk_score,
         sealed_amount=sealed_amount,
         payday_day=payday,
         monthly_income=estimated_monthly_income,
+        spending_persona=spending_persona,
+        weekday_pattern=weekday_pattern,
+        persona_shift=persona_shift,
     )
 
     category_comments = llm_result.get("categoryComments", {})

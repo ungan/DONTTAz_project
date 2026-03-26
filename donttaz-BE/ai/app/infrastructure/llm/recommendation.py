@@ -77,36 +77,37 @@ class LLMRecommendationService:
         weekday_pattern: dict | None = None,
         persona_shift: dict | None = None,
     ) -> dict:
-        persona_str = ""
-        if spending_persona and spending_persona.get("persona") not in ("분석불가", "데이터부족"):
-            persona = spending_persona.get("persona", "균형소비형")
-            topics = spending_persona.get("topics", [])
-            top_keywords = []
-            for t in sorted(topics, key=lambda x: x.get("weight", 0), reverse=True)[:2]:
-                top_keywords.extend(t.get("keywords", []))
-            persona_str = f"\n소비_페르소나: {persona} (주요 소비 패턴: {', '.join(top_keywords[:4])})"
+        try:
+            persona_str = ""
+            if spending_persona and spending_persona.get("persona") not in ("분석불가", "데이터부족"):
+                persona = spending_persona.get("persona", "균형소비형")
+                topics = spending_persona.get("topics", [])
+                top_keywords = []
+                for t in sorted(topics, key=lambda x: x.get("weight", 0), reverse=True)[:2]:
+                    top_keywords.extend(t.get("keywords", []))
+                persona_str = f"\n소비_페르소나: {persona} (주요 소비 패턴: {', '.join(top_keywords[:4])})"
 
-        if persona_shift and persona_shift.get("shifted"):
-            persona_str += f"\n페르소나_변화: {persona_shift['previousPersona']} → {persona_shift['currentPersona']} (이번달 소비 성향이 바뀜)"
+            if persona_shift and persona_shift.get("shifted"):
+                persona_str += f"\n페르소나_변화: {persona_shift['previousPersona']} → {persona_shift['currentPersona']} (이번달 소비 성향이 바뀜)"
 
-        weekday_str = ""
-        if weekday_pattern and weekday_pattern.get("topIncrease"):
-            top_inc = weekday_pattern["topIncrease"]
-            top_dec = weekday_pattern["topDecrease"]
-            weekday_str = f"\n요일_패턴: {top_inc['weekday']}요일 지출 비중 +{top_inc['change']}%p 증가, {top_dec['weekday']}요일 {top_dec['change']}%p 감소"
+            weekday_str = ""
+            if weekday_pattern and weekday_pattern.get("topIncrease"):
+                top_inc = weekday_pattern["topIncrease"]
+                top_dec = weekday_pattern["topDecrease"]
+                weekday_str = f"\n요일_패턴: {top_inc['weekday']}요일 지출 비중 +{top_inc['change']}%p 증가, {top_dec['weekday']}요일 {top_dec['change']}%p 감소"
 
-        key_signals = self._build_key_signals(spending_analysis, weekday_pattern, persona_shift)
+            key_signals = self._build_key_signals(spending_analysis, weekday_pattern, persona_shift)
 
-        prompt_data = {
-            "핵심_소비_신호": key_signals,
-            "카테고리별_상세": spending_analysis,
-            "위험점수": risk_score,
-            "봉인금액": sealed_amount,
-            "월급일": f"{payday_day}일",
-            "월소득": monthly_income,
-        }
+            prompt_data = {
+                "핵심_소비_신호": key_signals,
+                "카테고리별_상세": spending_analysis,
+                "위험점수": risk_score,
+                "봉인금액": sealed_amount,
+                "월급일": f"{payday_day}일",
+                "월소득": monthly_income,
+            }
 
-        system_prompt = f"""당신은 개인 재무 분석 AI입니다. 사용자의 소비 데이터를 분석하여 개인화된 예산 조언을 한국어로 제공합니다.{persona_str}{weekday_str}
+            system_prompt = f"""당신은 개인 재무 분석 AI입니다. 사용자의 소비 데이터를 분석하여 개인화된 예산 조언을 한국어로 제공합니다.{persona_str}{weekday_str}
 
 반드시 다음 JSON 형식으로만 응답하세요:
 {{
