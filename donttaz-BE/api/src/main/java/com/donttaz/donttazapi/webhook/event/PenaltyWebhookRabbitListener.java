@@ -68,24 +68,55 @@ public class PenaltyWebhookRabbitListener {
                 String wishName = vault.getWishName();
                 int withdrawalCount = vault.getWithdrawalCount();
 
-                String statusHeader = event.terminated() ? "금고 해지 (규칙 위반)" : "부분 출금";
-
-                // 상세 마크다운 템플릿 생성
-                // 디스코드는 마크다운 헤더 형식이 다를 수 있으나, 여기서는 공통 마크다운 사용
-                String detailedMessage = String.format(
-                                "### [%s님 수신] 🚨 위시리스트 규칙 위반 알림\n" +
-                                                "📌 **대상 위시리스트**: %s\n" +
-                                                "💰 **이번 출금 금액**: %,d원\n" +
-                                                "🔢 **현재 인출 횟수**: %d회\n" +
-                                                "⚠️ **상태**: %s\n\n" +
-                                                "💬 **수치심 메시지**:\n" +
-                                                "> %s",
-                                userName,
-                                wishName,
-                                event.withdrawAmount(),
-                                withdrawalCount,
-                                statusHeader,
-                                webhook.getShameMessage());
+                String detailedMessage;
+                if (event.success()) {
+                        detailedMessage = String.format(
+                                        "# 🎉 \" 축하합니다! ***목표 달성 완료!*** \" 🎉\n" +
+                                                        "## 👏 %s님이 그 어려운 걸 해내셨습니다! (와... 진짜 안 꺼내실 줄은...)\n\n" +
+                                                        "\"약속을 지킨 당신, 진정한 의지의 한국인입니다! \"\n\n" +
+                                                        "🥳 **달성한 꿈**: %s\n" +
+                                                        "💰 **최종 수령 금액**: %,d원\n" +
+                                                        "⚠️ **최종 상태**: %s",
+                                        userName,
+                                        wishName,
+                                        event.withdrawAmount(),
+                                        "목표 달성 (Maturity)");
+                } else {
+                        if (event.terminated()) {
+                                detailedMessage = String.format(
+                                                "# ❗ 【 ***의지 완전 파산*** 】 ❗\n" +
+                                                                "# ━━━━━━━━━━━━━━━━━━━━━━\n" +
+                                                                "# \" ***%s*** \" \n" +
+                                                                "# ━━━━━━━━━━━━━━━━━━━━━━\n" +
+                                                                "### 👆 [끝남] 이렇게 호언장담하시더니... 결국 포기하셨군요, %s님? 🏳️\n\n" +
+                                                                "\"와... 진짜로 금고를 깨버릴 줄은 몰랐네요. 미래의 내가 원망하지 않을까요? (의지력 0%%)\"\n\n" +
+                                                                "💀 **파괴된 꿈**: %s\n" +
+                                                                "🔥 **피 같은 내 돈(이었던 것)**: %,d원",
+                                                webhook.getShameMessage(),
+                                                userName,
+                                                wishName,
+                                                event.withdrawAmount());
+                        } else {
+                                detailedMessage = String.format(
+                                                "# 🚨 %s님의 '의지박약' 주의보 발령!! 🚨\n" +
+                                                                "# ━━━━━━━━━━━━━━━━━━━━━━\n" +
+                                                                "# \" ***%s*** \" \n" +
+                                                                "# ━━━━━━━━━━━━━━━━━━━━━━\n" +
+                                                                "### 👆 [경고] 이렇게 호기롭게 선포하셨던 %s님의 의지가 흔들리고 있습니다! 🤨\n\n"
+                                                                +
+                                                                "\"에이, 딱 한 번만? 그 한 번이 두 번 되고 세 번 되는 거 아시죠? (정신 똑바로 차리세요!)\"\n\n"
+                                                                +
+                                                                "⚠️ **멀어진 꿈**: %s\n" +
+                                                                "📉 **탈탈 털린 금액**: %,d원\n" +
+                                                                "🔢 **출금 누적 횟수**: %d회",
+                                                userName,
+                                                webhook.getShameMessage(),
+                                                userName,
+                                                wishName,
+                                                event.withdrawAmount(),
+                                                withdrawalCount);
+                        }
+                }
 
                 // 플랫폼에 따라 URL 선택
                 String targetUrl = webhook.getPlatformType() == PlatformType.DISCORD ? discordUrl : mattermostUrl;

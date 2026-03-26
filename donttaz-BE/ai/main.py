@@ -1,19 +1,33 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI
+import logging
+import traceback
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+
 from app.api.report import router as report_router
 from app.api.plan import router as plan_router
 from app.api.category import router as category_router
 from app.api.burndown import router as burndown_router
-
 from prometheus_fastapi_instrumentator import Instrumentator
+
+logger = logging.getLogger("uvicorn.error")
 
 app = FastAPI(
     title="Donttaz AI Service",
     description="Internal AI calculation service for Donttaz",
-    version="1.1.1",
+    version="1.1.2",
 )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled Exception: {str(exc)}")
+    logger.error(traceback.format_exc())
+    return JSONResponse(
+        status_code=500,
+        content={"status": "ERROR", "message": "Internal Server Error", "detail": str(exc)},
+    )
 
 # Prometheus 메트릭스 등록 (Dashboard 'DOWN' 현상 해결용)
 Instrumentator().instrument(app).expose(app)
