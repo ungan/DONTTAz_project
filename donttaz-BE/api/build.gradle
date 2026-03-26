@@ -67,8 +67,25 @@ tasks.named('test') {
         envFile.eachLine { line ->
             // 주석(#)이나 빈 줄 제외, 'KEY=VALUE' 형식만 파싱
             if (line.trim() && !line.startsWith("#") && line.contains("=")) {
-                def (key, value) = line.tokenize("=")
-                environment key.trim(), value.trim()
+                def index = line.indexOf("=")
+                def key = line.substring(0, index).trim()
+                def value = line.substring(index + 1).trim()
+                environment key, value
+            }
+        }
+    }
+}
+
+bootRun {
+    def envFile = file("${project.rootDir}/.env")
+    if (envFile.exists()) {
+        envFile.eachLine { line ->
+            // 주석(#)이나 빈 줄 제외, 'KEY=VALUE' 형식만 파싱
+            if (line.trim() && !line.startsWith("#") && line.contains("=")) {
+                def index = line.indexOf("=")
+                def key = line.substring(0, index).trim()
+                def value = line.substring(index + 1).trim()
+                environment key, value
             }
         }
     }

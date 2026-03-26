@@ -1,43 +1,94 @@
 package com.donttaz.donttazapi.ai.service;
 
 import com.donttaz.donttazapi.ai.dto.request.AiAnalysisRequest;
+import com.donttaz.donttazapi.ai.dto.request.AiPlanAnalysisRequest;
 import com.donttaz.donttazapi.ai.dto.response.AiAnalysisResponse;
-import java.util.List;
+import com.donttaz.donttazapi.ai.dto.response.AiPlanAnalysisResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.donttaz.donttazapi.ai.dto.request.AiPlanAnalysisRequest;
-import com.donttaz.donttazapi.ai.dto.response.AiPlanAnalysisResponse;
-
+@Slf4j
 @Service
 public class AiServiceClient {
 
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
     private final String aiServerUrl;
     private final String analysisEndpoint;
     private final String planningEndpoint;
 
     public AiServiceClient(
             RestTemplate restTemplate,
+            ObjectMapper objectMapper,
             @Value("${ai.server.url}") String aiServerUrl,
-            @Value("${ai.analysis.endpoint:/api/v1/predict}") String analysisEndpoint,
-            @Value("${ai.planning.endpoint:/api/v1/plan}") String planningEndpoint
+            @Value("${ai.analysis.endpoint:/internal/ai/categories/classify}") String analysisEndpoint,
+            @Value("${ai.planning.endpoint:/internal/ai/plans/generate}") String planningEndpoint
     ) {
         this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
         this.aiServerUrl = aiServerUrl;
         this.analysisEndpoint = analysisEndpoint;
         this.planningEndpoint = planningEndpoint;
     }
 
-    public AiAnalysisResponse analyzeMerchants(List<String> merchantNames) {
+    public AiAnalysisResponse analyzeTransactions(AiAnalysisRequest request) {
         String url = aiServerUrl + analysisEndpoint;
-        AiAnalysisRequest request = new AiAnalysisRequest(merchantNames);
-        return restTemplate.postForObject(url, request, AiAnalysisResponse.class);
+        log.info("[AI Request] Calling analysis API: {}", url);
+        ResponseEntity<String> response = restTemplate.postForEntity(url, new HttpEntity<>(request), String.class);
+        AiAnalysisResponse parsedResponse = readResponse(response, AiAnalysisResponse.class, "analysis");
+
+        log.info(
+                "[AI Response] Analysis parsed status={}, message={}, resultCount={}",
+                parsedResponse != null ? parsedResponse.status() : "null",
+                parsedResponse != null ? parsedResponse.message() : "null",
+                parsedResponse != null && parsedResponse.data() != null ? parsedResponse.data().size() : null
+        );
+        return parsedResponse;
+    }
+
+    public AiAnalysisResponse analyzeMerchants(AiAnalysisRequest request) {
+        return analyzeTransactions(request);
     }
 
     public AiPlanAnalysisResponse calculateSpendingPlan(AiPlanAnalysisRequest request) {
         String url = aiServerUrl + planningEndpoint;
-        return restTemplate.postForObject(url, request, AiPlanAnalysisResponse.class);
+        log.info("[AI Request] Calling planning API: {}", url);
+        ResponseEntity<String> response = restTemplate.postForEntity(url, new HttpEntity<>(request), String.class);
+        AiPlanAnalysisResponse parsedResponse = readResponse(response, AiPlanAnalysisResponse.class, "planning");
+
+        log.info(
+                "[AI Response] Planning parsed status={}, message={}, hasData={}, categoryPlanCount={}",
+                parsedResponse != null ? parsedResponse.status() : "null",
+                parsedResponse != null ? parsedResponse.message() : "null",
+                parsedResponse != null && parsedResponse.data() != null,
+                parsedResponse != null && parsedResponse.data() != null && parsedResponse.data().categories() != null
+                        ? parsedResponse.data().categories().size()
+                        : null
+        );
+
+        if (parsedResponse == null || !"SUCCESS".equals(parsedResponse.status()) || parsedResponse.data() == null) {
+            log.error("[AI Error] Invalid response from AI server. Response: {}", parsedResponse);
+            throw new RuntimeException("AI 서버로부터 올바른 소비 계획 응답을 받지 못했습니다.");
+        }
+
+        return parsedResponse;
+    }
+
+    private <T> T readResponse(ResponseEntity<String> response, Class<T> responseType, String context) {
+        log.info("[AI Response] {} status: {}", context, response.getStatusCode());
+        log.info("[AI Response] {} raw body: {}", context, response.getBody());
+
+        try {
+            return objectMapper.readValue(response.getBody(), responseType);
+        } catch (JsonProcessingException exception) {
+            log.error("[AI Response] Failed to parse {} response body: {}", context, response.getBody(), exception);
+            throw new RuntimeException("Failed to parse AI " + context + " response", exception);
+        }
     }
 }

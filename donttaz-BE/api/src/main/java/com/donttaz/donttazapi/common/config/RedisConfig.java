@@ -7,7 +7,10 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Configuration
 public class RedisConfig {
 
@@ -16,6 +19,14 @@ public class RedisConfig {
 
     @Value("${spring.data.redis.port}")
     private int port;
+
+    @PostConstruct
+    public void init() {
+        log.info("[Redis Debug] @Value Injected host: {}", host);
+        log.info("[Redis Debug] @Value Injected port: {}", port);
+        log.info("[Redis Debug] System.getenv(\"REDIS_HOST\"): {}", System.getenv("REDIS_HOST"));
+        log.info("[Redis Debug] System.getenv(\"REDIS_PORT\"): {}", System.getenv("REDIS_PORT"));
+    }
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {

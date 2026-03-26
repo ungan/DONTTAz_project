@@ -68,4 +68,9 @@ public class TransactionAiMetadata extends BaseEntity {
         this.isModified = true;
         this.modifiedAt = LocalDateTime.now();
     }
+
+    public void applyAiAnalysis(String category, Double confidenceScore) {
+        this.aiCategory = category;
+        this.confidenceScore = confidenceScore;
+    }
 }
