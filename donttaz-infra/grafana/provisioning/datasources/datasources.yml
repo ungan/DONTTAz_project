@@ -4,7 +4,7 @@ datasources:
   - name: prometheus_ds
     type: prometheus
     access: proxy
-    url: http://donttaz-prometheus:9090
+    url: http://prometheus:9090
     isDefault: true
     uid: prometheus_ds
     editable: true
