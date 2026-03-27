@@ -71,9 +71,9 @@ public class PenaltyWebhookRabbitListener {
                 String detailedMessage;
                 if (event.success()) {
                         detailedMessage = String.format(
-                                        "# 🎉 \" 축하합니다! ***목표 달성 완료!*** \" 🎉\n" +
+                                        "# 🎉 축하합니다! ***목표 달성 완료!*** 🎉\n" +
                                                         "## 👏 %s님이 그 어려운 걸 해내셨습니다! (와... 진짜 안 꺼내실 줄은...)\n\n" +
-                                                        "\"약속을 지킨 당신, 진정한 의지의 한국인입니다! \"\n\n" +
+                                                        "\"약속을 지킨 당신, 진정한 의지의 한국인입니다!\"\n\n" +
                                                         "🥳 **달성한 꿈**: %s\n" +
                                                         "💰 **최종 수령 금액**: %,d원\n" +
                                                         "⚠️ **최종 상태**: %s",
