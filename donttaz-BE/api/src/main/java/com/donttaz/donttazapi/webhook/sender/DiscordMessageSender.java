@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
@@ -34,8 +35,10 @@ public class DiscordMessageSender implements WebhookSender {
         try {
             restTemplate.postForEntity(webhookUrl, request, String.class);
             log.info("[Discord Webhook] 메시지 발송 완료");
+        } catch (HttpClientErrorException e) {
+            log.error("[Discord Webhook Error] 디스코드 응답 에러 ({}): {}", e.getStatusCode(), e.getResponseBodyAsString());
         } catch (Exception e) {
-            log.error("[Discord Webhook Error] 디스코드 발송 실패: {}", e.getMessage(), e);
+            log.error("[Discord Webhook Error] 디스코드 발송 중 예외 발생: {}", e.getMessage(), e);
         }
     }
 
