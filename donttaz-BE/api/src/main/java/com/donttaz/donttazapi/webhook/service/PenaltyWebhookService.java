@@ -42,13 +42,15 @@ public class PenaltyWebhookService {
             webhook = existingWebhook.get();
             webhook.updateWebhookSettings(
                     request.platformType(),
-                    request.shameMessage());
+                    request.shameMessage(),
+                    request.webhookUrl());
         } else {
             webhook = PenaltyWebhook.builder()
                     .userId(userId)
                     .wishlistVaultId(wishlistVaultId)
                     .platformType(request.platformType())
                     .shameMessage(request.shameMessage())
+                    .webhookUrl(request.webhookUrl())
                     .build();
         }
 

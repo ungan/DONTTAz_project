@@ -14,7 +14,7 @@ import jakarta.validation.Valid;
 @SecurityRequirement(name = "bearerAuth")
 public interface PenaltyWebhookSwagger {
 
-        @Operation(summary = "수치심 메시지 설정 저장 및 수정", description = "위시리스트 금고에 연결된 수치심 메시지와 카카오톡 웹훅 정보를 저장하거나 수정합니다.")
+        @Operation(summary = "수치심 메시지 설정 저장 및 수정", description = "위시리스트 금고에 연결된 수치심 메시지와 알림 플랫폼(Discord, Mattermost) 웹훅 정보를 저장하거나 수정합니다.")
         PenaltyWebhookResponse saveOrUpdateWebhook(
                         @Parameter(description = "위시리스트 금고 ID", example = "10") @PathVariable Long vaultId,
                         @RequestBody @Valid PenaltyWebhookRequest request);

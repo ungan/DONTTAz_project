@@ -262,4 +262,46 @@ class VaultCommandServiceTest {
                                                                 penaltyEvent.terminated() &&
                                                                 penaltyEvent.success()));
         }
+
+        @Test
+        @DisplayName("입금으로 목표 금액 달성 시 자동 만기 처리되고 성공 이벤트가 발행된다.")
+        void deposit_reachesGoal_publishesSuccessEvent() {
+                // Given
+                given(currentUserProvider.getCurrentUserId()).willReturn(USER_ID);
+
+                WishlistVault vault = WishlistVault.builder()
+                                .userId(USER_ID)
+                                .wishName("애플워치")
+                                .goalAmount(100000L)
+                                .lockedAmount(50000L) // 기존 잔액
+                                .status(VaultStatus.LOCKED)
+                                .build();
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "id", VAULT_ID);
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "baseInterestRate", 12.0);
+                org.springframework.test.util.ReflectionTestUtils.setField(vault, "createdAt",
+                                java.time.LocalDateTime.now().minusDays(10));
+
+                given(wishlistVaultRepository.findByIdAndUserId(VAULT_ID, USER_ID)).willReturn(Optional.of(vault));
+                given(accountRepository.findByUserIdAndIsPrimaryTrueAndStatusAndIsDeletedFalse(any(), any()))
+                                .willReturn(Optional.of(Account.builder()
+                                                .accountNumber("1000000000")
+                                                .status(AccountStatus.ACTIVE)
+                                                .build()));
+
+                // When
+                // 50,000원 추가 입금 -> 총 100,000원 (목표 달성)
+                vaultCommandService.deposit(VAULT_ID, VaultKind.WISHLIST,
+                                new com.donttaz.donttazapi.vault.dto.request.VaultDepositRequest(50000L));
+
+                // Then
+                assertThat(vault.getStatus()).isEqualTo(VaultStatus.MATURED);
+                verify(rabbitTemplate).convertAndSend(
+                                org.mockito.ArgumentMatchers.eq(
+                                                com.donttaz.donttazapi.common.config.RabbitMQConfig.PENALTY_EXCHANGE),
+                                org.mockito.ArgumentMatchers.eq(
+                                                com.donttaz.donttazapi.common.config.RabbitMQConfig.PENALTY_ROUTING_KEY),
+                                org.mockito.ArgumentMatchers.<com.donttaz.donttazapi.webhook.event.VaultPenaltyEvent>argThat(
+                                                penaltyEvent -> penaltyEvent.wishlistVaultId().equals(VAULT_ID) &&
+                                                                penaltyEvent.success()));
+        }
 }

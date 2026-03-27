@@ -12,11 +12,13 @@ public record PenaltyWebhookResponse(
 
         @Schema(description = "플랫폼 타입", example = "MATTERMOST") PlatformType platformType,
 
-        @Schema(description = "수치심 메시지 내용", example = "방금 야식 결제해 버렸습니다. 한마디씩 부탁드립니다.") String shameMessage) {
+        @Schema(description = "수치심 메시지 내용", example = "방금 야식 결제해 버렸습니다. 한마디씩 부탁드립니다.") String shameMessage,
+        @Schema(description = "웹훅 URL", example = "https://discord.com/api/webhooks/...") String webhookUrl) {
     public static PenaltyWebhookResponse from(PenaltyWebhook webhook) {
         return new PenaltyWebhookResponse(
                 webhook.getId(),
                 webhook.getPlatformType(),
-                webhook.getShameMessage());
+                webhook.getShameMessage(),
+                webhook.getWebhookUrl());
     }
 }

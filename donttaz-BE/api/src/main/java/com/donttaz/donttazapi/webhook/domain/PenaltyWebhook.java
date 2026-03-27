@@ -31,17 +31,22 @@ public class PenaltyWebhook extends BaseEntity {
     @Column(name = "shame_message", nullable = false, length = 200)
     private String shameMessage;
 
+    @Column(name = "webhook_url", length = 500)
+    private String webhookUrl;
+
     @Builder
     private PenaltyWebhook(Long userId, Long wishlistVaultId, PlatformType platformType,
-            String shameMessage) {
+            String shameMessage, String webhookUrl) {
         this.userId = userId;
         this.wishlistVaultId = wishlistVaultId;
         this.platformType = platformType;
         this.shameMessage = shameMessage;
+        this.webhookUrl = webhookUrl;
     }
 
-    public void updateWebhookSettings(PlatformType platformType, String shameMessage) {
+    public void updateWebhookSettings(PlatformType platformType, String shameMessage, String webhookUrl) {
         this.platformType = platformType;
         this.shameMessage = shameMessage;
+        this.webhookUrl = webhookUrl;
     }
 }
