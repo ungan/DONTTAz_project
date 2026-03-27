@@ -15,7 +15,7 @@ class SpendingAnalysisService:
         return "5주차"
 
     def _aggregate(self, transactions):
-        expense_txs = [tx for tx in transactions if tx["type"] == "WITHDRAWAL"]
+        expense_txs = [tx for tx in transactions if tx["type"] == "WITHDRAWAL" and int(tx.get("amount", 0)) <= 500000]
 
         total_spending = 0
         weekly_spending = defaultdict(int)
@@ -269,7 +269,7 @@ class SpendingAnalysisService:
         """카테고리 지출 비중 기반 소비 페르소나 도출"""
         expense_txs = [
             tx for tx in transactions
-            if tx.get("type") == "WITHDRAWAL" and int(tx.get("amount", 0)) > 0
+            if tx.get("type") == "WITHDRAWAL" and 0 < int(tx.get("amount", 0)) <= 500000
         ]
         if len(expense_txs) < 3:
             return {"persona": "데이터부족", "topics": []}
