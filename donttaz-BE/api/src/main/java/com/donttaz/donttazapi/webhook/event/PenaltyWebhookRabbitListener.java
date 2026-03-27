@@ -118,8 +118,11 @@ public class PenaltyWebhookRabbitListener {
                         }
                 }
 
-                // 플랫폼에 따라 URL 선택
-                String targetUrl = webhook.getPlatformType() == PlatformType.DISCORD ? discordUrl : mattermostUrl;
+                // 플랫폼에 따라 URL 선택 (개별 설정된 URL이 있으면 우선 사용, 없으면 전역 설정 사용)
+                String targetUrl = webhook.getWebhookUrl();
+                if (targetUrl == null || targetUrl.isBlank()) {
+                        targetUrl = webhook.getPlatformType() == PlatformType.DISCORD ? discordUrl : mattermostUrl;
+                }
 
                 if (targetUrl == null || targetUrl.isBlank()) {
                         log.warn("Webhook URL for platform {} is not configured", webhook.getPlatformType());

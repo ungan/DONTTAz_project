@@ -62,7 +62,7 @@ class PenaltyWebhookServiceTest {
         ReflectionTestUtils.setField(savedWebhook, "id", 100L);
         given(penaltyWebhookRepository.save(any(PenaltyWebhook.class))).willReturn(savedWebhook);
 
-        PenaltyWebhookRequest request = new PenaltyWebhookRequest(PlatformType.MATTERMOST, "야식 그만");
+        PenaltyWebhookRequest request = new PenaltyWebhookRequest(PlatformType.MATTERMOST, "야식 그만", null);
 
         // When
         PenaltyWebhookResponse response = penaltyWebhookService.saveOrUpdateWebhook(vaultId, request);
@@ -86,7 +86,7 @@ class PenaltyWebhookServiceTest {
         ReflectionTestUtils.setField(otherVault, "id", vaultId);
         given(wishlistVaultRepository.findById(vaultId)).willReturn(Optional.of(otherVault));
 
-        PenaltyWebhookRequest request = new PenaltyWebhookRequest(PlatformType.MATTERMOST, "야식 그만");
+        PenaltyWebhookRequest request = new PenaltyWebhookRequest(PlatformType.MATTERMOST, "야식 그만", null);
 
         // When & Then
         assertThrows(CustomException.class, () -> penaltyWebhookService.saveOrUpdateWebhook(vaultId, request));
