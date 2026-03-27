@@ -4,24 +4,32 @@ import { Primary } from '@/shared/constants/theme';
 export const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
+    marginHorizontal: 20,
+    padding: 4,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
   },
   tab: {
     flex: 1,
     alignItems: 'center',
-    paddingBottom: 10,
-    borderBottomWidth: 4,
-    borderBottomColor: '#E5E7EB',
+    justifyContent: 'center',
+    minHeight: 44,
+    borderRadius: 12,
   },
   tabActive: {
-    borderBottomColor: Primary,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
   },
   label: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#D1D5DB',
+    color: '#6B7280',
   },
   labelActive: {
-    color: '#111827',
+    color: Primary,
   },
 });

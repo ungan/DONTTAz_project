@@ -11,7 +11,7 @@ export function ReportMonthlyPage() {
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
-      <PageHeader title="월별 리포트" />
+      <PageHeader title="월간 리포트" />
       <View style={styles.content}>
         <MonthlyReport yearMonth={yearMonth} />
       </View>

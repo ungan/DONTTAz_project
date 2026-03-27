@@ -9,6 +9,7 @@ interface SelectInputProps {
   value: string;
   placeholder?: string;
   onChange: (value: string) => void;
+  getOptionLabel?: (value: string) => string;
 }
 
 export function SelectInput({
@@ -17,8 +18,10 @@ export function SelectInput({
   value,
   placeholder = '선택',
   onChange,
+  getOptionLabel,
 }: SelectInputProps) {
   const [visible, setVisible] = useState(false);
+  const toOptionLabel = getOptionLabel ?? ((option: string) => option);
 
   const handleSelect = (option: string) => {
     onChange(option);
@@ -35,7 +38,7 @@ export function SelectInput({
         activeOpacity={0.7}
       >
         <Text style={[styles.selectorText, !value && styles.placeholder]}>
-          {value || placeholder}
+          {value ? toOptionLabel(value) : placeholder}
         </Text>
         <Ionicons name="chevron-down" size={20} color="#6B7280" />
       </TouchableOpacity>
@@ -57,7 +60,7 @@ export function SelectInput({
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.optionText, item === value && styles.optionTextSelected]}>
-                    {item}
+                    {toOptionLabel(item)}
                   </Text>
                 </TouchableOpacity>
               )}

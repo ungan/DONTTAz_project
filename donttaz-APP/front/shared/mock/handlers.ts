@@ -1,6 +1,6 @@
 // import paymentHistory from './data/payment-history.json';
 import transfer from './data/transfer.json';
-import monthlyReport from './data/monthly-report.json';
+import spendingReport from './data/spending-report.json';
 import yearlyReport from './data/yearly-report.json';
 // import accounts from './data/accounts.json';
 // import burndown from './data/burndown.json';
@@ -24,8 +24,8 @@ export const mockHandlers: MockHandler[] = [
   },
   {
     method: 'GET',
-    url: '/ai/transactions/categories',
-    response: monthlyReport,
+    url: '/ai/reports',
+    response: spendingReport,
   },
   {
     method: 'GET',

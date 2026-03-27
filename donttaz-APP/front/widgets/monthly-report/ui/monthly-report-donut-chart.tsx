@@ -20,6 +20,7 @@ const CY = SIZE / 2;
 const OUTER_R = 90;
 const INNER_R = 60;
 const LABEL_R = OUTER_R + 20;
+const MIN_VISIBLE_LABEL_PERCENT = 5;
 
 function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
   'worklet';
@@ -115,22 +116,25 @@ export function MonthlyReportDonutChart({ categories }: Props) {
         </G>
       </Svg>
       <Animated.View style={[styles.centerLabel, centerStyle]}>
-        <Text style={styles.centerText}>100%</Text>
+        <Text style={styles.centerText}>{'\uC18C\uBE44'}</Text>
+        <Text style={styles.centerSubText}>{'\uBE44\uC911'}</Text>
       </Animated.View>
-      {slices.map((slice) => (
-        <Text
-          key={slice.category}
-          style={[
-            styles.percentLabel,
-            {
-              left: slice.labelPos.x - 16,
-              top: slice.labelPos.y - 8,
-            },
-          ]}
-        >
-          {slice.percentage}%
-        </Text>
-      ))}
+      {slices
+        .filter((slice) => slice.percentage >= MIN_VISIBLE_LABEL_PERCENT)
+        .map((slice) => (
+          <Text
+            key={slice.category}
+            style={[
+              styles.percentLabel,
+              {
+                left: slice.labelPos.x - 16,
+                top: slice.labelPos.y - 8,
+              },
+            ]}
+          >
+            {slice.percentage}%
+          </Text>
+        ))}
     </View>
   );
 }

@@ -1,24 +1,36 @@
-export interface CategorizedTransaction {
-  transactionId: number;
-  transactionDate: string;
-  storeName: string;
-  amount: number;
-  aiCategory: string;
-  confidenceScore: number;
-  isModified: boolean;
+export interface SpendingReportCategoryItem {
+  categoryName: string;
+  allocatedAmount: number;
+  spentAmount: number;
+  categoryRate: number;
+  budgetAchievementRate?: number;
+  feedback: string;
+}
+
+export interface SpendingReportFeedbackItem {
+  type: 'persona' | 'warning' | 'pattern' | 'positive';
+  categoryName: string | null;
+  message: string;
+}
+
+export interface SpendingReportData {
+  yearMonth: string;
+  sealedAmount: number;
+  totalBudget: number;
+  totalSpent: number;
+  achievementRate: number;
+  spendingPersona: string | null;
+  aiOverallFeedback: string;
+  categoryReports: SpendingReportCategoryItem[];
+  personalizedFeedback: SpendingReportFeedbackItem[];
 }
 
 export interface MonthlyReportResponse {
   status: string;
   message: string;
-  data: {
-    totalElements: number;
-    categorizedList: CategorizedTransaction[];
-  };
+  data: SpendingReportData | null;
 }
 
 export interface MonthlyReportParams {
   yearMonth: string;
-  page?: number;
-  size?: number;
 }
