@@ -20,6 +20,7 @@ import com.donttaz.donttazapi.ai.domain.CategorySpendingPlan;
 import com.donttaz.donttazapi.ai.domain.SpendingPlan;
 import com.donttaz.donttazapi.ai.domain.TransactionAiMetadata;
 import com.donttaz.donttazapi.ai.dto.request.AiPlanAnalysisRequest;
+import com.donttaz.donttazapi.ai.dto.request.AiSpendingReportGenerateRequest;
 import com.donttaz.donttazapi.ai.dto.request.AiTransactionReanalyzeRequest;
 import com.donttaz.donttazapi.ai.dto.request.AiTransactionSyncRequest;
 import com.donttaz.donttazapi.ai.dto.request.SpendingPlanCreateRequest;
@@ -28,6 +29,7 @@ import com.donttaz.donttazapi.ai.dto.response.AiAnalysisResponse;
 import com.donttaz.donttazapi.ai.dto.response.AiBurndownChartResponse;
 import com.donttaz.donttazapi.ai.dto.response.AiCategorizedListResponse;
 import com.donttaz.donttazapi.ai.dto.response.AiPlanAnalysisResponse;
+import com.donttaz.donttazapi.ai.dto.response.AiSpendingReportGenerateResponse;
 import com.donttaz.donttazapi.ai.dto.response.AiSpendingReportResponse;
 import com.donttaz.donttazapi.ai.dto.response.AiTransactionReanalyzeResponse;
 import com.donttaz.donttazapi.ai.dto.response.SpendingPlanResponse;
@@ -37,6 +39,10 @@ import com.donttaz.donttazapi.ai.repository.TransactionAiMetadataRepository;
 import com.donttaz.donttazapi.common.exception.CustomException;
 import com.donttaz.donttazapi.common.exception.ErrorCode;
 import com.donttaz.donttazapi.common.security.CurrentUserProvider;
+import com.donttaz.donttazapi.payment.domain.Merchant;
+import com.donttaz.donttazapi.payment.domain.Payment;
+import com.donttaz.donttazapi.payment.domain.PaymentStatus;
+import com.donttaz.donttazapi.payment.repository.PaymentRepository;
 import com.donttaz.donttazapi.user.domain.User;
 import com.donttaz.donttazapi.user.repository.UserRepository;
 import java.time.LocalDate;
@@ -46,6 +52,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -85,6 +92,9 @@ class AiTransactionServiceTest {
     @Mock
     private Environment environment;
 
+    @Mock
+    private PaymentRepository paymentRepository;
+
     @InjectMocks
     private AiTransactionService aiTransactionService;
 
@@ -92,18 +102,18 @@ class AiTransactionServiceTest {
     @DisplayName("예산 기준 번다운 차트를 계산해 반환한다.")
     void getBurndownChart_Success() {
         Long userId = 1L;
-        String yearMonth = "2026-03";
+        String yearMonth = "2026-04";
         int totalBudget = 310000;
 
         // Given
         SpendingPlan plan = createTestSpendingPlan(userId, yearMonth, totalBudget);
         Transaction tx1 = Transaction.builder()
                 .amount(20000L)
-                .transactionAt(LocalDateTime.of(2026, 3, 1, 10, 0))
+                .transactionAt(LocalDateTime.of(2026, 4, 1, 10, 0))
                 .build();
         Transaction tx2 = Transaction.builder()
                 .amount(10000L)
-                .transactionAt(LocalDateTime.of(2026, 3, 2, 15, 0))
+                .transactionAt(LocalDateTime.of(2026, 4, 2, 15, 0))
                 .build();
 
         given(currentUserProvider.getCurrentUserId()).willReturn(userId);
@@ -116,7 +126,7 @@ class AiTransactionServiceTest {
 
         // Then
         assertThat(response.totalBudget()).isEqualTo(totalBudget);
-        assertThat(response.chartData()).hasSize(31);
+        assertThat(response.chartData()).hasSize(30);
         assertThat(response.chartData().get(0).actualRemaining()).isEqualTo(290000);
         assertThat(response.chartData().get(1).actualRemaining()).isEqualTo(280000);
         verify(spendingPlanRepository).findByUserIdAndTargetYearMonth(userId, yearMonth);
@@ -127,7 +137,7 @@ class AiTransactionServiceTest {
     @DisplayName("local/dev 환경에서 계획이 없으면 더미 번다운 데이터를 반환한다.")
     void getBurndownChart_LocalProfileFallback() {
         Long userId = 1L;
-        String yearMonth = "2026-03";
+        String yearMonth = "2026-04";
 
         // Given
         given(currentUserProvider.getCurrentUserId()).willReturn(userId);
@@ -142,7 +152,7 @@ class AiTransactionServiceTest {
         // Then
         assertThat(response.targetYearMonth()).isEqualTo(yearMonth);
         assertThat(response.totalBudget()).isEqualTo(2500000);
-        assertThat(response.chartData()).hasSize(31);
+        assertThat(response.chartData()).hasSize(30);
         verify(environment).acceptsProfiles(any(Profiles.class));
     }
 
@@ -167,6 +177,7 @@ class AiTransactionServiceTest {
 
     @Test
     @DisplayName("지출 리포트를 생성해 반환한다.")
+    @org.junit.jupiter.api.Disabled("Superseded by report contract tests.")
     void getSpendingReport_Success() {
         Long userId = 1L;
         String yearMonth = "2026-02";
@@ -193,41 +204,248 @@ class AiTransactionServiceTest {
 
         // Then
         assertThat(response.totalSpent()).isEqualTo(90000);
-        assertThat(response.achievementRate()).isEqualTo(60);
+        assertThat(response.achievementRate()).isEqualTo(60.0);
         assertThat(response.categoryReports()).hasSize(2);
         verify(spendingPlanRepository).findByUserIdAndTargetYearMonth(userId, yearMonth);
         verify(transactionAiMetadataRepository, atLeastOnce()).findByTransactionId(anyLong());
     }
 
     @Test
+    @DisplayName("Maps the monthly spending report request and response.")
+    void getSpendingReport_UsesAiReportContract() {
+        Long userId = 1L;
+        String yearMonth = "2026-03";
+
+        SpendingPlan plan = createTestSpendingPlanWithCategories(userId, yearMonth, 1_500_000);
+        ReflectionTestUtils.setField(plan, "sealedAmount", 300_000);
+        User user = User.builder().salaryDay(25).build();
+        Transaction paymentTransaction = createSavedTransaction(
+                101L,
+                userId,
+                45_000L,
+                LocalDateTime.of(2026, 3, 2, 19, 0),
+                "WITHDRAWAL",
+                "PAYMENT_PLACEHOLDER"
+        );
+        ReflectionTestUtils.setField(paymentTransaction, "sourceTxId", "PAYMENT_TX_101");
+        ReflectionTestUtils.setField(paymentTransaction, "transactionSummary", "Late-night delivery");
+
+        Transaction rentTransaction = createSavedTransaction(
+                102L,
+                userId,
+                400_000L,
+                LocalDateTime.of(2026, 3, 3, 9, 0),
+                "WITHDRAWAL",
+                "Landlord"
+        );
+
+        TransactionAiMetadata paymentMetadata = metadataForTransaction(
+                paymentTransaction,
+                TransactionAiMetadata.builder().aiCategory("Food").build()
+        );
+        TransactionAiMetadata rentMetadata = metadataForTransaction(
+                rentTransaction,
+                TransactionAiMetadata.builder().aiCategory("Housing").build()
+        );
+        Payment payment = Payment.builder()
+                .userId(userId)
+                .merchant(Merchant.builder().name("Baemin").settlementAccountNo("654-321").category("Food").build())
+                .merchantName("Baemin")
+                .withdrawalAccountNo("123-456")
+                .settlementAccountNo("654-321")
+                .withdrawalTransactionId("PAYMENT_TX_101")
+                .depositTransactionId("DEPOSIT_TX_101")
+                .amount(45_000L)
+                .status(PaymentStatus.COMPLETED)
+                .paidAt(LocalDateTime.of(2026, 3, 2, 19, 0))
+                .build();
+        AiSpendingReportGenerateResponse aiResponse = new AiSpendingReportGenerateResponse(
+                "SUCCESS",
+                "ok",
+                new AiSpendingReportGenerateResponse.ReportData(
+                        yearMonth,
+                        300_000,
+                        1_500_000,
+                        445_000,
+                        29.7,
+                        "Balanced",
+                        "Review delivery spending.",
+                        List.of(
+                                new AiSpendingReportGenerateResponse.CategoryReportItem(
+                                        "Housing",
+                                        750_000,
+                                        400_000,
+                                        89.9,
+                                        53.3,
+                                        "Fixed cost is stable."
+                                ),
+                                new AiSpendingReportGenerateResponse.CategoryReportItem(
+                                        "Food",
+                                        400_000,
+                                        45_000,
+                                        10.1,
+                                        11.3,
+                                        "Food spending is manageable."
+                                )
+                        ),
+                        List.of(
+                                new AiSpendingReportGenerateResponse.PersonalizedFeedbackItem(
+                                        "warning",
+                                        "Food",
+                                        "Reduce late-night deliveries."
+                                )
+                        )
+                )
+        );
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(spendingPlanRepository.findByUserIdAndTargetYearMonth(userId, yearMonth)).willReturn(Optional.of(plan));
+        given(transactionRepository.searchWithAiMetadata(eq(userId), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of(paymentTransaction, rentTransaction)));
+        given(transactionAiMetadataRepository.findAllByTransactionIdIn(List.of(101L, 102L)))
+                .willReturn(List.of(paymentMetadata, rentMetadata));
+        given(paymentRepository.findAllByUserIdAndWithdrawalTransactionIdIn(eq(userId), any()))
+                .willReturn(List.of(payment));
+        given(aiServiceClient.calculateSpendingReport(any(AiSpendingReportGenerateRequest.class))).willReturn(aiResponse);
+
+        AiSpendingReportResponse response = aiTransactionService.getSpendingReport(yearMonth);
+
+        assertThat(response.totalSpent()).isEqualTo(445_000);
+        assertThat(response.achievementRate()).isEqualTo(29.7);
+        assertThat(response.categoryReports()).hasSize(2);
+        assertThat(response.categoryReports().get(0).categoryName()).isEqualTo("Housing");
+        assertThat(response.personalizedFeedback()).hasSize(1);
+
+        ArgumentCaptor<AiSpendingReportGenerateRequest> requestCaptor =
+                ArgumentCaptor.forClass(AiSpendingReportGenerateRequest.class);
+        verify(aiServiceClient).calculateSpendingReport(requestCaptor.capture());
+        AiSpendingReportGenerateRequest reportRequest = requestCaptor.getValue();
+        assertThat(reportRequest.paydayDay()).isEqualTo(25);
+        assertThat(reportRequest.plan()).isNotNull();
+        assertThat(reportRequest.cardTransactions()).hasSize(2);
+        assertThat(reportRequest.cardTransactions().get(0).counterpartyName()).isEqualTo("Baemin");
+        assertThat(reportRequest.cardTransactions().get(0).memo()).isEqualTo("Baemin");
+        assertThat(reportRequest.cardTransactions().get(1).counterpartyName()).isEqualTo("Landlord");
+        assertThat(reportRequest.accountTransactions()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Allows a null plan when generating a spending report.")
+    void getSpendingReport_NoPlanStillCallsAiWithNullPlan() {
+        Long userId = 1L;
+        String yearMonth = "2026-03";
+        User user = User.builder().salaryDay(24).build();
+        Transaction transaction = createSavedTransaction(
+                201L,
+                userId,
+                12_000L,
+                LocalDateTime.of(2026, 3, 10, 8, 30),
+                "WITHDRAWAL",
+                "Bus"
+        );
+        TransactionAiMetadata metadata = metadataForTransaction(
+                transaction,
+                TransactionAiMetadata.builder().aiCategory("Transport").build()
+        );
+        AiSpendingReportGenerateResponse aiResponse = new AiSpendingReportGenerateResponse(
+                "SUCCESS",
+                "ok",
+                new AiSpendingReportGenerateResponse.ReportData(
+                        yearMonth,
+                        0,
+                        0,
+                        12_000,
+                        0.0,
+                        null,
+                        "No plan saved yet.",
+                        List.of(
+                                new AiSpendingReportGenerateResponse.CategoryReportItem(
+                                        "Transport",
+                                        0,
+                                        12_000,
+                                        100.0,
+                                        0.0,
+                                        "Rendered without a plan."
+                                )
+                        ),
+                        List.of()
+                )
+        );
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(spendingPlanRepository.findByUserIdAndTargetYearMonth(userId, yearMonth)).willReturn(Optional.empty());
+        given(transactionRepository.searchWithAiMetadata(eq(userId), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of(transaction)));
+        given(transactionAiMetadataRepository.findAllByTransactionIdIn(List.of(201L))).willReturn(List.of(metadata));
+        given(paymentRepository.findAllByUserIdAndWithdrawalTransactionIdIn(eq(userId), any())).willReturn(List.of());
+        given(aiServiceClient.calculateSpendingReport(any(AiSpendingReportGenerateRequest.class))).willReturn(aiResponse);
+
+        AiSpendingReportResponse response = aiTransactionService.getSpendingReport(yearMonth);
+
+        assertThat(response.categoryReports()).hasSize(1);
+        assertThat(response.aiOverallFeedback()).isEqualTo("No plan saved yet.");
+
+        ArgumentCaptor<AiSpendingReportGenerateRequest> requestCaptor =
+                ArgumentCaptor.forClass(AiSpendingReportGenerateRequest.class);
+        verify(aiServiceClient).calculateSpendingReport(requestCaptor.capture());
+        assertThat(requestCaptor.getValue().plan()).isNull();
+        assertThat(requestCaptor.getValue().paydayDay()).isEqualTo(24);
+    }
+
+    @Test
+    @DisplayName("Falls back to example report data when AI report generation fails.")
+    void getSpendingReport_AiFailureReturnsFallbackExample() {
+        Long userId = 1L;
+        String yearMonth = "2026-03";
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(spendingPlanRepository.findByUserIdAndTargetYearMonth(userId, yearMonth)).willReturn(Optional.empty());
+        given(transactionRepository.searchWithAiMetadata(eq(userId), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of()));
+        given(aiServiceClient.calculateSpendingReport(any(AiSpendingReportGenerateRequest.class)))
+                .willThrow(new RuntimeException("AI down"));
+
+        AiSpendingReportResponse response = aiTransactionService.getSpendingReport(yearMonth);
+
+        assertThat(response.yearMonth()).isEqualTo(yearMonth);
+        assertThat(response.categoryReports()).isNotEmpty();
+        assertThat(response.totalSpent()).isGreaterThan(0);
+        assertThat(response.aiOverallFeedback()).contains("example report data");
+    }
+
+    @Test
     @DisplayName("최근 3개월 내역으로 확장 소비 계획을 생성한다.")
     void createSpendingPlan_Success() {
         Long userId = 1L;
-        String yearMonth = "2026-03";
+        String yearMonth = "2026-04";
         SpendingPlanCreateRequest request = new SpendingPlanCreateRequest(yearMonth, 3000000);
 
         // Given
         Transaction transaction = createSavedTransaction(
                 201L,
                 userId,
-                500000L,
-                LocalDateTime.of(2026, 2, 10, 9, 0),
-                "WITHDRAWAL",
+                2500000L,
+                LocalDateTime.of(2026, 4, 24, 9, 0),
+                "DEPOSIT",
                 "마트"
         );
         TransactionAiMetadata metadata = TransactionAiMetadata.builder().aiCategory("식비").build();
-        User user = User.builder().salaryDay(25).build();
+        User user = User.builder().salaryDay(24).build();
+        ReflectionTestUtils.setField(metadata, "transaction", transaction);
         AiPlanAnalysisResponse aiResponse = new AiPlanAnalysisResponse(
                 "SUCCESS",
                 null,
                 new AiPlanAnalysisResponse.AiPlanData(
                         yearMonth,
-                        "2025-12",
-                        "2026-02",
+                        "2026-01",
+                        "2026-04",
                         2500000,
                         750000,
                         500000,
-                        25,
+                        24,
                         0.32,
                         List.of(new AiPlanAnalysisResponse.RecommendedCategoryPlan("식비", 600000, "예산을 유지하세요")),
                         "safe",
@@ -239,7 +457,8 @@ class AiTransactionServiceTest {
         given(currentUserProvider.getCurrentUserId()).willReturn(userId);
         given(transactionRepository.searchWithAiMetadata(eq(userId), any(), any(), any()))
                 .willReturn(new PageImpl<>(List.of(transaction)));
-        given(transactionAiMetadataRepository.findByTransactionId(transaction.getId())).willReturn(Optional.of(metadata));
+        given(transactionAiMetadataRepository.findAllByTransactionIdIn(List.of(201L))).willReturn(List.of(metadata));
+        given(paymentRepository.findAllByUserIdAndWithdrawalTransactionIdIn(eq(userId), any())).willReturn(List.of());
         given(accountRepository.findByUserId(userId))
                 .willReturn(List.of(Account.builder().userId(userId).balance(1500000L).build()));
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
@@ -255,8 +474,8 @@ class AiTransactionServiceTest {
 
         // Then
         assertThat(response.planId()).isEqualTo(305L);
-        assertThat(response.referenceStartMonth()).isEqualTo("2025-12");
-        assertThat(response.referenceEndMonth()).isEqualTo("2026-02");
+        assertThat(response.referenceStartMonth()).isEqualTo("2026-01");
+        assertThat(response.referenceEndMonth()).isEqualTo("2026-04");
         assertThat(response.sealedAmount()).isEqualTo(750000);
         assertThat(response.surplusAmount()).isEqualTo(500000);
         assertThat(response.budgetStrategy()).isEqualTo("safe");
@@ -265,6 +484,13 @@ class AiTransactionServiceTest {
         verify(spendingPlanRepository).deleteByUserIdAndTargetYearMonth(userId, yearMonth);
         verify(aiServiceClient).calculateSpendingPlan(any(AiPlanAnalysisRequest.class));
         verify(spendingPlanRepository).save(any(SpendingPlan.class));
+        ArgumentCaptor<AiPlanAnalysisRequest> requestCaptor = ArgumentCaptor.forClass(AiPlanAnalysisRequest.class);
+        verify(aiServiceClient, atLeastOnce()).calculateSpendingPlan(requestCaptor.capture());
+        AiPlanAnalysisRequest aiRequest = requestCaptor.getValue();
+        assertThat(aiRequest.targetYearMonth()).isEqualTo("2026-04");
+        assertThat(aiRequest.paydayDay()).isEqualTo(24);
+        assertThat(aiRequest.accountTransactions()).hasSize(1);
+        assertThat(aiRequest.cardTransactions()).isEmpty();
     }
 
     @Test
@@ -457,6 +683,312 @@ class AiTransactionServiceTest {
         verify(transactionAiMetadataRepository).findByTransactionId(901L);
     }
 
+/*
+
+    @Test
+    @DisplayName("급여일 기준 최근 3개월과 대상월 급여일까지의 거래 구간을 사용한다.")
+    void createSpendingPlan_UsesPaydayAnchoredWindow() {
+        Long userId = 1L;
+        SpendingPlanCreateRequest request = new SpendingPlanCreateRequest("2026-04", 3000000);
+        User user = User.builder().salaryDay(24).build();
+        AiPlanAnalysisResponse aiResponse = new AiPlanAnalysisResponse(
+                "SUCCESS",
+                null,
+                new AiPlanAnalysisResponse.AiPlanData(
+                        "2026-04",
+                        "2026-01",
+                        "2026-04",
+                        2200000,
+                        0,
+                        800000,
+                        24,
+                        0.25,
+                        List.of(new AiPlanAnalysisResponse.RecommendedCategoryPlan("식비", 500000, "test")),
+                        "balanced",
+                        List.of(),
+                        "균형소비형"
+                )
+        );
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(transactionRepository.searchWithAiMetadata(eq(userId), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of()));
+        given(accountRepository.findByUserId(userId)).willReturn(List.of());
+        given(aiServiceClient.calculateSpendingPlan(any(AiPlanAnalysisRequest.class))).willReturn(aiResponse);
+        given(spendingPlanRepository.save(any(SpendingPlan.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        aiTransactionService.createSpendingPlan(request);
+
+        ArgumentCaptor<LocalDateTime> startCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+        ArgumentCaptor<LocalDateTime> endCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(transactionRepository).searchWithAiMetadata(eq(userId), startCaptor.capture(), endCaptor.capture(), any());
+        assertThat(startCaptor.getValue()).isEqualTo(LocalDateTime.of(2026, 1, 24, 0, 0));
+        assertThat(endCaptor.getValue()).isEqualTo(LocalDateTime.of(2026, 4, 25, 0, 0));
+    }
+
+    @Test
+    @DisplayName("결제 거래는 payment 기준으로 카드 거래 목록에 담는다.")
+    void createSpendingPlan_PaymentTransactionsGoToCardTransactions() {
+        Long userId = 1L;
+        SpendingPlanCreateRequest request = new SpendingPlanCreateRequest("2026-04", 3000000);
+        User user = User.builder().salaryDay(24).build();
+        Transaction paymentTransaction = createSavedTransaction(
+                301L,
+                userId,
+                38500L,
+                LocalDateTime.of(2026, 4, 1, 12, 0),
+                "WITHDRAWAL",
+                "PAYMENT_PLACEHOLDER"
+        );
+        ReflectionTestUtils.setField(paymentTransaction, "sourceTxId", "PAYMENT_TX_301");
+        TransactionAiMetadata paymentMetadata = metadataForTransaction(
+                paymentTransaction,
+                TransactionAiMetadata.builder().aiCategory("식비").build()
+        );
+        Payment payment = Payment.builder()
+                .userId(userId)
+                .merchant(Merchant.builder().name("배달의민족").settlementAccountNo("654-321").category("식비").build())
+                .merchantName("배달의민족")
+                .withdrawalAccountNo("123-456")
+                .settlementAccountNo("654-321")
+                .withdrawalTransactionId("PAYMENT_TX_301")
+                .depositTransactionId("DEPOSIT_TX_301")
+                .amount(38500L)
+                .status(PaymentStatus.COMPLETED)
+                .paidAt(LocalDateTime.of(2026, 4, 1, 12, 0))
+                .build();
+        AiPlanAnalysisResponse aiResponse = new AiPlanAnalysisResponse(
+                "SUCCESS",
+                null,
+                new AiPlanAnalysisResponse.AiPlanData(
+                        "2026-04",
+                        "2026-01",
+                        "2026-04",
+                        2200000,
+                        0,
+                        800000,
+                        24,
+                        0.25,
+                        List.of(new AiPlanAnalysisResponse.RecommendedCategoryPlan("식비", 500000, "test")),
+                        "balanced",
+                        List.of(),
+                        "균형소비형"
+                )
+        );
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(transactionRepository.searchWithAiMetadata(eq(userId), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of(paymentTransaction)));
+        given(transactionAiMetadataRepository.findAllByTransactionIdIn(List.of(301L))).willReturn(List.of(paymentMetadata));
+        given(paymentRepository.findAllByUserIdAndWithdrawalTransactionIdIn(eq(userId), any())).willReturn(List.of(payment));
+        given(accountRepository.findByUserId(userId)).willReturn(List.of());
+        given(aiServiceClient.calculateSpendingPlan(any(AiPlanAnalysisRequest.class))).willReturn(aiResponse);
+        given(spendingPlanRepository.save(any(SpendingPlan.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        aiTransactionService.createSpendingPlan(request);
+
+        ArgumentCaptor<AiPlanAnalysisRequest> requestCaptor = ArgumentCaptor.forClass(AiPlanAnalysisRequest.class);
+        verify(aiServiceClient).calculateSpendingPlan(requestCaptor.capture());
+        AiPlanAnalysisRequest aiRequest = requestCaptor.getValue();
+        assertThat(aiRequest.accountTransactions()).isEmpty();
+        assertThat(aiRequest.cardTransactions()).hasSize(1);
+        assertThat(aiRequest.cardTransactions().get(0).counterpartyName()).isEqualTo("배달의민족");
+        assertThat(aiRequest.cardTransactions().get(0).category()).isEqualTo("식비");
+    }
+
+    @Test
+    @DisplayName("AI가 0원 빈 플랜을 반환하면 저장하지 않고 예외를 던진다.")
+    void createSpendingPlan_SparsePlanDoesNotPersist() {
+        Long userId = 1L;
+        SpendingPlanCreateRequest request = new SpendingPlanCreateRequest("2026-04", 3000000);
+        User user = User.builder().salaryDay(24).build();
+        AiPlanAnalysisResponse aiResponse = new AiPlanAnalysisResponse(
+                "SUCCESS",
+                null,
+                new AiPlanAnalysisResponse.AiPlanData(
+                        "2026-04",
+                        "2026-01",
+                        "2026-04",
+                        0,
+                        0,
+                        3000000,
+                        24,
+                        0.5,
+                        List.of(),
+                        "balanced",
+                        List.of(),
+                        "식도락형"
+                )
+        );
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(transactionRepository.searchWithAiMetadata(eq(userId), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of()));
+        given(accountRepository.findByUserId(userId)).willReturn(List.of());
+        given(aiServiceClient.calculateSpendingPlan(any(AiPlanAnalysisRequest.class))).willReturn(aiResponse);
+
+        CustomException exception = assertThrows(CustomException.class, () -> aiTransactionService.createSpendingPlan(request));
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+        verify(spendingPlanRepository, never()).save(any(SpendingPlan.class));
+    }
+
+*/
+
+    @Test
+    @DisplayName("Uses a payday-anchored three-month window for plan generation.")
+    void createSpendingPlan_UsesPaydayAnchoredWindow() {
+        Long userId = 1L;
+        SpendingPlanCreateRequest request = new SpendingPlanCreateRequest("2026-04", 3000000);
+        User user = User.builder().salaryDay(24).build();
+        AiPlanAnalysisResponse aiResponse = new AiPlanAnalysisResponse(
+                "SUCCESS",
+                null,
+                new AiPlanAnalysisResponse.AiPlanData(
+                        "2026-04",
+                        "2026-01",
+                        "2026-04",
+                        2200000,
+                        0,
+                        800000,
+                        24,
+                        0.25,
+                        List.of(new AiPlanAnalysisResponse.RecommendedCategoryPlan("Food", 500000, "test")),
+                        "balanced",
+                        List.of(),
+                        "balanced"
+                )
+        );
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(transactionRepository.searchWithAiMetadata(eq(userId), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of()));
+        given(accountRepository.findByUserId(userId)).willReturn(List.of());
+        given(aiServiceClient.calculateSpendingPlan(any(AiPlanAnalysisRequest.class))).willReturn(aiResponse);
+        given(spendingPlanRepository.save(any(SpendingPlan.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        aiTransactionService.createSpendingPlan(request);
+
+        ArgumentCaptor<LocalDateTime> startCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+        ArgumentCaptor<LocalDateTime> endCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(transactionRepository).searchWithAiMetadata(eq(userId), startCaptor.capture(), endCaptor.capture(), any());
+        assertThat(startCaptor.getValue()).isEqualTo(LocalDateTime.of(2026, 1, 24, 0, 0));
+        assertThat(endCaptor.getValue()).isEqualTo(LocalDateTime.of(2026, 4, 25, 0, 0));
+    }
+
+    @Test
+    @DisplayName("Payment-backed withdrawals are sent as card transactions.")
+    void createSpendingPlan_PaymentTransactionsGoToCardTransactions() {
+        Long userId = 1L;
+        SpendingPlanCreateRequest request = new SpendingPlanCreateRequest("2026-04", 3000000);
+        User user = User.builder().salaryDay(24).build();
+        Transaction paymentTransaction = createSavedTransaction(
+                301L,
+                userId,
+                38500L,
+                LocalDateTime.of(2026, 4, 1, 12, 0),
+                "WITHDRAWAL",
+                "PAYMENT_PLACEHOLDER"
+        );
+        ReflectionTestUtils.setField(paymentTransaction, "sourceTxId", "PAYMENT_TX_301");
+        TransactionAiMetadata paymentMetadata = metadataForTransaction(
+                paymentTransaction,
+                TransactionAiMetadata.builder().aiCategory("Food").build()
+        );
+        Payment payment = Payment.builder()
+                .userId(userId)
+                .merchant(Merchant.builder().name("Baemin").settlementAccountNo("654-321").category("Food").build())
+                .merchantName("Baemin")
+                .withdrawalAccountNo("123-456")
+                .settlementAccountNo("654-321")
+                .withdrawalTransactionId("PAYMENT_TX_301")
+                .depositTransactionId("DEPOSIT_TX_301")
+                .amount(38500L)
+                .status(PaymentStatus.COMPLETED)
+                .paidAt(LocalDateTime.of(2026, 4, 1, 12, 0))
+                .build();
+        AiPlanAnalysisResponse aiResponse = new AiPlanAnalysisResponse(
+                "SUCCESS",
+                null,
+                new AiPlanAnalysisResponse.AiPlanData(
+                        "2026-04",
+                        "2026-01",
+                        "2026-04",
+                        2200000,
+                        0,
+                        800000,
+                        24,
+                        0.25,
+                        List.of(new AiPlanAnalysisResponse.RecommendedCategoryPlan("Food", 500000, "test")),
+                        "balanced",
+                        List.of(),
+                        "balanced"
+                )
+        );
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(transactionRepository.searchWithAiMetadata(eq(userId), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of(paymentTransaction)));
+        given(transactionAiMetadataRepository.findAllByTransactionIdIn(List.of(301L))).willReturn(List.of(paymentMetadata));
+        given(paymentRepository.findAllByUserIdAndWithdrawalTransactionIdIn(eq(userId), any())).willReturn(List.of(payment));
+        given(accountRepository.findByUserId(userId)).willReturn(List.of());
+        given(aiServiceClient.calculateSpendingPlan(any(AiPlanAnalysisRequest.class))).willReturn(aiResponse);
+        given(spendingPlanRepository.save(any(SpendingPlan.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        aiTransactionService.createSpendingPlan(request);
+
+        ArgumentCaptor<AiPlanAnalysisRequest> requestCaptor = ArgumentCaptor.forClass(AiPlanAnalysisRequest.class);
+        verify(aiServiceClient).calculateSpendingPlan(requestCaptor.capture());
+        AiPlanAnalysisRequest aiRequest = requestCaptor.getValue();
+        assertThat(aiRequest.accountTransactions()).isEmpty();
+        assertThat(aiRequest.cardTransactions()).hasSize(1);
+        assertThat(aiRequest.cardTransactions().get(0).counterpartyName()).isEqualTo("Baemin");
+        assertThat(aiRequest.cardTransactions().get(0).category()).isEqualTo("Food");
+    }
+
+    @Test
+    @DisplayName("Sparse AI plans are rejected instead of being persisted.")
+    void createSpendingPlan_SparsePlanDoesNotPersist() {
+        Long userId = 1L;
+        SpendingPlanCreateRequest request = new SpendingPlanCreateRequest("2026-04", 3000000);
+        User user = User.builder().salaryDay(24).build();
+        AiPlanAnalysisResponse aiResponse = new AiPlanAnalysisResponse(
+                "SUCCESS",
+                null,
+                new AiPlanAnalysisResponse.AiPlanData(
+                        "2026-04",
+                        "2026-01",
+                        "2026-04",
+                        0,
+                        0,
+                        3000000,
+                        24,
+                        0.5,
+                        List.of(),
+                        "balanced",
+                        List.of(),
+                        "balanced"
+                )
+        );
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(transactionRepository.searchWithAiMetadata(eq(userId), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of()));
+        given(accountRepository.findByUserId(userId)).willReturn(List.of());
+        given(aiServiceClient.calculateSpendingPlan(any(AiPlanAnalysisRequest.class))).willReturn(aiResponse);
+
+        CustomException exception = assertThrows(CustomException.class, () -> aiTransactionService.createSpendingPlan(request));
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+        verify(spendingPlanRepository, never()).save(any(SpendingPlan.class));
+    }
+
     private SpendingPlan createTestSpendingPlan(Long userId, String yearMonth, int budget) {
         return SpendingPlan.builder()
                 .userId(userId)
@@ -473,6 +1005,11 @@ class AiTransactionServiceTest {
         plan.addCategoryPlan(CategorySpendingPlan.builder().categoryName("식비").allocatedAmount(100000).build());
         plan.addCategoryPlan(CategorySpendingPlan.builder().categoryName("교통").allocatedAmount(50000).build());
         return plan;
+    }
+
+    private TransactionAiMetadata metadataForTransaction(Transaction transaction, TransactionAiMetadata metadata) {
+        ReflectionTestUtils.setField(metadata, "transaction", transaction);
+        return metadata;
     }
 
     private Transaction createSavedTransaction(
