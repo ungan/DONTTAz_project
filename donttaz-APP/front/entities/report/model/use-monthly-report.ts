@@ -1,60 +1,109 @@
 import { useState, useEffect } from 'react';
 import { getMonthlyReport } from '../api/get-monthly-report';
+import {
+  MonthlyReportResponse,
+  SpendingReportData,
+  SpendingReportFeedbackItem,
+} from '../types/report';
+import { getReportCategoryColor } from './report-category-colors';
 
 export interface CategorySummary {
   category: string;
   totalAmount: number;
   percentage: number;
+  allocatedAmount: number;
+  budgetAchievementRate: number | null;
+  feedback: string;
   color: string;
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  '식비/카페': '#5899FD',
-  '교통': '#FF6B6B',
-  '문화/여가': '#FFD93D',
-  '통신/보험': '#6BCB77',
-  '쇼핑': '#C77DFF',
-  '송금': '#FF9F43',
-};
+export type MonthlyReportViewState = 'ready' | 'empty' | 'no-plan' | 'error';
 
-const DEFAULT_COLOR = '#A0AEC0';
+export interface MonthlyReportSummary {
+  yearMonth: string;
+  sealedAmount: number;
+  totalBudget: number;
+  totalSpent: number;
+  achievementRate: number;
+  spendingPersona: string | null;
+  aiOverallFeedback: string;
+  personalizedFeedback: SpendingReportFeedbackItem[];
+}
 
-function aggregateByCategory(
-  list: { aiCategory: string; amount: number }[]
-): CategorySummary[] {
-  const totals: Record<string, number> = {};
-
-  for (const item of list) {
-    totals[item.aiCategory] = (totals[item.aiCategory] ?? 0) + item.amount;
+function toBudgetAchievementRate(
+  spentAmount: number,
+  allocatedAmount: number,
+  responseRate?: number
+): number | null {
+  if (typeof responseRate === 'number') {
+    return responseRate;
   }
+  if (allocatedAmount <= 0) {
+    return null;
+  }
+  return Number(((spentAmount / allocatedAmount) * 100).toFixed(1));
+}
 
-  const grandTotal = Object.values(totals).reduce((sum, v) => sum + v, 0);
-
-  const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-
-  const exact = entries.map(([category, totalAmount]) => ({
-    category,
-    totalAmount,
-    exact: grandTotal > 0 ? (totalAmount / grandTotal) * 100 : 0,
-    color: CATEGORY_COLORS[category] ?? DEFAULT_COLOR,
+function toCategorySummary(data: SpendingReportData): CategorySummary[] {
+  return data.categoryReports.map((item) => ({
+    category: item.categoryName,
+    totalAmount: item.spentAmount,
+    percentage: item.categoryRate,
+    allocatedAmount: item.allocatedAmount,
+    budgetAchievementRate: toBudgetAchievementRate(
+      item.spentAmount,
+      item.allocatedAmount,
+      item.budgetAchievementRate
+    ),
+    feedback: item.feedback,
+    color: getReportCategoryColor(item.categoryName),
   }));
+}
 
-  const floored = exact.map((item) => ({ ...item, percentage: Math.floor(item.exact) }));
-  const remainder = 100 - floored.reduce((sum, item) => sum + item.percentage, 0);
+function toSummary(data: SpendingReportData): MonthlyReportSummary {
+  return {
+    yearMonth: data.yearMonth,
+    sealedAmount: data.sealedAmount,
+    totalBudget: data.totalBudget,
+    totalSpent: data.totalSpent,
+    achievementRate: data.achievementRate,
+    spendingPersona: data.spendingPersona,
+    aiOverallFeedback: data.aiOverallFeedback,
+    personalizedFeedback: data.personalizedFeedback,
+  };
+}
 
-  const result = floored
-    .map((item, i) => ({ ...item, remainder: item.exact - item.percentage, index: i }))
-    .sort((a, b) => b.remainder - a.remainder)
-    .map((item, i) => ({ ...item, percentage: item.percentage + (i < remainder ? 1 : 0) }))
-    .sort((a, b) => a.index - b.index)
-    .map(({ category, totalAmount, percentage, color }) => ({ category, totalAmount, percentage, color }));
+function buildFallbackSummary(yearMonth: string): MonthlyReportSummary {
+  return {
+    yearMonth,
+    sealedAmount: 0,
+    totalBudget: 0,
+    totalSpent: 0,
+    achievementRate: 0,
+    spendingPersona: null,
+    aiOverallFeedback: '',
+    personalizedFeedback: [],
+  };
+}
 
-  return result;
+function isNoPlanMessage(message: string) {
+  return new RegExp('\\uD50C\\uB79C|\\uACC4\\uD68D|\\uC608\\uC0B0', 'i').test(message);
+}
+
+function resolveViewState(
+  summary: MonthlyReportSummary,
+  categories: CategorySummary[]
+): MonthlyReportViewState {
+  const hasSpending = summary.totalSpent > 0;
+  const hasCategoryAmount = categories.some((item) => item.totalAmount > 0);
+  return hasSpending || hasCategoryAmount ? 'ready' : 'empty';
 }
 
 export function useMonthlyReport(yearMonth: string) {
+  const [summary, setSummary] = useState<MonthlyReportSummary>(buildFallbackSummary(yearMonth));
   const [categories, setCategories] = useState<CategorySummary[]>([]);
-  const [totalAmount, setTotalAmount] = useState(0);
+  const [viewState, setViewState] = useState<MonthlyReportViewState>('ready');
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,15 +113,35 @@ export function useMonthlyReport(yearMonth: string) {
     const fetch = async () => {
       setIsPending(true);
       setError(null);
+      setStatusMessage(null);
+
       try {
-        const res = await getMonthlyReport({ yearMonth });
-        const list = res.data.categorizedList;
-        const aggregated = aggregateByCategory(list);
-        const total = aggregated.reduce((sum, c) => sum + c.totalAmount, 0);
-        setCategories(aggregated);
-        setTotalAmount(total);
+        const res: MonthlyReportResponse = await getMonthlyReport({ yearMonth });
+
+        if (res.status !== 'SUCCESS' || !res.data) {
+          const message =
+            res.message || '\uB9AC\uD3EC\uD2B8 \uB370\uC774\uD130\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.';
+          setSummary(buildFallbackSummary(yearMonth));
+          setCategories([]);
+          setStatusMessage(message);
+          setViewState(isNoPlanMessage(message) ? 'no-plan' : 'error');
+          return;
+        }
+
+        const nextSummary = toSummary(res.data);
+        const nextCategories = toCategorySummary(res.data);
+        setSummary(nextSummary);
+        setCategories(nextCategories);
+        setStatusMessage(res.message);
+        setViewState(resolveViewState(nextSummary, nextCategories));
       } catch {
-        setError('데이터를 불러오지 못했습니다.');
+        setSummary(buildFallbackSummary(yearMonth));
+        setCategories([]);
+        setStatusMessage(
+          '\uB124\uD2B8\uC6CC\uD06C \uC0C1\uD0DC\uB97C \uD655\uC778\uD55C \uB4A4 \uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694.'
+        );
+        setViewState('error');
+        setError('\uB370\uC774\uD130\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.');
       } finally {
         setIsPending(false);
       }
@@ -81,5 +150,17 @@ export function useMonthlyReport(yearMonth: string) {
     fetch();
   }, [yearMonth]);
 
-  return { categories, totalAmount, isPending, error };
+  const topCategory = categories[0] ?? null;
+  const budgetGap = summary.totalBudget - summary.totalSpent;
+
+  return {
+    summary,
+    categories,
+    topCategory,
+    budgetGap,
+    viewState,
+    statusMessage,
+    isPending,
+    error,
+  };
 }

@@ -53,16 +53,23 @@ function MiniDonut({ percentage, color }: { percentage: number; color: string })
 interface AnimatedItemProps {
   cat: CategorySummary;
   index: number;
+  isLast: boolean;
 }
 
-function AnimatedItem({ cat, index }: AnimatedItemProps) {
+function AnimatedItem({ cat, index, isLast }: AnimatedItemProps) {
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(12);
 
   useEffect(() => {
     const delay = index * STAGGER_MS;
-    opacity.value = withDelay(delay, withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }));
-    translateY.value = withDelay(delay, withTiming(0, { duration: 300, easing: Easing.out(Easing.ease) }));
+    opacity.value = withDelay(
+      delay,
+      withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) })
+    );
+    translateY.value = withDelay(
+      delay,
+      withTiming(0, { duration: 300, easing: Easing.out(Easing.ease) })
+    );
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -71,13 +78,25 @@ function AnimatedItem({ cat, index }: AnimatedItemProps) {
   }));
 
   return (
-    <Animated.View style={[styles.item, animatedStyle]}>
+    <Animated.View style={[styles.item, !isLast && styles.itemBorder, animatedStyle]}>
       <MiniDonut percentage={cat.percentage} color={cat.color} />
       <View style={styles.info}>
-        <Text style={styles.category}>{cat.category}</Text>
-        <Text style={styles.percentage}>{cat.percentage}%</Text>
+        <View style={styles.topRow}>
+          <Text style={styles.category}>{cat.category}</Text>
+          <Text style={styles.amount}>{`${cat.totalAmount.toLocaleString()}\uC6D0`}</Text>
+        </View>
+        <Text style={styles.meta}>
+          {`\uBE44\uC911 ${cat.percentage}% \u00B7 \uC608\uC0B0 ${cat.allocatedAmount.toLocaleString()}\uC6D0`}
+        </Text>
+        {cat.budgetAchievementRate !== null ? (
+          <Text style={styles.meta}>
+            {`\uC608\uC0B0 \uB2EC\uC131\uB960 ${cat.budgetAchievementRate.toFixed(1)}%`}
+          </Text>
+        ) : (
+          <Text style={styles.meta}>{'\uACC4\uD68D\uC5D0 \uC5C6\uB358 \uC9C0\uCD9C \uD56D\uBAA9'}</Text>
+        )}
+        <Text style={styles.feedback}>{cat.feedback}</Text>
       </View>
-      <Text style={styles.amount}>{cat.totalAmount.toLocaleString()}원</Text>
     </Animated.View>
   );
 }
@@ -90,7 +109,12 @@ export function MonthlyReportCategoryList({ categories }: Props) {
   return (
     <View style={styles.container}>
       {categories.map((cat, index) => (
-        <AnimatedItem key={cat.category} cat={cat} index={index} />
+        <AnimatedItem
+          key={cat.category}
+          cat={cat}
+          index={index}
+          isLast={index === categories.length - 1}
+        />
       ))}
     </View>
   );

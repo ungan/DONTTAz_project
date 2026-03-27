@@ -2,15 +2,21 @@ import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
+    marginHorizontal: 20,
     marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     gap: 16,
   },
   column: {
     gap: 8,
-    paddingHorizontal: 24,
+    flex: 1,
   },
   item: {
     flexDirection: 'row',
@@ -25,5 +31,6 @@ export const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     color: '#374151',
+    flexShrink: 1,
   },
 });

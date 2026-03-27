@@ -11,7 +11,7 @@ interface ReportTabSelectorProps {
 
 const TABS: { id: ReportTab; label: string }[] = [
   { id: 'yearly', label: '연간 리포트' },
-  { id: 'monthly', label: '월별 리포트' },
+  { id: 'monthly', label: '월간 리포트' },
 ];
 
 export function ReportTabSelector({ activeTab, onTabChange }: ReportTabSelectorProps) {
@@ -26,9 +26,7 @@ export function ReportTabSelector({ activeTab, onTabChange }: ReportTabSelectorP
             onPress={() => onTabChange(tab.id)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.label, isActive && styles.labelActive]}>
-              {tab.label}
-            </Text>
+            <Text style={[styles.label, isActive && styles.labelActive]}>{tab.label}</Text>
           </TouchableOpacity>
         );
       })}

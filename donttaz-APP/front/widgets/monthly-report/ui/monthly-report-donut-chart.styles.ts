@@ -14,9 +14,17 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   centerText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#111827',
+    textAlign: 'center',
+  },
+  centerSubText: {
+    marginTop: 2,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7280',
+    textAlign: 'center',
   },
   percentLabel: {
     position: 'absolute',
