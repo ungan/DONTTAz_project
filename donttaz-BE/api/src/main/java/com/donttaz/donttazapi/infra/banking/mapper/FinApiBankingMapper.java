@@ -284,7 +284,7 @@ public class FinApiBankingMapper {
         try {
             LocalDate date = LocalDate.parse(transactionDate, DATE_FORMATTER);
             LocalTime time = (transactionTime == null || transactionTime.isBlank())
-                    ? LocalTime.MIDNIGHT
+                    ? LocalTime.now()
                     : LocalTime.parse(transactionTime, TIME_FORMATTER);
             return LocalDateTime.of(date, time);
         } catch (DateTimeParseException exception) {
