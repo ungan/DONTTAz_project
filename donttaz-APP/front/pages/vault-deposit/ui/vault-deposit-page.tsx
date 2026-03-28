@@ -11,17 +11,19 @@ import { styles } from './vault-deposit-page.styles';
 
 export function VaultDepositPage() {
   const router = useRouter();
-  const { kind, vaultId, lockedAmount } = useLocalSearchParams<{
+  const { kind, vaultId, lockedAmount, goalAmount } = useLocalSearchParams<{
     kind: string;
     vaultId: string;
     lockedAmount: string;
+    goalAmount: string;
   }>();
 
-  const { amount, formattedAmount, isValid, handleKeyPress } = useDepositAmount();
   const { accounts } = useMyAccounts();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentBalance = Number(lockedAmount ?? 0);
+  const maxDeposit = goalAmount ? Number(goalAmount) - currentBalance : 100_000_000;
+  const { amount, formattedAmount, isValid, handleKeyPress } = useDepositAmount(maxDeposit);
   const primaryAccount = accounts.find((a) => a.isPrimary) ?? accounts[0];
 
   const handleConfirm = async () => {
