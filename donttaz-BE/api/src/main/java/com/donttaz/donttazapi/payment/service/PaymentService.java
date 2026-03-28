@@ -18,6 +18,7 @@ import com.donttaz.donttazapi.payment.repository.MerchantRepository;
 import com.donttaz.donttazapi.payment.repository.PaymentRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import lombok.RequiredArgsConstructor;
@@ -112,7 +113,8 @@ public class PaymentService {
         }
 
         try {
-            return LocalDate.parse(transactionDate, DateTimeFormatter.BASIC_ISO_DATE).atStartOfDay();
+            LocalDate date = LocalDate.parse(transactionDate, DateTimeFormatter.BASIC_ISO_DATE);
+            return LocalDateTime.of(date, LocalTime.now());
         } catch (DateTimeParseException exception) {
             return LocalDateTime.now();
         }
