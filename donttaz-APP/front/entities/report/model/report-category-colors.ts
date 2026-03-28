@@ -1,17 +1,19 @@
 const CATEGORY_COLORS: Record<string, string> = {
-  '\uC2DD\uBE44': '#5899FD',
-  '\uC2DD\uBE44/\uCE74\uD398': '#5899FD',
-  '\uAD50\uD1B5': '#FF6B6B',
-  '\uC5EC\uAC00': '#FFD93D',
-  '\uBB38\uD654/\uC5EC\uAC00': '#FFD93D',
-  '\uD1B5\uC2E0/\uBCF4\uD5D8': '#6BCB77',
-  '\uAE08\uC735/\uBCF4\uD5D8': '#6BCB77',
-  '\uC1FC\uD551': '#C77DFF',
-  '\uC1A1\uAE08': '#FF9F43',
-  '\uAE30\uD0C0': '#94A3B8',
+  '식비':       '#F97316',
+  '식비/카페':  '#FBBF24',
+  '교통':       '#5899FD',
+  '여가':       '#A855F7',
+  '문화/여가':  '#A855F7',
+  '통신/보험':  '#10B981',
+  '금융/보험':  '#06B6D4',
+  '쇼핑':       '#F472B6',
+  '송금':       '#EF4444',
+  '의료/건강':  '#34D399',
+  '미분류':     '#CBD5E1',
+  '기타':       '#94A3B8',
 };
 
-const DEFAULT_COLOR = '#A0AEC0';
+const DEFAULT_COLOR = '#64748B';
 
 export function getReportCategoryColor(category: string): string {
   return CATEGORY_COLORS[category] ?? DEFAULT_COLOR;

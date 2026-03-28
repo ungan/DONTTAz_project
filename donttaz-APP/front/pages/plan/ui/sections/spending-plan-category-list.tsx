@@ -22,7 +22,6 @@ export function SpendingPlanCategoryList({ categoryPlans }: SpendingPlanCategory
             <Text style={styles.category}>{item.categoryName}</Text>
             <Text style={styles.amount}>{formatWon(item.allocatedAmount)}</Text>
           </View>
-          <Text style={styles.comment}>{item.aiComment}</Text>
         </View>
       ))}
     </View>

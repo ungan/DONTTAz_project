@@ -131,29 +131,8 @@ export function useAccountOpenFlow() {
     }
   };
 
-  const updateAddress = (value: string) => {
-    accountOpenState.setAddress(value);
-    if (accountOpenState.addressError) {
-      accountOpenState.setAddressError(null);
-    }
-  };
-
   const updateAddressDetail = (value: string) => {
     accountOpenState.setAddressDetail(value);
-  };
-
-  const updateEmailLocalPart = (value: string) => {
-    accountOpenState.setEmailLocalPart(value.trim());
-    if (accountOpenState.emailError) {
-      accountOpenState.setEmailError(null);
-    }
-  };
-
-  const updateEmailDomain = (value: string) => {
-    accountOpenState.setEmailDomain(value.trim());
-    if (accountOpenState.emailError) {
-      accountOpenState.setEmailError(null);
-    }
   };
 
   const toggleSmsAgreed = () => {
@@ -179,7 +158,6 @@ export function useAccountOpenFlow() {
     accountOpenState.setCustomerNameError(null);
     accountOpenState.setPhoneNumberError(null);
     accountOpenState.setAddressError(null);
-    accountOpenState.setEmailError(null);
 
     if (!accountOpenState.verifiedOwnerName.trim()) {
       accountOpenState.setErrorMessage('본인인증을 먼저 완료해주세요.');
@@ -196,13 +174,8 @@ export function useAccountOpenFlow() {
       hasError = true;
     }
 
-    if (!accountOpenState.zipCode.trim() || !accountOpenState.address.trim()) {
-      accountOpenState.setAddressError('우편번호와 주소를 입력해주세요.');
-      hasError = true;
-    }
-
-    if (!accountOpenState.emailLocalPart.trim() || !accountOpenState.emailDomain.trim()) {
-      accountOpenState.setEmailError('이메일을 입력해주세요.');
+    if (!accountOpenState.zipCode.trim()) {
+      accountOpenState.setAddressError('우편번호를 입력해주세요.');
       hasError = true;
     }
 
@@ -291,8 +264,8 @@ export function useAccountOpenFlow() {
   };
 
   const proceedToProfileStep = () => {
-    accountOpenState.setCurrentStep('profile');
-    router.push('/account-open-profile' as never);
+    accountOpenState.setCurrentStep('banking');
+    router.push('/account-open-banking' as never);
   };
 
   const completeAccountCreation = async () => {
@@ -444,10 +417,7 @@ export function useAccountOpenFlow() {
     updateCustomerName,
     updatePhoneNumber,
     updateZipCode,
-    updateAddress,
     updateAddressDetail,
-    updateEmailLocalPart,
-    updateEmailDomain,
     toggleSmsAgreed,
     toggleAlimtalkAgreed,
     toggleMailAgreed,

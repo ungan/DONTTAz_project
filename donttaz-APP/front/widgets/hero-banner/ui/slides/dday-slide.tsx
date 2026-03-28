@@ -9,11 +9,11 @@ export function DdaySlide() {
   const { data } = useBurndown(yearMonth, { source: 'home-dday-slide' });
   const { daysUntilBankrupt } = useBurndownStats(data);
 
-  const ddayText = daysUntilBankrupt !== null ? `D-${daysUntilBankrupt}` : 'D-17';
+  const ddayText = daysUntilBankrupt !== null ? `D-${daysUntilBankrupt}` : '-';
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>사망일</Text>
+      <Text style={styles.label}>파산일</Text>
       <Text style={styles.dday}>{ddayText}</Text>
     </View>
   );

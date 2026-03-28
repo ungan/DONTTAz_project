@@ -15,14 +15,14 @@ export const styles = StyleSheet.create({
   centerCardWrap: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   stateCard: {
     borderRadius: 18,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingVertical: 24,
   },
   stateTitle: {
@@ -40,12 +40,24 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: '#EF4444',
   },
-  header: {
+  monthNav: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    paddingTop: 16,
+    paddingBottom: 4,
+  },
+  monthNavText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    minWidth: 100,
+    textAlign: 'center',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 12,
     paddingBottom: 12,
   },
   totalLabel: {
@@ -58,53 +70,10 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111827',
   },
-  headerRight: {
-    alignItems: 'flex-end',
-    gap: 8,
-  },
-  selectorWrap: {
-    paddingHorizontal: 20,
-    marginTop: 4,
-  },
-  monthBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: '#FFFFFF',
-  },
-  monthText: {
-    fontSize: 14,
-    color: '#374151',
-  },
-  statusBadge: {
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  statusBadgeDanger: {
-    backgroundColor: '#FEE2E2',
-  },
-  statusBadgeSafe: {
-    backgroundColor: '#DCFCE7',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  statusTextDanger: {
-    color: '#B91C1C',
-  },
-  statusTextSafe: {
-    color: '#166534',
-  },
   summaryRow: {
     flexDirection: 'row',
     gap: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     marginTop: 8,
   },
   summaryCard: {
@@ -115,6 +84,10 @@ export const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     paddingHorizontal: 16,
     paddingVertical: 14,
+  },
+  summaryCardFull: {
+    flex: 0,
+    flexBasis: '100%',
   },
   summaryCardLabel: {
     fontSize: 12,
@@ -127,18 +100,23 @@ export const styles = StyleSheet.create({
     color: '#111827',
   },
   feedbackCard: {
-    marginHorizontal: 20,
+    marginHorizontal: 24,
     marginTop: 16,
     borderRadius: 18,
     backgroundColor: '#EEF5FF',
     paddingHorizontal: 18,
     paddingVertical: 18,
   },
+  feedbackTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
   feedbackTitle: {
     fontSize: 14,
     fontWeight: '700',
     color: '#335C9E',
-    marginBottom: 8,
   },
   feedbackBody: {
     fontSize: 14,
@@ -146,13 +124,13 @@ export const styles = StyleSheet.create({
     color: '#1F2937',
   },
   emptyCard: {
-    marginHorizontal: 20,
+    marginHorizontal: 24,
     marginTop: 20,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingVertical: 22,
     alignItems: 'center',
   },
@@ -168,16 +146,23 @@ export const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
   },
+  divider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 24,
+    marginTop: 24,
+    marginBottom: 0,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#111827',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     marginTop: 24,
     marginBottom: 12,
   },
   personalizedFeedbackCard: {
-    marginHorizontal: 20,
+    marginHorizontal: 24,
     marginBottom: 28,
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
@@ -241,5 +226,8 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: '#111827',
+  },
+  feedbackMessageGap: {
+    marginTop: 5,
   },
 });

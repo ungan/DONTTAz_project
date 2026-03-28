@@ -21,8 +21,7 @@ export function AccountOpenBankingPage() {
     bankingPasswordError,
     bankingPasswordConfirmError,
     dailyTransferLimitError,
-    emailLocalPart,
-    emailDomain,
+    verifiedOwnerName,
     moveToBankingStep,
     updateBankingId,
     updateBankingPassword,
@@ -32,18 +31,18 @@ export function AccountOpenBankingPage() {
   } = useAccountOpenFlow();
 
   useEffect(() => {
-    if (!emailLocalPart || !emailDomain) {
-      router.replace('/account-open-profile' as never);
+    if (!verifiedOwnerName) {
+      router.replace('/account-open-verify' as never);
       return;
     }
 
     moveToBankingStep();
-  }, [emailLocalPart, emailDomain]);
+  }, [verifiedOwnerName]);
 
   return (
     <View style={styles.outerContainer}>
       <View style={styles.headerBlock}>
-        <PageHeader title="전자금융 설정" onBack={() => router.replace('/account-open-profile' as never)} />
+        <PageHeader title="전자금융 설정" onBack={() => router.replace('/account-open-verify' as never)} />
         <AccountOpenProgress currentStep="banking" />
       </View>
 

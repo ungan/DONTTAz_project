@@ -115,10 +115,6 @@ export function MonthlyReportDonutChart({ categories }: Props) {
           ))}
         </G>
       </Svg>
-      <Animated.View style={[styles.centerLabel, centerStyle]}>
-        <Text style={styles.centerText}>{'\uC18C\uBE44'}</Text>
-        <Text style={styles.centerSubText}>{'\uBE44\uC911'}</Text>
-      </Animated.View>
       {slices
         .filter((slice) => slice.percentage >= MIN_VISIBLE_LABEL_PERCENT)
         .map((slice) => (
@@ -127,7 +123,7 @@ export function MonthlyReportDonutChart({ categories }: Props) {
             style={[
               styles.percentLabel,
               {
-                left: slice.labelPos.x - 16,
+                left: slice.labelPos.x - 22,
                 top: slice.labelPos.y - 8,
               },
             ]}

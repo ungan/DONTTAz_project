@@ -1,33 +1,24 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { CustomInput, SelectInput } from '@/shared/ui';
+import { CustomInput } from '@/shared/ui';
 import { styles } from './account-open-profile-form.styles';
-
-const EMAIL_DOMAIN_OPTIONS = ['gmail.com', 'naver.com', 'kakao.com', '직접입력'];
 
 interface AccountOpenProfileFormProps {
   customerName: string;
   phoneNumber: string;
   zipCode: string;
-  address: string;
   addressDetail: string;
-  emailLocalPart: string;
-  emailDomain: string;
   customerNameError: string | null;
   phoneNumberError: string | null;
   addressError: string | null;
-  emailError: string | null;
   isSmsAgreed: boolean;
   isAlimtalkAgreed: boolean;
   isMailAgreed: boolean;
   onCustomerNameChange: (value: string) => void;
   onPhoneNumberChange: (value: string) => void;
   onZipCodeChange: (value: string) => void;
-  onAddressChange: (value: string) => void;
   onAddressDetailChange: (value: string) => void;
-  onEmailLocalPartChange: (value: string) => void;
-  onEmailDomainChange: (value: string) => void;
   onToggleSmsAgreed: () => void;
   onToggleAlimtalkAgreed: () => void;
   onToggleMailAgreed: () => void;
@@ -56,39 +47,21 @@ export function AccountOpenProfileForm({
   customerName,
   phoneNumber,
   zipCode,
-  address,
   addressDetail,
-  emailLocalPart,
-  emailDomain,
   customerNameError,
   phoneNumberError,
   addressError,
-  emailError,
   isSmsAgreed,
   isAlimtalkAgreed,
   isMailAgreed,
   onCustomerNameChange,
   onPhoneNumberChange,
   onZipCodeChange,
-  onAddressChange,
   onAddressDetailChange,
-  onEmailLocalPartChange,
-  onEmailDomainChange,
   onToggleSmsAgreed,
   onToggleAlimtalkAgreed,
   onToggleMailAgreed,
 }: AccountOpenProfileFormProps) {
-  const selectedDomain = EMAIL_DOMAIN_OPTIONS.includes(emailDomain) ? emailDomain : '직접입력';
-  const isCustomDomain = selectedDomain === '직접입력';
-
-  const handleDomainSelect = (value: string) => {
-    if (value === '직접입력') {
-      onEmailDomainChange('');
-      return;
-    }
-    onEmailDomainChange(value);
-  };
-
   return (
     <View style={styles.container}>
       <CustomInput
@@ -118,26 +91,11 @@ export function AccountOpenProfileForm({
 
       <View style={styles.addressSection}>
         <Text style={styles.sectionLabel}>주소</Text>
-        <View style={styles.addressRow}>
-          <View style={styles.zipCodeField}>
-            <CustomInput
-              value={zipCode}
-              onChangeText={onZipCodeChange}
-              placeholder="우편번호"
-              keyboardType="number-pad"
-              errorMessage={undefined}
-            />
-          </View>
-          <View style={styles.addressAction}>
-            <TouchableOpacity style={styles.addressButton} activeOpacity={0.8}>
-              <Text style={styles.addressButtonLabel}>주소찾기</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
         <CustomInput
-          value={address}
-          onChangeText={onAddressChange}
-          placeholder="기본 주소"
+          value={zipCode}
+          onChangeText={onZipCodeChange}
+          placeholder="우편번호"
+          keyboardType="number-pad"
           errorMessage={undefined}
         />
         <CustomInput
@@ -146,39 +104,6 @@ export function AccountOpenProfileForm({
           placeholder="상세 주소"
           errorMessage={addressError ?? undefined}
         />
-      </View>
-
-      <View style={styles.emailSection}>
-        <Text style={styles.sectionLabel}>이메일</Text>
-        <View style={styles.emailRow}>
-          <View style={styles.emailLocalField}>
-            <CustomInput
-              value={emailLocalPart}
-              onChangeText={onEmailLocalPartChange}
-              placeholder="아이디"
-              errorMessage={undefined}
-            />
-          </View>
-          <Text style={styles.emailAt}>@</Text>
-          <View style={styles.emailDomainField}>
-            <SelectInput
-              value={selectedDomain}
-              options={EMAIL_DOMAIN_OPTIONS}
-              placeholder="도메인 선택"
-              onChange={handleDomainSelect}
-            />
-          </View>
-        </View>
-        {isCustomDomain ? (
-          <CustomInput
-            value={emailDomain}
-            onChangeText={onEmailDomainChange}
-            placeholder="직접 입력"
-            errorMessage={emailError ?? undefined}
-          />
-        ) : emailError ? (
-          <Text style={styles.errorText}>{emailError}</Text>
-        ) : null}
       </View>
     </View>
   );

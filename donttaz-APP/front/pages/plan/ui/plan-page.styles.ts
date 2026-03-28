@@ -5,7 +5,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   content: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingTop: 12,
     paddingBottom: 28,
   },
@@ -119,6 +119,7 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#111827',
+    paddingLeft: 16,
   },
   dashboardDescription: {
     marginTop: 6,

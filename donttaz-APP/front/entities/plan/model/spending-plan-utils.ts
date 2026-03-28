@@ -7,17 +7,9 @@ import type {
   SpendingPlanRecommendationResponse,
   SpendingPlanResponseData,
 } from './plan-types';
+import { getReportCategoryColor } from '@/entities/report';
 
-const CATEGORY_COLORS: Record<string, string> = {
-  식비: '#5899FD',
-  교통: '#FF7A59',
-  여가: '#F6C445',
-  생활: '#45B97C',
-  쇼핑: '#A56CFF',
-  기타: '#7C8DB5',
-};
-
-const FALLBACK_COLORS = ['#5899FD', '#FF7A59', '#F6C445', '#45B97C', '#A56CFF', '#7C8DB5'];
+const FALLBACK_COLORS = ['#F97316', '#FBBF24', '#5899FD', '#A855F7', '#10B981', '#94A3B8'];
 
 function toInteger(value: number | undefined | null): number {
   return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
@@ -59,7 +51,9 @@ function mergeCategoryPlans(
       categoryName,
       allocatedAmount: value.allocatedAmount,
       aiComment: value.aiComment || `${categoryName} 예산을 배정했습니다.`,
-      color: CATEGORY_COLORS[categoryName] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length],
+      color: getReportCategoryColor(categoryName) !== '#64748B'
+        ? getReportCategoryColor(categoryName)
+        : FALLBACK_COLORS[index % FALLBACK_COLORS.length],
       exactPercentage: divisor > 0 ? (value.allocatedAmount / divisor) * 100 : 0,
     }))
     .sort((a, b) => b.allocatedAmount - a.allocatedAmount);

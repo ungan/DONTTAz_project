@@ -41,15 +41,42 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111827',
   },
-  meta: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 4,
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  feedback: {
+  meta: {
     fontSize: 13,
-    lineHeight: 19,
     color: '#374151',
-    marginTop: 8,
+    marginTop: 3,
+  },
+  badge: {
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  badgeOk: {
+    borderColor: '#D1D5DB',
+  },
+  badgeOver: {
+    borderColor: '#D1D5DB',
+  },
+  badgeUnplanned: {
+    borderColor: '#D1D5DB',
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  badgeTextOk: {
+    color: '#9CA3AF',
+  },
+  badgeTextOver: {
+    color: '#9CA3AF',
+  },
+  badgeTextUnplanned: {
+    color: '#9CA3AF',
   },
 });

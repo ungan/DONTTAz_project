@@ -1,10 +1,13 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePayments } from '@/entities/payment';
 import { useBankAccountStore } from '@/entities/bank-account';
 import { styles } from './payment-history.styles';
+
+const LAST_SEEN_KEY = '@payment_history_last_seen';
 
 const CATEGORY_ICON_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }> =
   {
@@ -29,6 +32,7 @@ function resolveCounterpartyName(name: string) {
   return COUNTERPARTY_NAME_MAP[name] ?? name;
 }
 
+
 interface PaymentHistoryProps {
   onViewAllPress?: () => void;
 }
@@ -36,8 +40,22 @@ interface PaymentHistoryProps {
 export function PaymentHistory({ onViewAllPress }: PaymentHistoryProps) {
   const { accountId } = useBankAccountStore();
   const { transactions, isPending, error, refetch } = usePayments();
+  const [lastSeenAt, setLastSeenAt] = useState<string | null>(null);
+  const nowRef = useRef(new Date().toISOString());
+
+  useEffect(() => {
+    AsyncStorage.getItem(LAST_SEEN_KEY).then((stored) => {
+      setLastSeenAt(stored);
+      AsyncStorage.setItem(LAST_SEEN_KEY, nowRef.current);
+    });
+  }, []);
 
   useFocusEffect(useCallback(() => { refetch(); }, []));
+
+  function isNew(transactionDate: string) {
+    if (!lastSeenAt) return false;
+    return new Date(transactionDate) > new Date(lastSeenAt);
+  }
 
   if (!accountId) {
     return (
@@ -70,11 +88,15 @@ export function PaymentHistory({ onViewAllPress }: PaymentHistoryProps) {
           !error &&
           transactions.slice(0, 3).map((item) => {
             const { icon, color } = CATEGORY_ICON_MAP[item.category] ?? DEFAULT_ICON;
+            const showDot = isNew(item.transactionDate);
 
             return (
               <View key={item.transactionId} style={styles.item}>
-                <View style={[styles.iconBox, { backgroundColor: `${color}1A` }]}>
-                  <Ionicons name={icon} size={18} color={color} />
+                <View style={styles.iconWrapper}>
+                  <View style={[styles.iconBox, { backgroundColor: `${color}1A` }]}>
+                    <Ionicons name={icon} size={18} color={color} />
+                  </View>
+                  {showDot && <View style={styles.newDot} />}
                 </View>
                 <Text style={styles.merchantName}>{resolveCounterpartyName(item.counterpartyName)}</Text>
                 <Text style={styles.amount}>

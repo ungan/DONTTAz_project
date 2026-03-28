@@ -82,20 +82,23 @@ function AnimatedItem({ cat, index, isLast }: AnimatedItemProps) {
       <MiniDonut percentage={cat.percentage} color={cat.color} />
       <View style={styles.info}>
         <View style={styles.topRow}>
-          <Text style={styles.category}>{cat.category}</Text>
+          <View style={styles.categoryRow}>
+            <Text style={styles.category}>{cat.category}</Text>
+            {cat.budgetAchievementRate !== null ? (
+              <View style={[styles.badge, cat.budgetAchievementRate > 100 ? styles.badgeOver : styles.badgeOk]}>
+                <Text style={[styles.badgeText, cat.budgetAchievementRate > 100 ? styles.badgeTextOver : styles.badgeTextOk]}>
+                  {cat.budgetAchievementRate > 100 ? '초과' : '준수'}
+                </Text>
+              </View>
+            ) : (
+              <View style={[styles.badge, styles.badgeUnplanned]}>
+                <Text style={[styles.badgeText, styles.badgeTextUnplanned]}>미계획</Text>
+              </View>
+            )}
+          </View>
           <Text style={styles.amount}>{`${cat.totalAmount.toLocaleString()}\uC6D0`}</Text>
         </View>
-        <Text style={styles.meta}>
-          {`\uBE44\uC911 ${cat.percentage}% \u00B7 \uC608\uC0B0 ${cat.allocatedAmount.toLocaleString()}\uC6D0`}
-        </Text>
-        {cat.budgetAchievementRate !== null ? (
-          <Text style={styles.meta}>
-            {`\uC608\uC0B0 \uB2EC\uC131\uB960 ${cat.budgetAchievementRate.toFixed(1)}%`}
-          </Text>
-        ) : (
-          <Text style={styles.meta}>{'\uACC4\uD68D\uC5D0 \uC5C6\uB358 \uC9C0\uCD9C \uD56D\uBAA9'}</Text>
-        )}
-        <Text style={styles.feedback}>{cat.feedback}</Text>
+        <Text style={styles.meta}>{`${cat.percentage}%`}</Text>
       </View>
     </Animated.View>
   );

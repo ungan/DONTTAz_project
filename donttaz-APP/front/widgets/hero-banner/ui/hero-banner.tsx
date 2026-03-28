@@ -1,66 +1,72 @@
-import React, { useRef, useCallback } from 'react';
-import { Animated, PanResponder, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import {
+  Animated,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+  View,
+} from 'react-native';
 import { MascotSlide } from './slides/mascot-slide';
 import { DdaySlide } from './slides/dday-slide';
 import { styles } from './hero-banner.styles';
 
+const SLIDES = [MascotSlide, DdaySlide];
+
 export function HeroBanner() {
-  const flipAnim = useRef(new Animated.Value(0)).current;
-  const isFlippedRef = useRef(false);
-  const isAnimatingRef = useRef(false);
+  const [slideWidth, setSlideWidth] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const indicatorAnims = useRef(SLIDES.map((_, i) => new Animated.Value(i === 0 ? 1 : 0))).current;
 
-  const flip = useCallback(() => {
-    if (isAnimatingRef.current) return;
-    isAnimatingRef.current = true;
-
-    const toValue = isFlippedRef.current ? 0 : 1;
-    Animated.timing(flipAnim, {
-      toValue,
-      duration: 400,
-      useNativeDriver: true,
-    }).start(() => {
-      isFlippedRef.current = !isFlippedRef.current;
-      isAnimatingRef.current = false;
-    });
-  }, [flipAnim]);
-
-  const flipRef = useRef(flip);
-  flipRef.current = flip;
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gs) =>
-        Math.abs(gs.dx) > Math.abs(gs.dy) && Math.abs(gs.dx) > 10,
-      onMoveShouldSetPanResponderCapture: (_, gs) =>
-        Math.abs(gs.dx) > Math.abs(gs.dy) && Math.abs(gs.dx) > 10,
-      onPanResponderRelease: (_, gs) => {
-        if (Math.abs(gs.dx) > 30) flipRef.current();
-      },
-    }),
-  ).current;
-
-  const frontRotate = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
-  });
-
-  const backRotate = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['180deg', '360deg'],
-  });
+  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (slideWidth === 0) return;
+    const index = Math.round(e.nativeEvent.contentOffset.x / slideWidth);
+    if (index !== activeIndex && index >= 0 && index < SLIDES.length) {
+      indicatorAnims.forEach((anim, i) => {
+        Animated.timing(anim, {
+          toValue: i === index ? 1 : 0,
+          duration: 200,
+          useNativeDriver: false,
+        }).start();
+      });
+      setActiveIndex(index);
+    }
+  };
 
   return (
-    <View style={styles.container} {...panResponder.panHandlers}>
-      <Animated.View
-        style={[styles.card, { transform: [{ perspective: 1000 }, { rotateY: frontRotate }] }]}
-      >
-        <MascotSlide />
-      </Animated.View>
-      <Animated.View
-        style={[styles.card, { transform: [{ perspective: 1000 }, { rotateY: backRotate }] }]}
-      >
-        <DdaySlide />
-      </Animated.View>
+    <View
+      style={styles.container}
+      onLayout={(e) => setSlideWidth(e.nativeEvent.layout.width)}
+    >
+      {slideWidth > 0 && (
+        <ScrollView
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          decelerationRate="fast"
+        >
+          {SLIDES.map((Slide, i) => (
+            <View key={i} style={[styles.slide, { width: slideWidth }]}>
+              <Slide />
+            </View>
+          ))}
+        </ScrollView>
+      )}
+
+      <View style={styles.indicators}>
+        {SLIDES.map((_, i) => {
+          const width = indicatorAnims[i].interpolate({
+            inputRange: [0, 1],
+            outputRange: [6, 20],
+          });
+          const backgroundColor = indicatorAnims[i].interpolate({
+            inputRange: [0, 1],
+            outputRange: ['#D1D5DB', '#5899FD'],
+          });
+          return <Animated.View key={i} style={[styles.indicator, { width, backgroundColor }]} />;
+        })}
+      </View>
     </View>
   );
 }

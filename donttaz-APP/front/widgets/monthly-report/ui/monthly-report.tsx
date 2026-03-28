@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
-import { SelectInput } from '@/shared/ui';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useMonthlyReport, SpendingReportFeedbackItem } from '@/entities/report';
 import { MonthlyReportDonutChart } from './monthly-report-donut-chart';
 import { MonthlyReportLegend } from './monthly-report-legend';
@@ -30,18 +30,6 @@ function shiftYearMonth(yearMonth: string, diff: number): string {
   return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
 }
 
-function buildMonthOptions(selectedYearMonth: string): string[] {
-  const options = new Set<string>();
-
-  for (let i = 0; i < 12; i += 1) {
-    options.add(shiftYearMonth(getDefaultReportYearMonth(), -i));
-  }
-
-  options.add(selectedYearMonth);
-
-  return Array.from(options).sort((a, b) => (a < b ? 1 : -1));
-}
-
 function formatYearMonthLabel(yearMonth: string): string {
   const [year, month] = yearMonth.split('-');
 
@@ -49,21 +37,21 @@ function formatYearMonthLabel(yearMonth: string): string {
     return yearMonth;
   }
 
-  return `${year}\uB144 ${month}\uC6D4`;
+  return `${year}년 ${month}월`;
 }
 
 function getFeedbackTypeLabel(type: SpendingReportFeedbackItem['type']) {
   switch (type) {
     case 'persona':
-      return '\uC18C\uBE44 \uC131\uD5A5';
+      return '소비 성향';
     case 'warning':
-      return '\uC8FC\uC758';
+      return '주의';
     case 'pattern':
-      return '\uD328\uD134';
+      return '패턴';
     case 'positive':
-      return '\uAC15\uC810';
+      return '강점';
     default:
-      return '\uD53C\uB4DC\uBC31';
+      return '피드백';
   }
 }
 
@@ -98,7 +86,7 @@ function getFeedbackTypeStyle(type: SpendingReportFeedbackItem['type']) {
 }
 
 function formatWon(amount: number) {
-  return `${Math.abs(amount).toLocaleString()}\uC6D0`;
+  return `${Math.abs(amount).toLocaleString()}원`;
 }
 
 interface MonthlyReportProps {
@@ -113,19 +101,16 @@ export function MonthlyReport({ yearMonth: yearMonthProp }: MonthlyReportProps) 
     setSelectedYearMonth(resolvedInitialYearMonth);
   }, [resolvedInitialYearMonth]);
 
+  const latestYearMonth = getDefaultReportYearMonth();
+  const oldestYearMonth = shiftYearMonth(latestYearMonth, -11);
+  const isLatest = selectedYearMonth >= latestYearMonth;
+  const isOldest = selectedYearMonth <= oldestYearMonth;
+
   const { summary, categories, topCategory, budgetGap, viewState, statusMessage, isPending, error } =
     useMonthlyReport(selectedYearMonth);
-  const monthOptions = buildMonthOptions(selectedYearMonth);
 
-  const month = summary.yearMonth.split('-')[1];
-  const achievementText =
-    summary.achievementRate > 100
-      ? '\uC608\uC0B0 \uCD08\uACFC'
-      : '\uC608\uC0B0 \uBC94\uC704';
-  const budgetGapLabel =
-    budgetGap >= 0
-      ? `\uC608\uC0B0 \uC5EC\uC720 ${formatWon(budgetGap)}`
-      : `\uCD08\uACFC \uC9C0\uCD9C ${formatWon(budgetGap)}`;
+  const budgetGapLabel = budgetGap >= 0 ? '저축 성공액' : '예산 초과액';
+  const budgetGapAmount = formatWon(budgetGap);
 
   if (isPending) {
     return (
@@ -139,12 +124,10 @@ export function MonthlyReport({ yearMonth: yearMonthProp }: MonthlyReportProps) 
     return (
       <View style={styles.centerCardWrap}>
         <View style={styles.stateCard}>
-          <Text style={styles.stateTitle}>
-            {'\uBA3C\uC800 \uC774 \uB2EC\uC758 \uC18C\uBE44 \uD50C\uB79C\uC774 \uD544\uC694\uD574\uC694.'}
-          </Text>
+          <Text style={styles.stateTitle}>먼저 이 달의 소비 플랜이 필요해요.</Text>
           <Text style={styles.stateDescription}>
             {statusMessage ||
-              '\uD604\uC7AC \uC120\uD0DD\uD55C \uC6D4\uC5D0 \uB9DE\uCDA4 \uC18C\uBE44 \uD50C\uB79C\uC774 \uC5C6\uC5B4 \uB9AC\uD3EC\uD2B8\uB97C \uB9CC\uB4E4 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.'}
+              '현재 선택한 월에 맞춤 소비 플랜이 없어 리포트를 만들 수 없습니다.'}
           </Text>
         </View>
       </View>
@@ -155,11 +138,9 @@ export function MonthlyReport({ yearMonth: yearMonthProp }: MonthlyReportProps) 
     return (
       <View style={styles.centerCardWrap}>
         <View style={styles.stateCard}>
-          <Text style={styles.stateTitle}>
-            {'\uB9AC\uD3EC\uD2B8\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC5B4\uC694.'}
-          </Text>
+          <Text style={styles.stateTitle}>리포트를 불러오지 못했어요.</Text>
           <Text style={styles.stateDescription}>
-            {error || statusMessage || '\uC7A0\uC2DC \uD6C4 \uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694.'}
+            {error || statusMessage || '잠시 후 다시 시도해주세요.'}
           </Text>
         </View>
       </View>
@@ -172,142 +153,143 @@ export function MonthlyReport({ yearMonth: yearMonthProp }: MonthlyReportProps) 
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.totalLabel}>{`${month}\uC6D4 \uCD1D \uC9C0\uCD9C`}</Text>
-          <Text style={styles.totalAmount}>{`${summary.totalSpent.toLocaleString()}\uC6D0`}</Text>
-        </View>
-        <View style={styles.headerRight}>
-          <View style={styles.monthBadge}>
-            <Text style={styles.monthText}>{`${month}\uC6D4`}</Text>
-          </View>
-          <View
-            style={[
-              styles.statusBadge,
-              summary.achievementRate > 100 ? styles.statusBadgeDanger : styles.statusBadgeSafe,
-            ]}
-          >
-            <Text
-              style={[
-                styles.statusText,
-                summary.achievementRate > 100 ? styles.statusTextDanger : styles.statusTextSafe,
-              ]}
-            >
-              {achievementText}
-            </Text>
-          </View>
-        </View>
+      <View style={styles.monthNav}>
+        <TouchableOpacity
+          onPress={() => setSelectedYearMonth(shiftYearMonth(selectedYearMonth, -1))}
+          disabled={isOldest}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <Ionicons name="chevron-back" size={20} color={isOldest ? '#D1D5DB' : '#374151'} />
+        </TouchableOpacity>
+        <Text style={styles.monthNavText}>{formatYearMonthLabel(selectedYearMonth)}</Text>
+        <TouchableOpacity
+          onPress={() => setSelectedYearMonth(shiftYearMonth(selectedYearMonth, 1))}
+          disabled={isLatest}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <Ionicons name="chevron-forward" size={20} color={isLatest ? '#D1D5DB' : '#374151'} />
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.selectorWrap}>
-        <SelectInput
-          label={'\uC870\uD68C \uC6D4'}
-          options={monthOptions}
-          value={selectedYearMonth}
-          onChange={setSelectedYearMonth}
-          getOptionLabel={formatYearMonthLabel}
-        />
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.totalLabel}>총 지출</Text>
+          <Text style={styles.totalAmount}>{`${summary.totalSpent.toLocaleString()}원`}</Text>
+        </View>
       </View>
 
       <View style={styles.summaryRow}>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryCardLabel}>{'\uCD1D \uC608\uC0B0'}</Text>
-          <Text style={styles.summaryCardValue}>{`${summary.totalBudget.toLocaleString()}\uC6D0`}</Text>
+          <Text style={styles.summaryCardLabel}>총 예산</Text>
+          <Text style={styles.summaryCardValue}>{`${summary.totalBudget.toLocaleString()}원`}</Text>
         </View>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryCardLabel}>{'\uB2EC\uC131\uB960'}</Text>
+          <Text style={styles.summaryCardLabel}>달성률</Text>
           <Text style={styles.summaryCardValue}>{summary.achievementRate.toFixed(1)}%</Text>
         </View>
       </View>
 
       <View style={styles.summaryRow}>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryCardLabel}>{'\uBD09\uC778 \uAE08\uC561'}</Text>
-          <Text style={styles.summaryCardValue}>{`${summary.sealedAmount.toLocaleString()}\uC6D0`}</Text>
+          <Text style={styles.summaryCardLabel}>소비 페르소나</Text>
+          <Text style={styles.summaryCardValue}>
+            {summary.spendingPersona ?? '분석 중'}
+          </Text>
         </View>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryCardLabel}>{'\uC18C\uBE44 \uD398\uB974\uC18C\uB098'}</Text>
+          <Text style={styles.summaryCardLabel}>최다 지출</Text>
           <Text style={styles.summaryCardValue}>
-            {summary.spendingPersona ?? '\uBD84\uC11D \uC911'}
+            {topCategory ? topCategory.category : '데이터 없음'}
           </Text>
         </View>
       </View>
 
       <View style={styles.summaryRow}>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryCardLabel}>{'\uC608\uC0B0 \uCC28\uC774'}</Text>
-          <Text style={styles.summaryCardValue}>{budgetGapLabel}</Text>
-        </View>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryCardLabel}>{'\uCD5C\uB300 \uC9C0\uCD9C \uCE74\uD14C\uACE0\uB9AC'}</Text>
-          <Text style={styles.summaryCardValue}>
-            {topCategory ? topCategory.category : '\uB370\uC774\uD130 \uC5C6\uC74C'}
-          </Text>
+        <View style={[styles.summaryCard, styles.summaryCardFull]}>
+          <Text style={styles.summaryCardLabel}>{budgetGapLabel}</Text>
+          <Text style={styles.summaryCardValue}>{budgetGapAmount}</Text>
         </View>
       </View>
 
       <View style={styles.feedbackCard}>
-        <Text style={styles.feedbackTitle}>{'AI \uC885\uD569 \uD53C\uB4DC\uBC31'}</Text>
+        <View style={styles.feedbackTitleRow}>
+          <Ionicons name="bulb-outline" size={16} color="#335C9E" />
+          <Text style={styles.feedbackTitle}>AI 종합 피드백</Text>
+        </View>
         <Text style={styles.feedbackBody}>
           {summary.aiOverallFeedback ||
-            '\uC774\uBC88 \uB2EC \uC18C\uBE44 \uD328\uD134\uC744 \uBD84\uC11D \uC911\uC785\uB2C8\uB2E4.'}
+            '이번 달 소비 패턴을 분석 중입니다.'}
         </Text>
       </View>
 
       {viewState === 'empty' ? (
         <View style={styles.emptyCard}>
-          <Text style={styles.emptyTitle}>
-            {'\uD45C\uC2DC\uD560 \uC18C\uBE44 \uB370\uC774\uD130\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.'}
-          </Text>
+          <Text style={styles.emptyTitle}>표시할 소비 데이터가 없습니다.</Text>
           <Text style={styles.emptyDescription}>
-            {
-              '\uC774 \uB2EC\uC5D0\uB294 \uC544\uC9C1 \uC9C0\uCD9C \uB0B4\uC5ED\uC774 \uC5C6\uC5B4 \uC608\uC0B0 \uC0C1\uD0DC\uB97C \uB2E8\uC21C \uC694\uC57D\uB9CC \uD45C\uC2DC\uD574\uC694.'
-            }
+            이 달에는 아직 지출 내역이 없어 예산 상태만 표시해요.
           </Text>
         </View>
       ) : (
         <>
+          <View style={styles.divider} />
+          <Text style={styles.sectionTitle}>내 소비 한 눈에 보기</Text>
           <MonthlyReportDonutChart categories={categories} />
           <MonthlyReportLegend categories={categories} />
 
-          <Text style={styles.sectionTitle}>{'\uCE74\uD14C\uACE0\uB9AC\uBCC4 \uC18C\uBE44'}</Text>
+          <Text style={styles.sectionTitle}>카테고리별 소비</Text>
           <MonthlyReportCategoryList categories={categories} />
         </>
       )}
 
-      {summary.personalizedFeedback.length > 0 && (
-        <>
-          <Text style={styles.sectionTitle}>{'\uB9DE\uCDA4 \uD53C\uB4DC\uBC31'}</Text>
-          <View style={styles.personalizedFeedbackCard}>
-            {summary.personalizedFeedback.map((item, index) => (
-              <View
-                key={`${item.type}-${item.categoryName ?? 'overall'}-${index}`}
-                style={[
-                  styles.personalizedFeedbackItem,
-                  index === summary.personalizedFeedback.length - 1 && styles.personalizedFeedbackItemLast,
-                ]}
-              >
-                <View style={styles.personalizedFeedbackHeader}>
-                  <View style={[styles.feedbackBadge, getFeedbackTypeStyle(item.type).badge]}>
-                    <Text
-                      style={[
-                        styles.personalizedFeedbackType,
-                        getFeedbackTypeStyle(item.type).text,
-                      ]}
-                    >
-                      {getFeedbackTypeLabel(item.type)}
-                    </Text>
-                  </View>
-                  {item.categoryName ? (
-                    <Text style={styles.personalizedFeedbackCategory}>{item.categoryName}</Text>
-                  ) : null}
+      {summary.personalizedFeedback.length > 0 && (() => {
+        const typeOrder: Record<string, number> = { persona: 0, pattern: 1, positive: 2, warning: 3 };
+        const grouped = [...summary.personalizedFeedback]
+          .sort((a, b) => (typeOrder[a.type] ?? 4) - (typeOrder[b.type] ?? 4))
+          .reduce<{ type: SpendingReportFeedbackItem['type']; items: SpendingReportFeedbackItem[] }[]>((acc, item) => {
+            const last = acc[acc.length - 1];
+            if (last && last.type === item.type) {
+              last.items.push(item);
+            } else {
+              acc.push({ type: item.type, items: [item] });
+            }
+            return acc;
+          }, []);
+
+        return (
+          <>
+            <Text style={styles.sectionTitle}>맞춤 피드백</Text>
+            <View style={styles.personalizedFeedbackCard}>
+              {grouped.map((group, gIndex) => (
+                <View
+                  key={group.type}
+                  style={[
+                    styles.personalizedFeedbackItem,
+                    gIndex === grouped.length - 1 && styles.personalizedFeedbackItemLast,
+                  ]}
+                >
+                  {group.items.map((item, iIndex) => (
+                    <View key={iIndex} style={iIndex > 0 ? styles.feedbackMessageGap : undefined}>
+                      <View style={styles.personalizedFeedbackHeader}>
+                        {iIndex === 0 && (
+                          <View style={[styles.feedbackBadge, getFeedbackTypeStyle(group.type).badge]}>
+                            <Text style={[styles.personalizedFeedbackType, getFeedbackTypeStyle(group.type).text]}>
+                              {getFeedbackTypeLabel(group.type)}
+                            </Text>
+                          </View>
+                        )}
+                        {item.categoryName ? (
+                          <Text style={styles.personalizedFeedbackCategory}>{item.categoryName}</Text>
+                        ) : null}
+                      </View>
+                      <Text style={styles.personalizedFeedbackMessage}>{item.message}</Text>
+                    </View>
+                  ))}
                 </View>
-                <Text style={styles.personalizedFeedbackMessage}>{item.message}</Text>
-              </View>
-            ))}
-          </View>
-        </>
-      )}
+              ))}
+            </View>
+          </>
+        );
+      })()}
     </ScrollView>
   );
 }

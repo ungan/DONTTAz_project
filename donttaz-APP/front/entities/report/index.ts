@@ -1,4 +1,5 @@
 export { useMonthlyReport } from './model/use-monthly-report';
+export { getReportCategoryColor } from './model/report-category-colors';
 export type {
   CategorySummary,
   MonthlyReportSummary,

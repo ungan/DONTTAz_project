@@ -63,7 +63,7 @@ export function PlanPage() {
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
-      <PageHeader title="소비 분석" />
+      <PageHeader title="플랜" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.tabRow}>
           <TouchableOpacity
@@ -126,7 +126,6 @@ export function PlanPage() {
                 <View style={styles.section}>
                   <SpendingPlanPieChart
                     categoryPlans={planData.categoryPlans}
-                    totalBudget={planData.totalBudget}
                   />
                 </View>
 
@@ -140,24 +139,7 @@ export function PlanPage() {
                   />
                 </View>
 
-                <View style={styles.section}>
-                  <SpendingPlanCategoryList categoryPlans={planData.categoryPlans} />
-                </View>
 
-                <View style={styles.section}>
-                  <View style={styles.stateCard}>
-                    <Text style={styles.stateTitle}>계획이 잘 지켜지고 있는지도 볼 수 있어요.</Text>
-                    <Text style={styles.stateDescription}>
-                      대시보드에서 실제 소비 속도와 남은 예산을 실시간으로 확인해보세요.
-                    </Text>
-                    <View style={styles.stateButtonWrap}>
-                      <Button
-                        label="대시보드에서 실시간으로 확인하기"
-                        onPress={() => setActiveTab('dashboard')}
-                      />
-                    </View>
-                  </View>
-                </View>
               </>
             )}
           </>
@@ -165,12 +147,6 @@ export function PlanPage() {
 
         {activeTab === 'dashboard' && (
           <>
-            <View style={styles.firstSection}>
-              <Text style={styles.dashboardHeading}>계획 대비 소비 현황</Text>
-              <Text style={styles.dashboardDescription}>
-                이번 달 소비가 계획대로 진행되고 있는지 확인해보세요.
-              </Text>
-            </View>
 
             {showLoading && (
               <View style={styles.loaderWrap}>
@@ -194,7 +170,6 @@ export function PlanPage() {
                 <View pointerEvents="none" style={styles.previewChartWrap}>
                   <BurndownChart
                     data={previewData}
-                    yearMonth={previewData.targetYearMonth}
                     vsIdealPercent={previewStats.vsIdealPercent}
                     daysUntilBankrupt={previewStats.daysUntilBankrupt}
                     onToggleView={() => {}}
@@ -222,7 +197,6 @@ export function PlanPage() {
               <View style={styles.section}>
                 <BurndownChart
                   data={data}
-                  yearMonth={yearMonth}
                   vsIdealPercent={vsIdealPercent}
                   daysUntilBankrupt={daysUntilBankrupt}
                   onToggleView={() => setIsListView(true)}
@@ -236,15 +210,6 @@ export function PlanPage() {
               </View>
             )}
 
-            {planData && (
-              <View style={styles.ctaWrap}>
-                <Button
-                  label="소비 플랜 다시 보기"
-                  variant="outline"
-                  onPress={() => setActiveTab('plan')}
-                />
-              </View>
-            )}
           </>
         )}
       </ScrollView>
