@@ -12,6 +12,8 @@ public interface WishlistVaultRepository extends JpaRepository<WishlistVault, Lo
     Optional<WishlistVault> findByIdAndUserId(Long id, Long userId);
 
     List<WishlistVault> findAllByUserIdAndStatus(Long userId, VaultStatus status);
+    
+    List<WishlistVault> findAllByUserIdOrderByCreatedAtDesc(Long userId);
 
     List<WishlistVault> findAllByStatus(VaultStatus status);
 
