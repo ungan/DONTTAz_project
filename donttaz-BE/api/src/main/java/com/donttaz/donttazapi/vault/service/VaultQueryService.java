@@ -64,6 +64,19 @@ public class VaultQueryService {
                                 .build();
         }
 
+        public VaultListResponse getAllWishlistVaults() {
+                Long userId = currentUserProvider.getCurrentUserId();
+
+                List<VaultSummaryResponse> summaries = wishlistVaultRepository
+                                .findAllByUserIdOrderByCreatedAtDesc(userId).stream()
+                                .map(this::toSummaryResponse)
+                                .toList();
+
+                return VaultListResponse.builder()
+                                .vaults(summaries)
+                                .build();
+        }
+
         public VaultSummaryResponse getVaultDetail(Long vaultId, VaultKind kind) {
                 Long userId = currentUserProvider.getCurrentUserId();
 

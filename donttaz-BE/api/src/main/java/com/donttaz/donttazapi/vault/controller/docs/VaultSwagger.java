@@ -57,6 +57,19 @@ public interface VaultSwagger {
         })
         ResponseEntity<VaultListResponse> getMyVaults();
 
+        @Operation(summary = "내 위시리스트 금고 전체 목록 조회", description = "사용자의 모든 위시리스트 금고 목록(잠금, 만기, 해지 포함)을 조회합니다.")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "위시리스트 금고 목록 조회 성공", content = @Content(mediaType = "application/json", examples = {
+                                        @ExampleObject(name = "위시리스트 전체 목록 예시", value = "{\"vaults\": [" +
+                                                        "{\"vaultId\": 10, \"vaultKind\": \"WISHLIST\", \"lockedAmount\": 900000, \"status\": \"MATURED\", \"wishName\": \"아이패드 구매\", \"goalAmount\": 900000, \"baseInterestRate\": 6.0, \"penaltyInterestRate\": 0.0, \"withdrawalCount\": 0},"
+                                                        +
+                                                        "{\"vaultId\": 11, \"vaultKind\": \"WISHLIST\", \"lockedAmount\": 500000, \"status\": \"LOCKED\", \"wishName\": \"애플워치 구매\", \"goalAmount\": 900000, \"baseInterestRate\": 6.0, \"penaltyInterestRate\": 0.3, \"withdrawalCount\": 1}"
+                                                        +
+                                                        "]}")
+                        }))
+        })
+        ResponseEntity<VaultListResponse> getAllWishlistVaults();
+
         @Operation(summary = "금고 상세 조회", description = "특정 유형(DEFAULT/WISHLIST)의 금고 상세 정보를 조회합니다.")
         @ApiResponses({
                         @ApiResponse(responseCode = "200", description = "금고 상세 조회 성공", content = @Content(mediaType = "application/json", examples = {

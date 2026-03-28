@@ -54,6 +54,12 @@ public class VaultController implements VaultSwagger {
         }
 
         @Override
+        @GetMapping("/wishlist")
+        public ResponseEntity<VaultListResponse> getAllWishlistVaults() {
+                return ResponseEntity.ok(vaultQueryService.getAllWishlistVaults());
+        }
+
+        @Override
         @GetMapping("/{kind}/{vaultId}")
         public ResponseEntity<VaultSummaryResponse> getVaultDetail(
                         @PathVariable VaultKind kind,
