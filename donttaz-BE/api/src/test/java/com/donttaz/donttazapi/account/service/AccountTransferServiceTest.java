@@ -186,7 +186,7 @@ class AccountTransferServiceTest {
         given(currentUserProvider.getCurrentUserId()).willReturn(1L);
         given(bankingClient.transfer(any(Long.class), any(TransferCommand.class))).willReturn(result);
         given(accountSyncService.syncAccountSnapshot(1L, "0016174648358792")).willReturn(withdrawalAccount);
-        given(accountRepository.findByUserIdAndAccountNumberAndIsDeletedFalse(1L, "0204667768182760"))
+        given(accountRepository.findFirstByAccountNumberAndStatusAndIsDeletedFalse("0204667768182760", AccountStatus.ACTIVE))
                 .willReturn(Optional.of(depositAccount));
         given(accountSyncService.syncAccountSnapshot(1L, "0204667768182760")).willReturn(depositAccount);
 
@@ -235,7 +235,7 @@ class AccountTransferServiceTest {
         )).willReturn(Optional.of(withdrawalAccount));
         given(bankingClient.transfer(any(Long.class), any(TransferCommand.class))).willReturn(result);
         given(accountSyncService.syncAccountSnapshot(9L, "0016174648358792")).willReturn(withdrawalAccount);
-        given(accountRepository.findByUserIdAndAccountNumberAndIsDeletedFalse(9L, "0204667768182760"))
+        given(accountRepository.findFirstByAccountNumberAndStatusAndIsDeletedFalse("0204667768182760", AccountStatus.ACTIVE))
                 .willReturn(Optional.of(depositAccount));
         given(accountSyncService.syncAccountSnapshot(9L, "0204667768182760")).willReturn(depositAccount);
 
@@ -267,7 +267,7 @@ class AccountTransferServiceTest {
         given(currentUserProvider.getCurrentUserId()).willReturn(1L);
         given(bankingClient.transfer(any(Long.class), any(TransferCommand.class))).willReturn(result);
         given(accountSyncService.syncAccountSnapshot(1L, "0016174648358792")).willReturn(withdrawalAccount);
-        given(accountRepository.findByUserIdAndAccountNumberAndIsDeletedFalse(1L, "0204667768182760"))
+        given(accountRepository.findFirstByAccountNumberAndStatusAndIsDeletedFalse("0204667768182760", AccountStatus.ACTIVE))
                 .willReturn(Optional.empty());
 
         AccountTransferResponse response = accountTransferService.transfer(request);
