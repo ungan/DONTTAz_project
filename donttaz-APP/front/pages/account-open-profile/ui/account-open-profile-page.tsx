@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ScrollView, View, Text } from 'react-native';
+import { ScrollView, View, Text, KeyboardAvoidingView } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, PageHeader } from '@/shared/ui';
@@ -65,6 +65,7 @@ export function AccountOpenProfilePage() {
         <AccountOpenProgress currentStep="profile" />
       </View>
 
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.heroSection}>
           <Text style={styles.title}>개인정보 입력</Text>
@@ -104,6 +105,7 @@ export function AccountOpenProfilePage() {
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
         <Button label="다음" onPress={submitProfileStep} />
       </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }

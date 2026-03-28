@@ -62,7 +62,7 @@ export function PlanPage() {
   }, [planData, noPlan, reload]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['bottom']} style={styles.container}>
       <PageHeader title="소비 분석" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.tabRow}>

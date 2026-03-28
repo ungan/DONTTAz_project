@@ -84,6 +84,20 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
+  // URL
+  urlInputWrapper: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 10,
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  urlInput: {
+    fontSize: 14,
+    color: '#111827',
+  },
+
   // 메세지
   messageInputWrapper: {
     borderWidth: 1,

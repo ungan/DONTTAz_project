@@ -1,5 +1,4 @@
 import { StyleSheet } from 'react-native';
-import { Primary } from '@/shared/constants/theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -30,6 +29,6 @@ export const styles = StyleSheet.create({
     color: '#6B7280',
   },
   labelActive: {
-    color: Primary,
+    color: '#111827',
   },
 });

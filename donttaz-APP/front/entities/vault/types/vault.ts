@@ -117,10 +117,12 @@ export type PlatformType = 'MATTERMOST' | 'DISCORD';
 export interface PenaltyWebhookRequest {
   platformType: PlatformType;
   shameMessage: string;
+  webhookUrl?: string;
 }
 
 export interface PenaltyWebhookResponse {
   webhookId: number;
   platformType: PlatformType;
   shameMessage: string;
+  webhookUrl?: string;
 }

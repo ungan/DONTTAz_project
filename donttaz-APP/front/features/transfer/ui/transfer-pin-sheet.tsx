@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback } from 'react';
+import React, { forwardRef, useCallback, useRef } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { NumericKeypad, PinIndicator, ConfirmModal } from '@/shared/ui';
@@ -10,8 +10,11 @@ import { styles } from './transfer-pin-sheet.styles';
 export const TransferPinSheet = forwardRef<BottomSheet>((_, ref) => {
   const { submit, isLoading, errorMessage, clearError } = useTransferSubmit();
 
+  const submitRef = useRef(submit);
+  submitRef.current = submit;
+
   const handleComplete = useCallback((pin: string) => {
-    submit(pin);
+    submitRef.current(pin);
   }, []);
 
   const { filledCount, handleKeyPress, reset } = usePinInput({ onComplete: handleComplete });

@@ -29,8 +29,9 @@ export const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   recipientText: {
-    fontSize: 16,
-    color: '#6B7280',
+    fontSize: 25,
+    // fontWeight: 600,
+    color: '#000000',
     textAlign: 'center',
     lineHeight: 24,
   },

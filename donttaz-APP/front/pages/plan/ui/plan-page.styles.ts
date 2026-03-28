@@ -1,6 +1,4 @@
 import { StyleSheet } from 'react-native';
-import { Primary } from '@/shared/constants/theme';
-
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -13,22 +11,27 @@ export const styles = StyleSheet.create({
   },
   tabRow: {
     flexDirection: 'row',
+    marginHorizontal: 4,
     marginBottom: 18,
+    padding: 4,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    overflow: 'hidden',
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
-    paddingBottom: 10,
-    borderBottomWidth: 4,
-    borderBottomColor: '#E5E7EB',
+    justifyContent: 'center',
+    minHeight: 44,
+    borderRadius: 12,
   },
   tabButtonActive: {
-    borderBottomColor: Primary,
+    backgroundColor: '#FFFFFF',
   },
   tabLabel: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#D1D5DB',
+    color: '#6B7280',
   },
   tabLabelActive: {
     color: '#111827',

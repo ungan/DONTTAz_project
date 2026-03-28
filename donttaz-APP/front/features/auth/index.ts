@@ -9,6 +9,7 @@ export { useLogout } from './model/use-logout';
 export { useRefreshSession } from './model/use-refresh-session';
 export { clearLocalAuthSession } from './model/clear-local-auth-session';
 export { completeLoginSession } from './model/complete-login-session';
+export { setupAuthInterceptor } from './model/setup-auth-interceptor';
 export { loginApi } from './api/login';
 export { logoutApi } from './api/logout';
 export { refreshApi } from './api/refresh';

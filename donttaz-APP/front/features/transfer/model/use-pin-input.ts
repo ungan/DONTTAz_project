@@ -17,14 +17,12 @@ export function usePinInput({ onComplete }: UsePinInputOptions) {
       return;
     }
 
-    setPin((prev) => {
-      if (prev.length >= PIN_LENGTH) return prev;
-      const next = prev + key;
-      if (next.length === PIN_LENGTH) {
-        onComplete(next);
-      }
-      return next;
-    });
+    if (pin.length >= PIN_LENGTH) return;
+    const next = pin + key;
+    setPin(next);
+    if (next.length === PIN_LENGTH) {
+      onComplete(next);
+    }
   };
 
   const reset = () => setPin('');

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -77,46 +77,56 @@ export function TransferAccountPage() {
   } = useBankAccountStore();
   const { accounts, isPending, error } = useMyAccounts();
 
-  const accountOptions = accounts.map((account) => {
-    const transferableAccountNo = resolveTransferableAccountNo(account, storedAccountNo);
-    const accountId = account.accountId ?? `${account.bankCode}-${account.accountNo}`;
+  const accountOptions = useMemo(() => {
+    const options = accounts.map((account) => {
+      const transferableAccountNo = resolveTransferableAccountNo(account, storedAccountNo);
+      const accountId = account.accountId ?? `${account.bankCode}-${account.accountNo}`;
 
-    return {
-      id: String(accountId),
-      bankName: account.bankName,
-      accountName: account.accountName,
-      accountLabel: account.accountNo,
-      balanceLabel: `${parseBalance(account.accountBalance).toLocaleString('ko-KR')}원`,
-      isPrimary: account.isPrimary,
-      isSelectable: !!transferableAccountNo,
-      transferableAccountNo,
-    };
-  });
-
-  if (
-    accountOptions.length === 0 &&
-    storedAccountNo &&
-    storedBankName &&
-    storedAccountName &&
-    storedBalance !== null
-  ) {
-    accountOptions.push({
-      id: String(storedAccountId ?? storedAccountNo),
-      bankName: storedBankName,
-      accountName: storedAccountName,
-      accountLabel: maskAccountNumber(storedAccountNo),
-      balanceLabel: `${storedBalance.toLocaleString('ko-KR')}원`,
-      isPrimary: true,
-      isSelectable: true,
-      transferableAccountNo: sanitizeAccountNumber(storedAccountNo),
+      return {
+        id: String(accountId),
+        bankName: account.bankName,
+        accountName: account.accountName,
+        accountLabel: account.accountNo,
+        balanceLabel: `${parseBalance(account.accountBalance).toLocaleString('ko-KR')}원`,
+        isPrimary: account.isPrimary,
+        isSelectable: !!transferableAccountNo,
+        transferableAccountNo,
+      };
     });
-  }
+
+    if (
+      options.length === 0 &&
+      storedAccountNo &&
+      storedBankName &&
+      storedAccountName &&
+      storedBalance !== null
+    ) {
+      options.push({
+        id: String(storedAccountId ?? storedAccountNo),
+        bankName: storedBankName,
+        accountName: storedAccountName,
+        accountLabel: maskAccountNumber(storedAccountNo),
+        balanceLabel: `${storedBalance.toLocaleString('ko-KR')}원`,
+        isPrimary: true,
+        isSelectable: true,
+        transferableAccountNo: sanitizeAccountNumber(storedAccountNo),
+      });
+    }
+
+    return options;
+  }, [accounts, storedAccountNo, storedAccountId, storedBankName, storedBalance, storedAccountName]);
+
+  const withdrawalAccountNoRef = useRef(withdrawalAccountNo);
+  withdrawalAccountNoRef.current = withdrawalAccountNo;
+
+  const withdrawalAccountLabelRef = useRef(withdrawalAccountLabel);
+  withdrawalAccountLabelRef.current = withdrawalAccountLabel;
 
   useEffect(() => {
     const hasSelectedAccount = accountOptions.some(
       (account) =>
-        account.transferableAccountNo === withdrawalAccountNo &&
-        account.accountLabel === withdrawalAccountLabel
+        account.transferableAccountNo === withdrawalAccountNoRef.current &&
+        account.accountLabel === withdrawalAccountLabelRef.current
     );
 
     if (hasSelectedAccount) {
@@ -137,12 +147,7 @@ export function TransferAccountPage() {
       defaultAccount.accountLabel,
       defaultAccount.transferableAccountNo
     );
-  }, [
-    accountOptions,
-    setWithdrawalAccount,
-    withdrawalAccountLabel,
-    withdrawalAccountNo,
-  ]);
+  }, [accountOptions, setWithdrawalAccount]);
 
   const selectedAccountId =
     accountOptions.find(
@@ -175,7 +180,7 @@ export function TransferAccountPage() {
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
-      <PageHeader title="이체" />
+      <PageHeader title="송금" />
 
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
