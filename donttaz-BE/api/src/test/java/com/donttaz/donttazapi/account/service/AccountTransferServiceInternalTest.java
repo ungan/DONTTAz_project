@@ -86,7 +86,7 @@ class AccountTransferServiceInternalTest {
 
         given(bankingClient.transfer(any(Long.class), any(TransferCommand.class))).willReturn(result);
         given(accountSyncService.syncAccountSnapshot(7L, "0016174648358792")).willReturn(withdrawalAccount);
-        given(accountRepository.findByUserIdAndAccountNumberAndIsDeletedFalse(7L, "0204667768182760"))
+        given(accountRepository.findFirstByAccountNumberAndStatusAndIsDeletedFalse("0204667768182760", AccountStatus.ACTIVE))
                 .willReturn(Optional.empty());
 
         AccountTransferResponse response = accountTransferService.transfer(7L, request);

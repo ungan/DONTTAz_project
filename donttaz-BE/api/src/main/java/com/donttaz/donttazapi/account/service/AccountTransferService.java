@@ -381,7 +381,7 @@ public class AccountTransferService {
                     resolveTransferCounterpartyName(TransactionType.WITHDRAWAL, request)
             );
 
-            syncOwnedDepositAccount(userId, request.depositAccountNo())
+            syncSystemDepositAccount(request.depositAccountNo())
                     .ifPresent(account -> saveTransferTransaction(
                             account,
                             findTransactionByAccountNo(result.transactions(), request.depositAccountNo()).orElse(null),
@@ -400,13 +400,15 @@ public class AccountTransferService {
         }
     }
 
-    private Optional<Account> syncOwnedDepositAccount(Long userId, String accountNo) {
-        if (accountRepository.findByUserIdAndAccountNumberAndIsDeletedFalse(userId, accountNo).isEmpty()) {
+    private Optional<Account> syncSystemDepositAccount(String accountNo) {
+        Optional<Account> depositAccount = accountRepository.findFirstByAccountNumberAndStatusAndIsDeletedFalse(accountNo, AccountStatus.ACTIVE);
+        if (depositAccount.isEmpty()) {
             return Optional.empty();
         }
 
         try {
-            return Optional.of(accountSyncService.syncAccountSnapshot(userId, accountNo));
+            Long ownerUserId = depositAccount.get().getUserId();
+            return Optional.of(accountSyncService.syncAccountSnapshot(ownerUserId, accountNo));
         } catch (RuntimeException exception) {
             log.warn("deposit account snapshot sync skipped accountNo={} message={}", accountNo,
                     exception.getMessage());
