@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 20,
+    marginHorizontal: 24,
     marginTop: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -11,12 +11,10 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 16,
-  },
-  column: {
-    gap: 8,
-    flex: 1,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    rowGap: 10,
+    columnGap: 16,
   },
   item: {
     flexDirection: 'row',

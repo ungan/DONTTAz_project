@@ -37,10 +37,9 @@ function buildArcPath(startAngle: number, endAngle: number): string {
 
 interface SpendingPlanPieChartProps {
   categoryPlans: SpendingPlanCategoryPlan[];
-  totalBudget: number;
 }
 
-export function SpendingPlanPieChart({ categoryPlans, totalBudget }: SpendingPlanPieChartProps) {
+export function SpendingPlanPieChart({ categoryPlans }: SpendingPlanPieChartProps) {
   let currentAngle = 0;
   const slices = categoryPlans.map((item) => {
     const angle = (item.percentage / 100) * 360;
@@ -56,10 +55,7 @@ export function SpendingPlanPieChart({ categoryPlans, totalBudget }: SpendingPla
 
   return (
     <View style={styles.card}>
-      <Text style={styles.headerTitle}>카테고리별 예산 비중</Text>
-      <Text style={styles.headerDescription}>
-        어디에 얼마를 둘지 한눈에 볼 수 있게 정리했어요.
-      </Text>
+      <Text style={styles.headerTitle}>카테고리별 예산</Text>
 
       <View style={styles.chartWrap}>
         <Svg width={SIZE} height={SIZE}>
@@ -67,10 +63,6 @@ export function SpendingPlanPieChart({ categoryPlans, totalBudget }: SpendingPla
             <Path key={slice.categoryName} d={slice.path} fill={slice.color} />
           ))}
         </Svg>
-        <View style={styles.chartCenter}>
-          <Text style={styles.centerLabel}>총 예산</Text>
-          <Text style={styles.centerAmount}>{formatWon(totalBudget)}</Text>
-        </View>
       </View>
 
       <View style={styles.legend}>

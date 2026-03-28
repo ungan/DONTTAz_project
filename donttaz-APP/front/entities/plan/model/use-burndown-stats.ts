@@ -36,7 +36,7 @@ export function useBurndownStats(data: BurndownData | null): BurndownStats {
     const dailyBurn = elapsedDays > 0 ? (firstActual - latestActual) / elapsedDays : 0;
 
     const daysUntilBankrupt =
-      dailyBurn > 0 ? Math.ceil(data.currentRemaining / dailyBurn) : null;
+      dailyBurn > 0 ? Math.max(0, Math.ceil(data.currentRemaining / dailyBurn)) : null;
 
     return { vsIdealPercent, daysUntilBankrupt };
   }, [data]);

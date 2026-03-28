@@ -18,14 +18,10 @@ export function AccountOpenProfilePage() {
     verifiedOwnerName,
     verifiedOwnerPhoneNumber,
     zipCode,
-    address,
     addressDetail,
-    emailLocalPart,
-    emailDomain,
     customerNameError,
     phoneNumberError,
     addressError,
-    emailError,
     isSmsAgreed,
     isAlimtalkAgreed,
     isMailAgreed,
@@ -34,10 +30,7 @@ export function AccountOpenProfilePage() {
     updateCustomerName,
     updatePhoneNumber,
     updateZipCode,
-    updateAddress,
     updateAddressDetail,
-    updateEmailLocalPart,
-    updateEmailDomain,
     toggleSmsAgreed,
     toggleAlimtalkAgreed,
     toggleMailAgreed,
@@ -78,24 +71,17 @@ export function AccountOpenProfilePage() {
           customerName={customerName}
           phoneNumber={phoneNumber}
           zipCode={zipCode}
-          address={address}
           addressDetail={addressDetail}
-          emailLocalPart={emailLocalPart}
-          emailDomain={emailDomain}
           customerNameError={customerNameError}
           phoneNumberError={phoneNumberError}
           addressError={addressError}
-          emailError={emailError}
           isSmsAgreed={isSmsAgreed}
           isAlimtalkAgreed={isAlimtalkAgreed}
           isMailAgreed={isMailAgreed}
           onCustomerNameChange={updateCustomerName}
           onPhoneNumberChange={updatePhoneNumber}
           onZipCodeChange={updateZipCode}
-          onAddressChange={updateAddress}
           onAddressDetailChange={updateAddressDetail}
-          onEmailLocalPartChange={updateEmailLocalPart}
-          onEmailDomainChange={updateEmailDomain}
           onToggleSmsAgreed={toggleSmsAgreed}
           onToggleAlimtalkAgreed={toggleAlimtalkAgreed}
           onToggleMailAgreed={toggleMailAgreed}

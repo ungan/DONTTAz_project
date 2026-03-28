@@ -9,6 +9,7 @@ export interface AccountOpenTermItem {
   title: string;
   category: AccountOpenTermCategory;
   isAgreed: boolean;
+  content?: string;
 }
 
 export interface AccountOpenState {

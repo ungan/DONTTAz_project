@@ -214,8 +214,8 @@ export function MenuPage() {
 
       <ConfirmModal
         visible={isConfirmVisible}
-        title="로그아웃할까요?"
-        message="현재 기기에 저장된 로그인 정보와 간편 PIN 정보를 정리합니다."
+        title="로그아웃"
+        message="다시 로그인하면 모든 기능을 사용할 수 있어요."
         confirmLabel={isPending ? '처리 중...' : '로그아웃'}
         cancelLabel="취소"
         onConfirm={handleConfirmLogout}

@@ -5,12 +5,21 @@ export const styles = StyleSheet.create({
     alignSelf: 'stretch',
     height: 200,
   },
-  card: {
+  slide: {
+    height: 200,
+  },
+  indicators: {
     position: 'absolute',
-    width: '100%',
-    height: '100%',
+    bottom: 12,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backfaceVisibility: 'hidden',
+    gap: 4,
+  },
+  indicator: {
+    height: 6,
+    borderRadius: 3,
   },
 });

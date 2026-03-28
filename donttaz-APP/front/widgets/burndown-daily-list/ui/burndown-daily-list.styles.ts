@@ -20,10 +20,15 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   cardTitle: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#111827',
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#374151',
   },
   toggleButton: {
     width: 36,
@@ -55,26 +60,24 @@ export const styles = StyleSheet.create({
   },
   cellDate: {
     flex: 0.8,
-    fontSize: 15,
-    color: '#374151',
-    fontWeight: '600',
+    fontSize: 14,
+    color: '#9CA3AF',
   },
   cellActual: {
     flex: 1.75,
-    fontSize: 15,
-    color: '#374151',
+    fontSize: 14,
+    color: '#6B7280',
     textAlign: 'center',
   },
   cellActualEmpty: {
     flex: 1.75,
-    fontSize: 15,
+    fontSize: 14,
     color: '#D1D5DB',
     textAlign: 'center',
   },
   cellDiff: {
     flex: 1.75,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 14,
     textAlign: 'right',
   },
 });

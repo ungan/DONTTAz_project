@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Modal, ScrollView, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { AccountOpenTermItem } from '../types/account-open';
 import { styles } from './account-open-terms-section.styles';
@@ -29,6 +29,8 @@ export function AccountOpenTermsSection({
   onToggleAll,
   onToggleItem,
 }: AccountOpenTermsSectionProps) {
+  const [selectedTerm, setSelectedTerm] = useState<AccountOpenTermItem | null>(null);
+
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
@@ -57,12 +59,41 @@ export function AccountOpenTermsSection({
               <Text style={styles.itemLabel} numberOfLines={2}>
                 {item.title}
               </Text>
-              <Ionicons name="chevron-forward" size={16} color="#C4C9D4" />
+              {item.content ? (
+                <TouchableOpacity
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  onPress={() => setSelectedTerm(item)}
+                >
+                  <Ionicons name="chevron-forward" size={16} color="#C4C9D4" />
+                </TouchableOpacity>
+              ) : (
+                <Ionicons name="chevron-forward" size={16} color="#C4C9D4" />
+              )}
             </TouchableOpacity>
             {index < items.length - 1 && <View style={styles.innerDivider} />}
           </View>
         ))}
       </View>
+
+      {/* 약관 내용 모달 */}
+      <Modal
+        visible={!!selectedTerm}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setSelectedTerm(null)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle} numberOfLines={2}>{selectedTerm?.title}</Text>
+            <TouchableOpacity onPress={() => setSelectedTerm(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="close" size={22} color="#6B7280" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.modalBody} contentContainerStyle={styles.modalContent}>
+            <Text style={styles.modalText}>{selectedTerm?.content}</Text>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
     </View>
   );
 }

@@ -12,6 +12,11 @@ export const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   badge: {
     alignSelf: 'flex-start',
     borderRadius: 999,
@@ -24,11 +29,10 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     color: Primary,
   },
-  title: {
-    marginTop: 12,
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#111827',
+  monthLabel: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#9CA3AF',
   },
   subtitle: {
     marginTop: 8,

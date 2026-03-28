@@ -19,13 +19,12 @@ interface SpendingPlanSummaryProps {
 export function SpendingPlanSummary({ data }: SpendingPlanSummaryProps) {
   return (
     <View style={styles.card}>
-      <View style={styles.badge}>
-        <Text style={styles.badgeText}>{data.budgetStrategyLabel}</Text>
+      <View style={styles.badgeRow}>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{data.budgetStrategyLabel}</Text>
+        </View>
+        <Text style={styles.monthLabel}>{formatMonth(data.targetYearMonth)}</Text>
       </View>
-      <Text style={styles.title}>{formatMonth(data.targetYearMonth)} AI 소비 플랜</Text>
-      <Text style={styles.subtitle}>
-        최근 소비 패턴을 바탕으로 이번 달 예산안을 만들었어요.
-      </Text>
 
       <Text style={styles.totalLabel}>권장 소비 예산</Text>
       <Text style={styles.totalAmount}>{formatWon(data.totalBudget)}</Text>

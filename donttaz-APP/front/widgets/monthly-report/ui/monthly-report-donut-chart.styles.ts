@@ -31,7 +31,7 @@ export const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '500',
     color: '#6B7280',
-    width: 32,
+    width: 44,
     textAlign: 'center',
   },
 });

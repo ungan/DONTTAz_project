@@ -75,4 +75,37 @@ export const styles = StyleSheet.create({
     borderColor: Primary,
     backgroundColor: Primary,
   },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+    gap: 12,
+  },
+  modalTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+    lineHeight: 22,
+  },
+  modalBody: {
+    flex: 1,
+  },
+  modalContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  modalText: {
+    fontSize: 14,
+    lineHeight: 24,
+    color: '#374151',
+  },
 });

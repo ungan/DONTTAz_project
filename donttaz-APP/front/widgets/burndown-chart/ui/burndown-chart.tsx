@@ -20,13 +20,12 @@ import type { BurndownData } from '@/entities/plan';
 import { styles, CHART_HEIGHT, CHART_LABEL_HEIGHT } from './burndown-chart.styles';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const OUTER_PADDING = 16;
+const OUTER_PADDING = 30;
 const CARD_PADDING = 20;
 const CHART_WIDTH = SCREEN_WIDTH - OUTER_PADDING * 2 - CARD_PADDING * 2;
 
 interface BurndownChartProps {
   data: BurndownData;
-  yearMonth: string;
   vsIdealPercent: number;
   daysUntilBankrupt: number | null;
   onToggleView: () => void;
@@ -36,18 +35,13 @@ function formatWon(amount: number): string {
   return amount.toLocaleString('ko-KR') + '원';
 }
 
-function getMonthLabel(yearMonth: string): string {
-  const [year, month] = yearMonth.split('-');
-  return `${year}년 ${parseInt(month)}월`;
-}
-
 function toLinePath(points: { x: number; y: number }[]): string {
   return points
     .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
     .join(' ');
 }
 
-export function BurndownChart({ data, yearMonth, vsIdealPercent, daysUntilBankrupt, onToggleView }: BurndownChartProps) {
+export function BurndownChart({ data, vsIdealPercent, daysUntilBankrupt, onToggleView }: BurndownChartProps) {
   const bannerOpacity = useSharedValue(0);
   const bannerTranslateY = useSharedValue(16);
   const cardOpacity = useSharedValue(0);
@@ -86,7 +80,7 @@ export function BurndownChart({ data, yearMonth, vsIdealPercent, daysUntilBankru
   const toX = (i: number) =>
     totalDays <= 1 ? 0 : (i / (totalDays - 1)) * CHART_WIDTH;
   const toY = (value: number) =>
-    chartInnerHeight - (value / totalBudget) * chartInnerHeight;
+    Math.max(0, Math.min(chartInnerHeight, chartInnerHeight - (value / totalBudget) * chartInnerHeight));
 
   const idealPoints = chartData.map((d, i) => ({ x: toX(i), y: toY(d.idealRemaining) }));
   const actualPoints = chartData
@@ -133,7 +127,6 @@ export function BurndownChart({ data, yearMonth, vsIdealPercent, daysUntilBankru
               <View style={[styles.badge, { backgroundColor: badgeBg }]}>
                 <Text style={[styles.badgeText, { color: accentColor }]}>{vsText}</Text>
               </View>
-              <Text style={styles.periodText}>{getMonthLabel(yearMonth)}</Text>
             </View>
           </View>
           <TouchableOpacity style={styles.calendarButton} onPress={onToggleView}>
@@ -152,9 +145,6 @@ export function BurndownChart({ data, yearMonth, vsIdealPercent, daysUntilBankru
               <Text style={styles.legendLabel}>권장 잔액선</Text>
             </View>
           </View>
-          <Text style={styles.legendDescription}>
-            실선은 실제 잔액, 점선은 권장 잔액 흐름을 뜻해요.
-          </Text>
         </View>
 
         <View style={styles.chartContainer}>

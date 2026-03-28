@@ -46,12 +46,24 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  iconWrapper: {
+    position: 'relative',
+  },
   iconBox: {
     width: 36,
     height: 36,
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  newDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
   },
   merchantName: {
     flex: 1,
