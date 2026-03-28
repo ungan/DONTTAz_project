@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, KeyboardAvoidingView } from 'react-native';
 import { router } from 'expo-router';
 import { LoginFormSection, LoginActionSection, useLogin } from '@/features/auth';
 import { styles } from './login-page.styles';
@@ -26,7 +26,7 @@ export function LoginPage() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView behavior="padding" style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>DONTTAz</Text>
         <Text style={styles.subtitle}>당신의 소비를 지켜보는 작은 감시자</Text>
@@ -48,6 +48,6 @@ export function LoginPage() {
         onSignUp={handleSignUp}
         isLoggingIn={isPending}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }

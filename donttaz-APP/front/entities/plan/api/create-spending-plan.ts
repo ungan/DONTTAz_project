@@ -80,7 +80,7 @@ export async function createSpendingPlan({
     payload.monthlyIncome = monthlyIncome;
   }
 
-  logPlanApi('request:start', payload);
+  logPlanApi('request:start', payload as unknown as Record<string, unknown>);
 
   try {
     const { data } = await apiClient.post<SpendingPlanResponse | LegacySpendingPlanResponse>(

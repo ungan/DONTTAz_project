@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "199780336158",
+    "project_id": "donttaz-fb22",
+    "storage_bucket": "donttaz-fb22.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:199780336158:android:f517a292449b74b7df240f",
+        "android_client_info": {
+          "package_name": "com.hoein.front"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBezWhN6DPrYgxp4_t8xrIbUDSUqcS-d6c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

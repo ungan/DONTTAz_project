@@ -3,7 +3,6 @@ import { Alert, ScrollView, Text, View, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSessionStore } from '@/entities/session';
 import { useLogout } from '@/features/auth';
 import { useBankAccountStore } from '@/entities/bank-account';
 import { getVaultApi } from '@/entities/vault';
@@ -21,7 +20,6 @@ type MenuItem = {
 export function MenuPage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { name } = useSessionStore();
   const { accountId } = useBankAccountStore();
   const { logout, isPending, error, resetError } = useLogout();
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
@@ -51,7 +49,7 @@ export function MenuPage() {
     },
     {
       icon: 'swap-horizontal-outline',
-      label: '이체',
+      label: '송금',
       description: '다른 계좌로 송금하기',
       onPress: () => router.push('/transfer-account'),
     },
@@ -73,7 +71,7 @@ export function MenuPage() {
     {
       icon: 'trending-down-outline',
       label: '소비 계획',
-      description: '번다운 차트로 예산 관리',
+      description: '번다운 차트로 계획 이행률 체크',
       onPress: () => router.push('/(tabs)/plan'),
     },
   ];
@@ -87,9 +85,31 @@ export function MenuPage() {
     },
     {
       icon: 'document-text-outline',
-      label: '각서 작성',
-      description: '소비 절제 각서 설정',
-      onPress: () => router.push('/vault-memorandum?readonly=true'),
+      label: '각서 보기',
+      description: '소비 절제 각서 다시 보기',
+      onPress: async () => {
+        try {
+          const { vaults } = await getVaultApi();
+          const wishlist = vaults.find((v) => v.vaultKind === 'WISHLIST');
+          if (!wishlist) {
+            Alert.alert(
+              '위시금고 필요',
+              '각서를 보려면 먼저 위시금고를 만들어야 합니다.',
+              [
+                { text: '취소', style: 'cancel' },
+                {
+                  text: '위시금고 만들기',
+                  onPress: () => router.push('/(tabs)/vault?tab=wishlist'),
+                },
+              ]
+            );
+            return;
+          }
+          router.push(`/vault-memorandum?readonly=true&vaultId=${wishlist.vaultId}`);
+        } catch {
+          router.push('/vault-memorandum?readonly=true');
+        }
+      },
     },
     {
       icon: 'chatbubble-ellipses-outline',
@@ -161,14 +181,6 @@ export function MenuPage() {
         contentContainerStyle={[styles.container, { paddingTop: insets.top + 16 }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.profileSection}>
-          <View>
-            <Text style={styles.profileName}>{name ?? '사용자'}님</Text>
-            <Text style={styles.profileSub}>내 정보 관리</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-        </View>
-
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>금융</Text>
           <View style={styles.sectionCard}>

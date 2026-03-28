@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PageHeader } from '@/shared/ui';
 import { useTransferStore } from '@/features/transfer';
@@ -17,7 +17,8 @@ export function TransferLayout({ amount, children }: TransferLayoutProps) {
   const formattedAmount = amount.toLocaleString('ko-KR');
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['bottom']} style={styles.container}>
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <PageHeader title="송금" />
 
       <View style={styles.recipientRow}>
@@ -41,6 +42,7 @@ export function TransferLayout({ amount, children }: TransferLayoutProps) {
 
       {children}
 
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

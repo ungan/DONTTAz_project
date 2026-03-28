@@ -40,12 +40,12 @@ export function useLogout() {
 
           await storeAuthTokens(refreshedAccessToken, refreshedRefreshToken);
           await logoutApi({ refreshToken: refreshedRefreshToken });
-          await clearLocalAuthSession();
+          await clearLocalAuthSession({ keepDevicePin: true });
           router.replace('/login');
           return true;
         }
 
-        await clearLocalAuthSession();
+        await clearLocalAuthSession({ keepDevicePin: true });
         router.replace('/login');
         return true;
       }
@@ -54,12 +54,12 @@ export function useLogout() {
         await logoutApi({ refreshToken });
       }
 
-      await clearLocalAuthSession();
+      await clearLocalAuthSession({ keepDevicePin: true });
       router.replace('/login');
       return true;
     } catch (error) {
       try {
-        await clearLocalAuthSession();
+        await clearLocalAuthSession({ keepDevicePin: true });
         router.replace('/login');
         return true;
       } catch {

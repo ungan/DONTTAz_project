@@ -48,7 +48,7 @@ export function TransferConfirmPage() {
         />
         <Animated.View style={[styles.textArea, { opacity }]}>
           <Text style={styles.amountText}>{formattedAmount}원</Text>
-          <Text style={styles.recipientText}>{recipientLabel}에게{'\n'}보냈어요</Text>
+          <Text style={styles.recipientText}>송금 완료</Text>
         </Animated.View>
       </View>
 
@@ -74,10 +74,10 @@ export function TransferConfirmPage() {
       </Animated.View>
 
       <Animated.View style={[styles.buttonArea, { opacity }]}>
-        <TouchableOpacity style={styles.confirmButton} onPress={() => router.replace('/(tabs)/home')} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.confirmButton} onPress={() => router.dismissAll()} activeOpacity={0.8}>
           <Text style={styles.confirmButtonLabel}>확인</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.extraButton} onPress={() => router.replace('/transfer-account')} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.extraButton} onPress={() => { router.dismissAll(); router.push('/transfer-account'); }} activeOpacity={0.7}>
           <Text style={styles.extraButtonLabel}>추가 이체</Text>
         </TouchableOpacity>
       </Animated.View>

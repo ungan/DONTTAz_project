@@ -123,7 +123,7 @@ export function VaultMemorandumPage() {
 
       <SignStampOverlay
         visible={showStamp}
-        onAnimationEnd={() => router.replace(`/vault-webhook?vaultId=${vaultId}`)}
+        onAnimationEnd={() => router.replace(`/vault-webhook?vaultId=${vaultId}&from=setup`)}
       />
     </SafeAreaView>
   );

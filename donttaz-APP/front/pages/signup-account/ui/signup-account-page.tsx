@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ScrollView, View, Text } from 'react-native';
+import { ScrollView, View, Text, KeyboardAvoidingView } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, PageHeader } from '@/shared/ui';
@@ -39,6 +39,7 @@ export function SignupAccountPage() {
 
   return (
     <View style={styles.outerContainer}>
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.headerBlock}>
           <PageHeader title="계정설정" />
@@ -74,6 +75,7 @@ export function SignupAccountPage() {
         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
         <Button label="다음" onPress={submitAccountStep} />
       </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }

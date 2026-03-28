@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, View, Text, ScrollView, TextInput, TouchableOpacity, BackHandler, Image } from 'react-native';
+import { Alert, View, Text, ScrollView, TextInput, TouchableOpacity, BackHandler, Image, KeyboardAvoidingView, type ImageSourcePropType } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -13,24 +13,26 @@ import { styles } from './vault-webhook-page.styles';
 const mattermostLogo = require('@/shared/assets/logo/mattermost-logo.png');
 const discordLogo = require('@/shared/assets/logo/discord-logo.jpg');
 
-const PLATFORMS: { id: PlatformType; label: string; color: string; bg: string; logo: ReturnType<typeof require> }[] = [
+const PLATFORMS: { id: PlatformType; label: string; color: string; bg: string; logo: ImageSourcePropType }[] = [
   { id: 'MATTERMOST', label: 'Mattermost', color: '#1B5299', bg: '#E8EEF7', logo: mattermostLogo },
   { id: 'DISCORD',    label: 'Discord',    color: '#5865F2', bg: '#EEEEFF', logo: discordLogo },
 ];
 
 export function VaultWebhookPage() {
   const router = useRouter();
-  const { vaultId } = useLocalSearchParams<{ vaultId: string }>();
-  const { platform, setPlatform, message, setMessage, isValid } = useWebhookForm();
+  const { vaultId, from } = useLocalSearchParams<{ vaultId: string; from: string }>();
+  const isSetupFlow = from === 'setup';
+  const { platform, setPlatform, message, setMessage, webhookUrl, setWebhookUrl, isValid } = useWebhookForm();
   const [isEditMode, setIsEditMode] = useState(false);
 
   const isOver = message.length > WEBHOOK_MESSAGE_MAX_LENGTH;
 
   useFocusEffect(
     React.useCallback(() => {
+      if (!isSetupFlow) return;
       const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
       return () => sub.remove();
-    }, [])
+    }, [isSetupFlow])
   );
 
   useEffect(() => {
@@ -41,6 +43,7 @@ export function VaultWebhookPage() {
       if (existing?.shameMessage) {
         setPlatform(existing.platformType);
         setMessage(existing.shameMessage);
+        setWebhookUrl(existing.webhookUrl ?? '');
         setIsEditMode(true);
       }
     };
@@ -79,6 +82,7 @@ export function VaultWebhookPage() {
       await postPenaltyWebhookApi(id, {
         platformType: platform,
         shameMessage: message,
+        ...(webhookUrl.trim() && { webhookUrl: webhookUrl.trim() }),
       });
       console.log('[WebhookSave] success, navigating');
       router.back();
@@ -89,7 +93,8 @@ export function VaultWebhookPage() {
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.safeArea}>
-      <PageHeader title="수치심 메세지 설정" onBack={() => {}} />
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+      <PageHeader title="수치심 메세지 설정" onBack={isSetupFlow ? () => {} : undefined} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -97,9 +102,9 @@ export function VaultWebhookPage() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.heroSection}>
-          <Text style={styles.heroTitle}>지인에게 메세지 전송</Text>
+          <Text style={styles.heroTitle}>친구에게 메세지 전송</Text>
           <Text style={styles.heroText}>
-            긴급 출금·중도 해지 시 즉시 전송됩니다
+            위시리스트 긴급 출금·중도 해지 시 전송됩니다
           </Text>
         </View>
 
@@ -126,6 +131,27 @@ export function VaultWebhookPage() {
           </View>
         </View>
 
+        {/* Webhook URL */}
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>Webhook URL (선택)</Text>
+          <View style={styles.urlInputWrapper}>
+            <TextInput
+              style={styles.urlInput}
+              value={webhookUrl}
+              onChangeText={setWebhookUrl}
+              placeholder="https://discord.gg/..."
+              placeholderTextColor="#9CA3AF"
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+            />
+          </View>
+          <View style={styles.infoBox}>
+            <Ionicons name="information-circle-outline" size={14} color="#9CA3AF" />
+            <Text style={styles.infoText}>입력하지 않으면 기본 Webhook 설정이 사용됩니다.</Text>
+          </View>
+        </View>
+
         {/* 메세지 */}
         <View style={styles.card}>
           <Text style={styles.cardLabel}>전송 메세지</Text>
@@ -134,7 +160,7 @@ export function VaultWebhookPage() {
               style={styles.messageInput}
               value={message}
               onChangeText={setMessage}
-              placeholder="예: 방금 야식 결제해 버렸습니다. 한마디씩 부탁드립니다."
+              placeholder={"예: 저는 지금 통장을 배신했습니다. 한마디 부탁드립니다."}
               placeholderTextColor="#9CA3AF"
               multiline
               maxLength={WEBHOOK_MESSAGE_MAX_LENGTH + 10}
@@ -157,6 +183,7 @@ export function VaultWebhookPage() {
           onPress={handleSave}
         />
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

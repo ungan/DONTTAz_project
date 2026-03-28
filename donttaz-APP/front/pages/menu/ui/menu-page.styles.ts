@@ -8,24 +8,6 @@ export const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
     gap: 24,
   },
-  profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-  },
-  profileName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  profileSub: {
-    fontSize: 13,
-    color: '#9CA3AF',
-    marginTop: 2,
-  },
   section: {
     gap: 8,
   },

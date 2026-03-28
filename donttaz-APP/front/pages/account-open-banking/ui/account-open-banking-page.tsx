@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ScrollView, View, Text } from 'react-native';
+import { ScrollView, View, Text, KeyboardAvoidingView } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, PageHeader } from '@/shared/ui';
@@ -47,6 +47,7 @@ export function AccountOpenBankingPage() {
         <AccountOpenProgress currentStep="banking" />
       </View>
 
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.heroSection}>
           <Text style={styles.title}>전자금융 설정</Text>
@@ -74,6 +75,7 @@ export function AccountOpenBankingPage() {
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
         <Button label="계좌 개설하기" onPress={submitBankingStep} />
       </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }

@@ -1,18 +1,19 @@
 import React from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, View, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { WelcomingAlert } from '@/widgets/welcoming-alert';
 import { HeroBanner } from '@/widgets/hero-banner';
 import { FavoriteMenu } from '@/widgets/favorite-menu';
 import { PaymentHistory } from '@/widgets/payment-history';
 import { useSessionStore } from '@/entities/session';
+import { getVaultApi } from '@/entities/vault';
 import { styles } from './home-page.styles';
 
 export function HomePage() {
   const { name } = useSessionStore();
   const router = useRouter();
 
-  const handleFavoriteMenuPress = (id: string) => {
+  const handleFavoriteMenuPress = async (id: string) => {
     if (id === '1') {
       router.push('/transfer-account');
     }
@@ -20,10 +21,44 @@ export function HomePage() {
       router.push('/report');
     }
     if (id === '3') {
-      router.push('/(tabs)/plan');
+      try {
+        const { vaults } = await getVaultApi();
+        const wishlist = vaults.find((v) => v.vaultKind === 'WISHLIST');
+        if (!wishlist) {
+          Alert.alert(
+            '위시금고 필요',
+            '각서를 보려면 먼저 위시금고를 만들어야 합니다.',
+            [
+              { text: '취소', style: 'cancel' },
+              { text: '위시금고 만들기', onPress: () => router.push('/(tabs)/vault?tab=wishlist') },
+            ]
+          );
+          return;
+        }
+        router.push(`/vault-memorandum?readonly=true&vaultId=${wishlist.vaultId}`);
+      } catch {
+        router.push('/vault-memorandum?readonly=true');
+      }
     }
     if (id === '4') {
-      router.push('/(tabs)/vault');
+      try {
+        const { vaults } = await getVaultApi();
+        const wishlist = vaults.find((v) => v.vaultKind === 'WISHLIST');
+        if (!wishlist) {
+          Alert.alert(
+            '위시금고 필요',
+            '수치심 메세지를 설정하려면 먼저 위시금고를 만들어야 합니다.',
+            [
+              { text: '취소', style: 'cancel' },
+              { text: '위시금고 만들기', onPress: () => router.push('/(tabs)/vault?tab=wishlist') },
+            ]
+          );
+          return;
+        }
+        router.push(`/vault-webhook?vaultId=${wishlist.vaultId}`);
+      } catch {
+        router.push('/vault-webhook');
+      }
     }
   };
 

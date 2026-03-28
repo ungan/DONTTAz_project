@@ -17,12 +17,12 @@ const MENU_ITEMS = [
   {
     id: '3',
     icon: require('@/shared/assets/icons/medium-icon3.svg'),
-    label: '소비 플랜',
+    label: '각서',
   },
   {
     id: '4',
     icon: require('@/shared/assets/icons/medium-icon4.svg'),
-    label: '금고',
+    label: '메세지 설정',
   },
 ];
 

@@ -10,7 +10,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { usePushTokenRegistration } from '@/features/push';
+import { setupAuthInterceptor } from '@/features/auth';
 import { useColorScheme } from '@/shared/hooks/use-color-scheme';
+
+setupAuthInterceptor();
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
