@@ -1,26 +1,37 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, Alert, Animated } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useRouter } from 'expo-router';
 import BottomSheet from '@gorhom/bottom-sheet';
-import type { Vault, VaultTransaction } from '@/entities/vault';
+import type { Vault, VaultStatus } from '@/entities/vault';
 import { createWishlistVaultApi, terminateVaultApi } from '@/entities/vault';
 import { WishlistBottomSheet } from '@/features/vault-wishlist';
 import { WithdrawWarningModal } from '@/features/vault-withdraw';
-import { VaultNotice } from '@/widgets/vault-notice';
-import { VaultHistory } from '@/widgets/vault-history';
 import { styles, wishlistStyles } from './vault-page.styles';
 
 const vaultFishImage = require('@/shared/assets/images/vault-fish.jpg');
 
+const STATUS_LABEL: Record<VaultStatus, string> = {
+  LOCKED: '진행 중',
+  MATURED: '달성',
+  BROKEN: '해지',
+};
+
+const STATUS_COLOR: Record<VaultStatus, string> = {
+  LOCKED: '#5899FD',
+  MATURED: '#4A9B6F',
+  BROKEN: '#6B7280',
+};
+
 interface VaultWishlistTabProps {
   vault: Vault | null;
-  transactions: VaultTransaction[];
+  wishlistHistory: Vault[];
   onRefetch?: () => void;
 }
 
-export function VaultWishlistTab({ vault, transactions, onRefetch }: VaultWishlistTabProps) {
+export function VaultWishlistTab({ vault, wishlistHistory, onRefetch }: VaultWishlistTabProps) {
   const router = useRouter();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -110,7 +121,7 @@ export function VaultWishlistTab({ vault, transactions, onRefetch }: VaultWishli
           <View style={wishlistStyles.buttonRow}>
             <TouchableOpacity
               style={[wishlistStyles.button, wishlistStyles.buttonPrimary]}
-              onPress={() => router.push(`/vault-deposit?kind=WISHLIST&vaultId=${vault.vaultId}&lockedAmount=${vault.lockedAmount}`)}
+              onPress={() => router.push(`/vault-deposit?kind=WISHLIST&vaultId=${vault.vaultId}&lockedAmount=${vault.lockedAmount}&goalAmount=${vault.goalAmount}`)}
               activeOpacity={0.8}
             >
               <Text style={wishlistStyles.buttonTextPrimary}>+ 넣기</Text>
@@ -125,11 +136,58 @@ export function VaultWishlistTab({ vault, transactions, onRefetch }: VaultWishli
           </View>
         </View>
 
-        <VaultNotice
-          baseInterestRate={vault.baseInterestRate - vault.penaltyInterestRate}
-          penaltyInterestRate={-0.3}
-        />
-        <VaultHistory transactions={transactions} />
+        <View style={{ paddingHorizontal: 16, paddingBottom: 32, marginTop: 8, borderTopWidth: 1, borderTopColor: '#F3F4F6' }}>
+          <Text style={{ fontSize: 18, fontWeight: '600', color: '#111827', paddingTop: 20, paddingBottom: 12 }}>
+            지난 위시리스트
+          </Text>
+          {wishlistHistory.length === 0 ? (
+            <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+              <Text style={{ fontSize: 16, color: '#9CA3AF' }}>지난 위시리스트가 없습니다.</Text>
+            </View>
+          ) : (
+            wishlistHistory.map((item) => {
+              const isMatured = item.status === 'MATURED';
+              return (
+                <View
+                  key={item.vaultId}
+                  style={{
+                    borderRadius: 16,
+                    marginBottom: 12,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.12,
+                    shadowRadius: 2,
+                    elevation: 2,
+                  }}
+                >
+                  <View style={{ borderRadius: 16, overflow: 'hidden', backgroundColor: isMatured ? '#fff' : '#F0F1F3' }}>
+                  <View style={{ padding: 16 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8, gap: 6 }}>
+                        {isMatured && <Text style={{ fontSize: 15 }}>😎</Text>}
+                        <Text style={{ fontSize: 16, fontWeight: '700', color: isMatured ? '#111827' : '#374151' }}>
+                          {item.wishName}
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: isMatured ? '#4A9B6F' : '#9CA3AF' }}>
+                        {STATUS_LABEL[item.status]}
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 22, fontWeight: '700', color: '#111827' }}>
+                      {item.goalAmount.toLocaleString('ko-KR')}원
+                    </Text>
+                    {item.withdrawalCount > 0 && (
+                      <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 6 }}>
+                        긴급 출금 {item.withdrawalCount}회
+                      </Text>
+                    )}
+                  </View>
+                  </View>
+                </View>
+              );
+            })
+          )}
+        </View>
       </ScrollView>
 
       <TouchableOpacity

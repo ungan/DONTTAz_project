@@ -14,7 +14,7 @@ import { styles } from './vault-page.styles';
 export function VaultPage() {
   const router = useRouter();
   const { tab } = useLocalSearchParams<{ tab?: string }>();
-  const { defaultVault, wishlistVault, transactions, wishlistTransactions, isPending, refetch } = useVault();
+  const { defaultVault, wishlistVault, wishlistHistory, transactions, wishlistTransactions, isPending, refetch } = useVault();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -36,7 +36,7 @@ export function VaultPage() {
         ) : activeTab === 'default' ? (
           <VaultDefaultTab vault={defaultVault} transactions={transactions} />
         ) : (
-          <VaultWishlistTab vault={wishlistVault} transactions={wishlistTransactions} onRefetch={refetch} />
+          <VaultWishlistTab vault={wishlistVault} wishlistHistory={wishlistHistory} onRefetch={refetch} />
         )}
       </View>
     </SafeAreaView>
