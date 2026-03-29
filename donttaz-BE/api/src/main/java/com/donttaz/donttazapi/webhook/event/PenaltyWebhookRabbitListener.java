@@ -40,6 +40,18 @@ public class PenaltyWebhookRabbitListener {
         public void receivePenaltyEvent(VaultPenaltyEvent event) {
                 log.info("Received penalty event for vault ID: {}", event.wishlistVaultId());
 
+                // 벤치마크용 가상 지연 시뮬레이션 (ID 0일 경우 1초 대기)
+                if (event.wishlistVaultId() == 0L) {
+                        try {
+                                log.info("[Benchmark] 비동기 처리 지연 시뮬레이션 시작 (1초)");
+                                Thread.sleep(1000);
+                                log.info("[Benchmark] 비동기 처리 지연 시뮬레이션 종료");
+                        } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                        }
+                        return;
+                }
+
                 PenaltyWebhook webhook = penaltyWebhookRepository.findByWishlistVaultId(event.wishlistVaultId())
                                 .orElse(null);
 
