@@ -25,6 +25,7 @@
       "output": "static"
     },
     "plugins": [
+      "@portone/react-native-sdk/plugin",
       "expo-router",
       "expo-secure-store",
       "@react-native-community/datetimepicker",

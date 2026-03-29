@@ -1,41 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { ScrollView, View, Text } from 'react-native';
-import { useURL } from 'expo-linking';
 import { Button, PageHeader } from '@/shared/ui';
-import {
-  matchesPortOneCallbackPath,
-  PORTONE_CALLBACK_PATH,
-  SignupProgress,
-  useSignupFlow,
-} from '@/features/signup';
+import { SignupProgress, useSignupFlow } from '@/features/signup';
 import { styles } from './signup-start-page.styles';
 
 export function SignupStartPage() {
-  const callbackUrl = useURL();
-  const handledCallbackUrlRef = useRef<string | null>(null);
-  const {
-    currentStep,
-    errorMessage,
-    isStartingVerification,
-    completeVerificationFromCallbackUrl,
-    startVerification,
-  } = useSignupFlow();
-  const completeVerificationFromCallbackUrlRef = useRef(completeVerificationFromCallbackUrl);
-
-  completeVerificationFromCallbackUrlRef.current = completeVerificationFromCallbackUrl;
-
-  useEffect(() => {
-    if (!callbackUrl || handledCallbackUrlRef.current === callbackUrl) {
-      return;
-    }
-
-    if (!matchesPortOneCallbackPath(callbackUrl, PORTONE_CALLBACK_PATH)) {
-      return;
-    }
-
-    handledCallbackUrlRef.current = callbackUrl;
-    void completeVerificationFromCallbackUrlRef.current(callbackUrl);
-  }, [callbackUrl]);
+  const { currentStep, errorMessage, isStartingVerification, startVerification } = useSignupFlow();
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
