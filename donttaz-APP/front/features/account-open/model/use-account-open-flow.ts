@@ -7,11 +7,6 @@ import { getDemandDepositProductsApi } from '../api/get-demand-deposit-products'
 import { useAccountOpenStore } from './account-open-store';
 import { setPrimaryAccountApi } from '../api/set-primary-account';
 import { verifyIdentityApi } from '@/features/signup/api/signup';
-import {
-  parsePortOneCallbackUrl,
-  requestPortOneIdentityVerification,
-} from '@/features/signup/api/portone';
-import { ACCOUNT_OPEN_PORTONE_CALLBACK_PATH } from '../types/account-open';
 
 const PHONE_REGEX = /^01[0-9]\d{7,8}$/;
 const BANKING_ID_REGEX = /^[a-zA-Z0-9]{6,12}$/;
@@ -362,22 +357,15 @@ export function useAccountOpenFlow() {
     }
   };
 
-  const completeVerificationFromCallbackUrl = async (url: string) => {
-    const { identityVerificationId, errorCode, errorMessage } = parsePortOneCallbackUrl(url);
+  const completeVerificationFromIdentityVerificationId = async (
+    identityVerificationId: string
+  ) => {
+    return verifyCurrentUserOwnership(identityVerificationId);
+  };
 
-    if (identityVerificationId && identityVerificationId.length > 0) {
-      return verifyCurrentUserOwnership(identityVerificationId);
-    }
-
-    if (errorMessage && errorMessage.length > 0) {
-      accountOpenState.setIdentityVerificationError(
-        errorCode && errorCode.length > 0 ? `[${errorCode}] ${errorMessage}` : errorMessage
-      );
-      accountOpenState.setIsIdentityVerificationPending(false);
-      return false;
-    }
-
-    return false;
+  const failVerification = (message: string) => {
+    accountOpenState.setIdentityVerificationError(message);
+    accountOpenState.setIsIdentityVerificationPending(false);
   };
 
   const submitVerifyStep = async () => {
@@ -388,19 +376,8 @@ export function useAccountOpenFlow() {
 
     accountOpenState.setIdentityVerificationError(null);
     accountOpenState.setErrorMessage(null);
-
-    try {
-      const { identityVerificationId } = await requestPortOneIdentityVerification({
-        callbackPath: ACCOUNT_OPEN_PORTONE_CALLBACK_PATH,
-      });
-
-      return verifyCurrentUserOwnership(identityVerificationId);
-    } catch (error) {
-      accountOpenState.setErrorMessage(
-        error instanceof Error ? error.message : '본인인증 처리 중 문제가 발생했습니다.'
-      );
-      return false;
-    }
+    router.push('/account-open-certification' as never);
+    return true;
   };
 
   return {
@@ -431,7 +408,8 @@ export function useAccountOpenFlow() {
     submitBankingStep,
     moveToVerifyStep,
     proceedToProfileStep,
-    completeVerificationFromCallbackUrl,
+    completeVerificationFromIdentityVerificationId,
+    failVerification,
     submitVerifyStep,
   };
 }

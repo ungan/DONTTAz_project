@@ -50,8 +50,10 @@ export default function RootLayout() {
             <Stack.Screen name="account-open-profile" options={{ headerShown: false }} />
             <Stack.Screen name="account-open-banking" options={{ headerShown: false }} />
             <Stack.Screen name="account-open-verify" options={{ headerShown: false }} />
+            <Stack.Screen name="account-open-certification" options={{ headerShown: false }} />
             <Stack.Screen name="account-open-complete" options={{ headerShown: false }} />
             <Stack.Screen name="signup-start" options={{ headerShown: false }} />
+            <Stack.Screen name="signup-certification" options={{ headerShown: false }} />
             <Stack.Screen name="signup-account" options={{ headerShown: false }} />
             <Stack.Screen name="signup-pin" options={{ headerShown: false }} />
             <Stack.Screen name="signup-complete" options={{ headerShown: false }} />

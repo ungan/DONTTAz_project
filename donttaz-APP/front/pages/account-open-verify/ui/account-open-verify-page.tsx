@@ -1,22 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text } from 'react-native';
-import { useURL } from 'expo-linking';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, PageHeader } from '@/shared/ui';
-import {
-  ACCOUNT_OPEN_PORTONE_CALLBACK_PATH,
-  AccountOpenProgress,
-  useAccountOpenFlow,
-} from '@/features/account-open';
-import { matchesPortOneCallbackPath } from '@/features/signup';
+import { AccountOpenProgress, useAccountOpenFlow } from '@/features/account-open';
 import { styles } from './account-open-verify-page.styles';
 
 export function AccountOpenVerifyPage() {
   const insets = useSafeAreaInsets();
-  const callbackUrl = useURL();
-  const handledCallbackUrlRef = useRef<string | null>(null);
   const {
     currentUserName,
     currentUserPhoneNumber,
@@ -28,15 +20,12 @@ export function AccountOpenVerifyPage() {
     moveToVerifyStep,
     verifiedOwnerName,
     verifiedOwnerPhoneNumber,
-    completeVerificationFromCallbackUrl,
     proceedToProfileStep,
     submitVerifyStep,
   } = useAccountOpenFlow();
   const moveToVerifyStepRef = useRef(moveToVerifyStep);
-  const completeVerificationFromCallbackUrlRef = useRef(completeVerificationFromCallbackUrl);
 
   moveToVerifyStepRef.current = moveToVerifyStep;
-  completeVerificationFromCallbackUrlRef.current = completeVerificationFromCallbackUrl;
 
   useEffect(() => {
     if (!isRequiredTermsAgreed) {
@@ -46,19 +35,6 @@ export function AccountOpenVerifyPage() {
 
     moveToVerifyStepRef.current();
   }, [isRequiredTermsAgreed]);
-
-  useEffect(() => {
-    if (!callbackUrl || handledCallbackUrlRef.current === callbackUrl) {
-      return;
-    }
-
-    if (!matchesPortOneCallbackPath(callbackUrl, ACCOUNT_OPEN_PORTONE_CALLBACK_PATH)) {
-      return;
-    }
-
-    handledCallbackUrlRef.current = callbackUrl;
-    void completeVerificationFromCallbackUrlRef.current(callbackUrl);
-  }, [callbackUrl]);
 
   const isVerified = !!verifiedOwnerName && !!verifiedOwnerPhoneNumber;
   const displayName = isVerified ? verifiedOwnerName : (currentUserName || '-');
