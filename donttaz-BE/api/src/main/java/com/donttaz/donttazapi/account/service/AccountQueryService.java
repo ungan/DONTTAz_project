@@ -403,7 +403,13 @@ public class AccountQueryService {
         if (payment != null && payment.getMerchantName() != null && !payment.getMerchantName().isBlank()) {
             return payment.getMerchantName();
         }
-        return translateCounterpartyName(transaction.getCounterpartyName());
+
+        String translatedCounterpartyName = translateCounterpartyName(transaction.getCounterpartyName());
+        if (shouldDisplayTransactionSummaryAsCounterparty(transaction, translatedCounterpartyName)) {
+            return translateDisplayText(transaction.getTransactionSummary());
+        }
+
+        return translatedCounterpartyName;
     }
 
     private String resolveCounterpartyAccount(Transaction transaction, Payment payment) {
@@ -524,5 +530,22 @@ public class AccountQueryService {
 
     private String translateDisplayText(String value) {
         return translateTransactionLabel(translateCounterpartyName(value));
+    }
+
+    private boolean shouldDisplayTransactionSummaryAsCounterparty(
+            Transaction transaction,
+            String translatedCounterpartyName
+    ) {
+        if (transaction == null) {
+            return false;
+        }
+        if (translatedCounterpartyName == null || !translatedCounterpartyName.equals(TRANSFER_COUNTERPARTY_LABEL)) {
+            return false;
+        }
+        if (transaction.getTransactionSummary() == null || transaction.getTransactionSummary().isBlank()) {
+            return false;
+        }
+
+        return "DEPOSIT".equalsIgnoreCase(toApiTransactionType(transaction.getTxType()));
     }
 }

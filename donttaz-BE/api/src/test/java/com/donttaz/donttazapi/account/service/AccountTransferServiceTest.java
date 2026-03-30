@@ -44,7 +44,9 @@ import com.donttaz.donttazapi.common.security.CurrentUserProvider;
 import com.donttaz.donttazapi.infra.banking.client.BankingClient;
 import com.donttaz.donttazapi.infra.banking.config.FinApiProperties;
 import com.donttaz.donttazapi.notification.service.PushNotificationService;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -90,12 +92,14 @@ class AccountTransferServiceTest {
     void depositSuccess() {
         AccountDepositRequest request = new AccountDepositRequest("100000000", "deposit");
         Account account = createAccount("0016174648358792", 100000000L, 1L);
+        LocalTime before = LocalTime.now();
         given(currentUserProvider.getCurrentUserId()).willReturn(1L);
         given(bankingClient.deposit(any(Long.class), any(AccountDepositCommand.class)))
                 .willReturn(new AccountDepositResult("59", "20240401"));
         given(accountSyncService.syncAccountSnapshot(1L, "0016174648358792")).willReturn(account);
 
         AccountDepositResponse response = accountTransferService.deposit("0016174648358792", request);
+        LocalTime after = LocalTime.now();
 
         ArgumentCaptor<AccountDepositCommand> commandCaptor = ArgumentCaptor.forClass(AccountDepositCommand.class);
         ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
@@ -110,6 +114,8 @@ class AccountTransferServiceTest {
         assertThat(transactionCaptor.getValue().getAmount()).isEqualTo(100000000L);
         assertThat(transactionCaptor.getValue().getTxTypeName()).isEqualTo("입금");
         assertThat(transactionCaptor.getValue().getCounterpartyName()).isEqualTo("본인");
+        assertThat(transactionCaptor.getValue().getTransactionAt().toLocalDate()).isEqualTo(LocalDate.of(2024, 4, 1));
+        assertThat(transactionCaptor.getValue().getTransactionAt().toLocalTime()).isBetween(before, after);
         assertThat(response.transactionUniqueNo()).isEqualTo("59");
         assertThat(response.transactionDate()).isEqualTo("20240401");
     }
@@ -177,6 +183,7 @@ class AccountTransferServiceTest {
         );
         Account withdrawalAccount = createAccount("0016174648358792", 90000000L, 1L);
         Account depositAccount = createAccount("0204667768182760", 110000000L, 1L);
+        LocalTime before = LocalTime.now();
         TransferResult result = new TransferResult(
                 List.of(
                         new TransferTransactionResult("61", "0016174648358792", "20240401", "2", "WITHDRAWAL_TRANSFER", "0204667768182760"),
@@ -191,6 +198,7 @@ class AccountTransferServiceTest {
         given(accountSyncService.syncAccountSnapshot(1L, "0204667768182760")).willReturn(depositAccount);
 
         AccountTransferResponse response = accountTransferService.transfer(request);
+        LocalTime after = LocalTime.now();
 
         ArgumentCaptor<TransferCommand> commandCaptor = ArgumentCaptor.forClass(TransferCommand.class);
         ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
@@ -205,6 +213,11 @@ class AccountTransferServiceTest {
         assertThat(transactionCaptor.getAllValues())
                 .extracting(Transaction::getTxTypeName)
                 .containsExactlyInAnyOrder("이체 출금", "이체 입금");
+        assertThat(transactionCaptor.getAllValues())
+                .extracting(transaction -> transaction.getTransactionAt().toLocalDate())
+                .containsOnly(LocalDate.of(2024, 4, 1));
+        assertThat(transactionCaptor.getAllValues())
+                .allSatisfy(transaction -> assertThat(transaction.getTransactionAt().toLocalTime()).isBetween(before, after));
         verify(pushNotificationService).sendTransferNotification(1L, 10000000L, "withdrawal transfer");
         assertThat(response.transactions()).hasSize(2);
     }

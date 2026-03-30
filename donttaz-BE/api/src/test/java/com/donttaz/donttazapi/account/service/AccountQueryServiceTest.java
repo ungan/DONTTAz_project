@@ -265,6 +265,52 @@ class AccountQueryServiceTest {
     }
 
     @Test
+    @DisplayName("incoming transfer uses transaction summary when counterparty is generic transfer")
+    void getTransactionsShowsDepositSummaryForIncomingTransfer() {
+        Account account = createAccount();
+        ReflectionTestUtils.setField(account, "accountId", 10L);
+        Transaction transaction = Transaction.builder()
+                .account(account)
+                .userId(1L)
+                .source("FIN_API")
+                .sourceTxId("salary-1")
+                .txType("DEPOSIT")
+                .txTypeName("DEPOSIT_TRANSFER")
+                .amount(3_000_000L)
+                .balanceSnapshot(92_900_000L)
+                .counterpartyName("TRANSFER")
+                .transactionSummary("테스트기업 월급")
+                .transactionAt(LocalDateTime.of(2024, 4, 25, 9, 0, 0))
+                .syncedAt(LocalDateTime.of(2024, 4, 25, 9, 0, 1))
+                .build();
+        ReflectionTestUtils.setField(transaction, "id", 702L);
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(1L);
+        given(accountRepository.findByAccountIdAndUserIdAndStatusAndIsDeletedFalse(10L, 1L, AccountStatus.ACTIVE))
+                .willReturn(Optional.of(account));
+        given(transactionSyncService.syncTransactions(account, LocalDate.of(2024, 4, 1), LocalDate.of(2024, 4, 30)))
+                .willReturn(List.of());
+        given(transactionRepository.search(eq(10L), eq(1L), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of(transaction)));
+        given(paymentRepository.findAllByUserIdAndWithdrawalTransactionIdIn(1L, List.of("salary-1")))
+                .willReturn(List.of());
+        given(transactionAiMetadataRepository.findAllByTransactionIdIn(List.of(702L)))
+                .willReturn(List.of());
+
+        TransactionListResponse response = accountQueryService.getTransactions(
+                10L,
+                LocalDate.of(2024, 4, 1),
+                LocalDate.of(2024, 4, 30),
+                "ALL",
+                0,
+                20
+        );
+
+        assertThat(response.transactions()).hasSize(1);
+        assertThat(response.transactions().get(0).counterpartyName()).isEqualTo("테스트기업 월급");
+    }
+
+    @Test
     @DisplayName("getTransactionDetail reads stored transaction and overlays merchant data")
     void getTransactionDetailSuccess() {
         Account account = createAccount();

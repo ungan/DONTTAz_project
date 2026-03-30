@@ -510,14 +510,15 @@ public class AccountTransferService {
     }
 
     private LocalDateTime toTransactionAt(String transactionDate) {
+        LocalDateTime now = LocalDateTime.now();
         if (transactionDate == null || transactionDate.isBlank()) {
-            return LocalDateTime.now();
+            return now;
         }
 
         try {
-            return LocalDate.parse(transactionDate, DateTimeFormatter.BASIC_ISO_DATE).atStartOfDay();
+            return LocalDate.parse(transactionDate, DateTimeFormatter.BASIC_ISO_DATE).atTime(now.toLocalTime());
         } catch (DateTimeParseException exception) {
-            return LocalDateTime.now();
+            return now;
         }
     }
 
