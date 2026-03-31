@@ -2,165 +2,315 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+    >
     <title>포트원 V2 본인인증 테스트</title>
     <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
     <style>
+        :root {
+            color-scheme: light;
+            --bg: #f4f7f6;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #475569;
+            --line: #dbe2ea;
+            --primary: #0f766e;
+            --primary-pressed: #115e59;
+            --success-bg: #f0fdf4;
+            --success-text: #166534;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            background: var(--bg);
+            overscroll-behavior-y: contain;
+        }
+
         body {
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
             margin: 0;
-            background-color: #f4f7f6;
+            min-height: 100vh;
+            min-height: 100svh;
+            padding: max(24px, env(safe-area-inset-top)) 16px
+                max(24px, calc(env(safe-area-inset-bottom) + 16px));
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            -webkit-text-size-adjust: 100%;
+            overflow-x: hidden;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
         }
 
         .container {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: var(--card);
+            padding: 24px 20px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #e6fffb;
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        h1 {
+            margin: 16px 0 12px;
+            font-size: 28px;
+            line-height: 1.25;
+        }
+
+        p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .actions {
+            margin-top: 24px;
+        }
+
+        button,
+        a.button-link {
+            width: 100%;
+            border: none;
+            border-radius: 14px;
+            padding: 16px 18px;
+            font-size: 16px;
+            font-weight: 700;
             text-align: center;
-            max-width: 420px;
+            text-decoration: none;
+            transition: background-color 0.2s ease, opacity 0.2s ease;
         }
 
         button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            background: var(--primary);
+            color: #ffffff;
             cursor: pointer;
-            font-size: 16px;
-            margin-top: 20px;
         }
 
-        button:hover {
-            background-color: #0056b3;
+        button:active {
+            background: var(--primary-pressed);
+        }
+
+        button[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         a.button-link {
-            display: inline-block;
-            background-color: #1f7a1f;
-            color: white;
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            display: none;
             margin-top: 12px;
-        }
-
-        a.button-link:hover {
-            background-color: #155d15;
+            background: #1d4ed8;
+            color: #ffffff;
         }
 
         #result {
-            margin-top: 20px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background: #fafafa;
             display: none;
-            text-align: left;
+            margin-top: 20px;
+            padding: 16px;
+            border: 1px solid #bbf7d0;
+            border-radius: 14px;
+            background: var(--success-bg);
+            color: var(--success-text);
+            line-height: 1.6;
             word-break: break-all;
         }
 
-        #returnToApp {
-            display: none;
+        code {
+            display: inline-block;
+            margin-top: 8px;
+            color: var(--text);
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+<main class="page">
+    <section class="container">
+        <span class="eyebrow">PortOne Identity</span>
         <h1>본인인증 테스트</h1>
-        <p>버튼을 눌러 포트원 본인인증을 시작하세요.</p>
-        <button onclick="requestCert()">본인인증 시작</button>
+        <p>
+            버튼을 누르면 포트원 본인인증이 시작됩니다.
+            모바일 브라우저에서 화면이 밀리지 않도록 고정형 레이아웃으로 구성했습니다.
+        </p>
+
+        <div class="actions">
+            <button id="requestButton" type="button" onclick="requestCert()">
+                본인인증 시작
+            </button>
+            <a id="returnToApp" class="button-link" href="#">
+                앱으로 돌아가기
+            </a>
+        </div>
 
         <div id="result">
             <strong>인증 성공</strong><br>
-            아래 ID를 복사하거나 앱으로 돌아가기를 눌러 주세요.<br>
+            아래 ID를 확인한 뒤 자동 복귀가 되지 않으면 버튼으로 앱에 돌아가세요.<br>
             <code id="certId"></code>
-            <br>
-            <a id="returnToApp" class="button-link" href="#">앱으로 돌아가기</a>
         </div>
-    </div>
+    </section>
+</main>
 
-    <script>
-        function createIdentityVerificationId() {
-            if (window.crypto && typeof window.crypto.randomUUID === "function") {
-                return `cert-${window.crypto.randomUUID()}`;
-            }
+<script>
+    const requestButton = document.getElementById("requestButton");
+    const resultBox = document.getElementById("result");
+    const certIdElement = document.getElementById("certId");
+    const returnToAppLink = document.getElementById("returnToApp");
 
-            if (window.crypto && typeof window.crypto.getRandomValues === "function") {
-                const bytes = new Uint8Array(16);
-                window.crypto.getRandomValues(bytes);
-                const randomHex = Array.from(bytes, (byte) =>
-                    byte.toString(16).padStart(2, "0")
-                ).join("");
-                return `cert-${randomHex}`;
-            }
+    function lockScrollTop() {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+    }
 
-            return `cert-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    function setPendingState(isPending) {
+        requestButton.disabled = isPending;
+        requestButton.textContent = isPending ? "인증창 여는 중..." : "본인인증 시작";
+    }
+
+    function createIdentityVerificationId() {
+        if (window.crypto && typeof window.crypto.randomUUID === "function") {
+            return `cert-${window.crypto.randomUUID()}`;
         }
 
-        function getRedirectUri() {
-            const params = new URLSearchParams(window.location.search);
-            return params.get("redirectUri");
+        if (window.crypto && typeof window.crypto.getRandomValues === "function") {
+            const bytes = new Uint8Array(16);
+            window.crypto.getRandomValues(bytes);
+            const randomHex = Array.from(bytes, (byte) =>
+                byte.toString(16).padStart(2, "0")
+            ).join("");
+            return `cert-${randomHex}`;
         }
 
-        function redirectToApp(values) {
-            const redirectUri = getRedirectUri();
+        return `cert-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
 
-            if (!redirectUri) {
-                return false;
-            }
+    function getRedirectUri() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get("redirectUri");
+    }
 
-            const query = new URLSearchParams(values).toString();
-            const nextUrl = query ? `${redirectUri}?${query}` : redirectUri;
-            const returnToAppLink = document.getElementById("returnToApp");
+    function getBridgeRedirectUrl() {
+        const redirectUri = getRedirectUri();
 
-            returnToAppLink.href = nextUrl;
-            returnToAppLink.style.display = "inline-block";
-            window.location.replace(nextUrl);
-            return true;
+        if (!redirectUri) {
+            return window.location.origin + window.location.pathname;
         }
 
-        async function requestCert() {
-            try {
-                const response = await PortOne.requestIdentityVerification({
-                    storeId: "store-e9d6a7c5-fb1d-4094-a7b6-c2fe37b55e8a",
-                    identityVerificationId: createIdentityVerificationId(),
-                    channelKey: "channel-key-f0acd432-a0ca-4c76-a481-1a219e2fc9a5",
-                });
+        return `${window.location.origin}${window.location.pathname}?${new URLSearchParams({
+            redirectUri,
+        }).toString()}`;
+    }
 
-                if (response.code != null) {
-                    redirectToApp({
-                        code: response.code,
-                        message: response.message ?? "본인인증에 실패했습니다.",
-                    });
-                    alert(`인증 실패: ${response.message}`);
-                    return;
-                }
+    function getResultFromCurrentUrl() {
+        const params = new URLSearchParams(window.location.search);
 
-                console.log("인증 성공 응답:", response);
-                document.getElementById("result").style.display = "block";
-                document.getElementById("certId").innerText = response.identityVerificationId;
+        return {
+            identityVerificationId: params.get("identityVerificationId"),
+            code: params.get("code"),
+            message: params.get("message"),
+        };
+    }
 
-                console.log("---------------------------------------");
-                console.log("ID 복사용:", response.identityVerificationId);
-                console.log("---------------------------------------");
+    function redirectToApp(values) {
+        const redirectUri = getRedirectUri();
 
+        if (!redirectUri) {
+            return false;
+        }
+
+        const query = new URLSearchParams(values).toString();
+        const nextUrl = query ? `${redirectUri}?${query}` : redirectUri;
+
+        returnToAppLink.href = nextUrl;
+        returnToAppLink.style.display = "block";
+
+        setTimeout(() => {
+            window.location.href = nextUrl;
+        }, 150);
+
+        return true;
+    }
+
+    async function requestCert() {
+        lockScrollTop();
+        setPendingState(true);
+
+        try {
+            const response = await PortOne.requestIdentityVerification({
+                storeId: "store-e9d6a7c5-fb1d-4094-a7b6-c2fe37b55e8a",
+                identityVerificationId: createIdentityVerificationId(),
+                channelKey: "channel-key-f0acd432-a0ca-4c76-a481-1a219e2fc9a5",
+                redirectUrl: getBridgeRedirectUrl(),
+                windowType: {
+                    pc: "POPUP",
+                    mobile: "REDIRECTION",
+                },
+            });
+
+            if (response.code != null) {
                 redirectToApp({
-                    identityVerificationId: response.identityVerificationId,
+                    code: response.code,
+                    message: response.message ?? "본인인증에 실패했습니다.",
                 });
-            } catch (error) {
-                console.error(error);
-                redirectToApp({
-                    message: error?.message ?? "본인인증 처리 중 오류가 발생했습니다.",
-                });
-                alert(`에러 발생: ${error?.message}`);
+                alert(`인증 실패: ${response.message}`);
+                return;
             }
+
+            resultBox.style.display = "block";
+            certIdElement.textContent = response.identityVerificationId;
+
+            redirectToApp({
+                identityVerificationId: response.identityVerificationId,
+            });
+        } catch (error) {
+            console.error(error);
+            redirectToApp({
+                message: error?.message ?? "본인인증 처리 중 오류가 발생했습니다.",
+            });
+            alert(`오류 발생: ${error?.message}`);
+        } finally {
+            setPendingState(false);
+            lockScrollTop();
         }
-    </script>
+    }
+
+    (function handleRedirectResult() {
+        const { identityVerificationId, code, message } = getResultFromCurrentUrl();
+
+        if (identityVerificationId) {
+            resultBox.style.display = "block";
+            certIdElement.textContent = identityVerificationId;
+            redirectToApp({ identityVerificationId });
+            return;
+        }
+
+        if (message) {
+            redirectToApp({
+                code,
+                message,
+            });
+        }
+    })();
+
+    window.addEventListener("load", lockScrollTop);
+    window.addEventListener("pageshow", lockScrollTop);
+    window.addEventListener("resize", lockScrollTop);
+</script>
 </body>
 </html>

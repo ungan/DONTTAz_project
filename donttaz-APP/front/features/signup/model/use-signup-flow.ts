@@ -3,7 +3,7 @@ import { isAxiosError } from 'axios';
 import { completeLoginSession, loginApi } from '@/features/auth';
 import { storeDevicePin } from '@/shared/api/auth-storage';
 import { signupApi, verifyIdentityApi } from '../api/signup';
-import { parsePortOneCallbackUrl, requestPortOneIdentityVerification } from '../api/portone';
+import { parsePortOneCallbackUrl } from '../api/portone';
 import { useSignupStore } from './signup-store';
 import type { SignupRequest, SignupStep, VerifyIdentityResponseData } from '../types/signup';
 
@@ -104,7 +104,6 @@ export function useSignupFlow() {
   const startVerification = async () => {
     signupState.setErrorMessage(null);
     signupState.setLastHandledIdentityVerificationId(null);
-    signupState.setVerificationLoading(true);
 
     if (__DEV__) {
       console.log('[SignupDebug][Flow] startVerification:start', {
@@ -114,24 +113,13 @@ export function useSignupFlow() {
     }
 
     try {
-      let identityVerificationId = MOCK_VERIFICATION_ID;
-
       if (process.env.EXPO_PUBLIC_IS_MOCK !== 'true') {
-        if (__DEV__) {
-          console.log('[SignupDebug][Flow] startVerification:beforePortOne');
-        }
-
-        const portOneResult = await requestPortOneIdentityVerification();
-        identityVerificationId = portOneResult.identityVerificationId;
-
-        if (__DEV__) {
-          console.log('[SignupDebug][Flow] startVerification:afterPortOne', {
-            identityVerificationId,
-          });
-        }
+        router.push('/signup-certification' as never);
+        return;
       }
 
-      await completeIdentityVerification(identityVerificationId);
+      signupState.setVerificationLoading(true);
+      await completeIdentityVerification(MOCK_VERIFICATION_ID);
     } catch (error) {
       if (__DEV__) {
         console.log('[SignupDebug][Flow] startVerification:error', {
@@ -146,6 +134,30 @@ export function useSignupFlow() {
     } finally {
       signupState.setVerificationLoading(false);
     }
+  };
+
+  const completeVerificationFromIdentityVerificationId = async (
+    identityVerificationId: string
+  ) => {
+    signupState.setErrorMessage(null);
+    signupState.setVerificationLoading(true);
+
+    try {
+      await completeIdentityVerification(identityVerificationId);
+      return true;
+    } catch (error) {
+      signupState.setErrorMessage(
+        error instanceof Error ? error.message : '본인인증 처리 중 문제가 발생했습니다.'
+      );
+      return false;
+    } finally {
+      signupState.setVerificationLoading(false);
+    }
+  };
+
+  const failVerification = (message: string) => {
+    signupState.setErrorMessage(message);
+    signupState.setVerificationLoading(false);
   };
 
   const completeVerificationFromCallbackUrl = async (url: string) => {
@@ -388,7 +400,9 @@ export function useSignupFlow() {
     ...signupState,
     resetFromStart,
     startVerification,
+    completeVerificationFromIdentityVerificationId,
     completeVerificationFromCallbackUrl,
+    failVerification,
     updateLoginId,
     updatePassword,
     updatePasswordConfirm,
