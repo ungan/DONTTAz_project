@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  # 1. MySQL (관계형 데이터베이스)
+  mysql:
+    image: mysql:8.0
+    container_name: donttaz-mysql
+    restart: always
+    ports:
+      - "127.0.0.1:3333:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: a1d2m3i4n5  # [보안] 실서버 배포 시 반드시 변경!
+      MYSQL_DATABASE: donttaz
+      MYSQL_USER: donttaz_user
+      MYSQL_PASSWORD: u1s2e3r4       # [보안] 실서버 배포 시 반드시 변경!
+      TZ: Asia/Seoul                     # DB 내부 시간 KST 적용
+    volumes:
+      - mysql_data:/var/lib/mysql        # 컨테이너가 꺼져도 데이터 영구 보존
+    networks:
+      - donttaz-net
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+
+  # 2. Redis (세션 캐싱 및 분산 락)
+  redis:
+    image: redis:alpine
+    container_name: donttaz-redis
+    restart: always
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - donttaz-net
+    command: redis-server --appendonly yes # 디스크에 데이터 백업 (안전성 강화)
+
+  # 3. RabbitMQ (비동기 메시지 큐 - 관리자 UI 포함 버전)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: donttaz-rabbitmq
+    restart: always
+    ports:
+      - "127.0.0.1:5672:5672"   # Spring Boot/FastAPI가 통신할 포트
+      - "127.0.0.1:15672:15672" # 웹으로 접속해서 볼 대시보드 포트
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: a1d2m3i4n5 # [보안] 실서버 배포 시 반드시 변경!
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - donttaz-net
+    
+  # 4. Prometheus (메트릭 수집)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: donttaz-prometheus
+    restart: always
+    ports:
+      - "127.0.0.1:9099:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - donttaz-net
+
+  # 5. Grafana (데이터 시각화)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: donttaz-grafana
+    restart: "no"
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=a1d2m3i4n5 # [보안] 초기 비밀번호
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - donttaz-net
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: "no"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # nginx 전용 폴더를 만들어서 설정 관리
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf   # (선택) 전역 설정 파일
+      - ./nginx/conf.d:/etc/nginx/conf.d           # 서비스별 라우팅 설정 파일들을 넣는 폴더
+      - /etc/letsencrypt:/etc/letsencrypt
+
+    networks:
+      - donttaz-net # 젠킨스, DB와 같은 망
+
+# 도커 내부망 정의
+networks:
+  donttaz-net:
+    external: true
+    name: donttaz-net
+
+# 도커 볼륨 정의
+volumes:
+  mysql_data:
+  redis_data:
+  rabbitmq_data:
+  prometheus_data:
+  grafana_data:

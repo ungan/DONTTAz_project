@@ -1,0 +1,44 @@
+import React, { useState } from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
+import { PageHeader } from '@/shared/ui';
+import { useVault } from '@/entities/vault';
+import { VaultTabBar } from './vault-tab-bar';
+import type { VaultTab } from './vault-tab-bar';
+import { VaultDefaultTab } from './vault-default-tab';
+import { VaultWishlistTab } from './vault-wishlist-tab';
+import { styles } from './vault-page.styles';
+
+export function VaultPage() {
+  const router = useRouter();
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
+  const { defaultVault, wishlistVault, wishlistHistory, transactions, wishlistTransactions, isPending, refetch } = useVault();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
+  const [activeTab, setActiveTab] = useState<VaultTab>(tab === 'wishlist' ? 'wishlist' : 'default');
+
+  return (
+    <SafeAreaView edges={['bottom']} style={styles.container}>
+      <PageHeader title="금고" onBack={() => router.replace('/(tabs)/home')} />
+      <VaultTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+
+      <View style={styles.content}>
+        {isPending ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#5899FD" />
+          </View>
+        ) : activeTab === 'default' ? (
+          <VaultDefaultTab vault={defaultVault} transactions={transactions} />
+        ) : (
+          <VaultWishlistTab vault={wishlistVault} wishlistHistory={wishlistHistory} onRefetch={refetch} />
+        )}
+      </View>
+    </SafeAreaView>
+  );
+}

@@ -1,0 +1,31 @@
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: donttaz-api
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - donttaz-net
+
+  ai:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile
+    container_name: donttaz-ai
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - donttaz-net
+
+networks:
+  donttaz-net:
+    external: true
+    name: donttaz-net

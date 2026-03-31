@@ -1,0 +1,16 @@
+{
+  "status": "SUCCESS",
+  "message": "이체가 성공적으로 완료되었습니다.",
+  "data": {
+    "transactions": [
+      {
+        "transactionUniqueNo": "2048",
+        "accountNo": "0016174648358792",
+        "transactionDate": "20260320",
+        "transactionType": "2",
+        "transactionTypeName": "출금(이체)",
+        "transactionAccountNo": "110123456789"
+      }
+    ]
+  }
+}

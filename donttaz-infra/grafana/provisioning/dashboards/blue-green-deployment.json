@@ -1,0 +1,254 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+        {
+            "title": "트래픽 기반 활성 배포 상태 (Active)",
+            "type": "stat",
+            "gridPos": {
+                "h": 4,
+                "w": 12,
+                "x": 0,
+                "y": 0
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus_ds"
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (color)",
+                    "legendFormat": "{{color}}",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "mappings": [],
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            },
+            "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "name"
+            }
+        },
+        {
+            "title": "배포 타임라인 (컨테이너 상태)",
+            "type": "state-timeline",
+            "gridPos": {
+                "h": 6,
+                "w": 24,
+                "x": 0,
+                "y": 4
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus_ds"
+            },
+            "targets": [
+                {
+                    "expr": "up{job=~\"donttaz-(api|ai)\"}",
+                    "legendFormat": "{{job}} ({{color}})",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "mappings": [
+                        {
+                            "type": "value",
+                            "options": {
+                                "0": {
+                                    "color": "red",
+                                    "index": 1,
+                                    "text": "DOWN"
+                                },
+                                "1": {
+                                    "color": "green",
+                                    "index": 0,
+                                    "text": "UP"
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "options": {
+                "alignValue": "left",
+                "mergeValues": true,
+                "rowHeight": 0.9,
+                "showValue": "auto",
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            }
+        },
+        {
+            "title": "초당 요청 수 비교 (Request Rate)",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 10
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus_ds"
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (color)",
+                    "legendFormat": "{{color}}",
+                    "refId": "A"
+                }
+            ],
+            "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "name",
+                "legend": {
+                    "calcs": [
+                        "mean",
+                        "lastNotNull"
+                    ],
+                    "displayMode": "table",
+                    "placement": "bottom"
+                }
+            }
+        },
+        {
+            "title": "최대 응답 시간 비교 (Max Response Time)",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 10
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus_ds"
+            },
+            "targets": [
+                {
+                    "expr": "max(http_server_requests_seconds_max) by (color)",
+                    "legendFormat": "{{color}} P99",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "s"
+                }
+            }
+        },
+        {
+            "title": "5xx 에러 발생 수 (Error Rate)",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 18
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus_ds"
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[1m])) by (color) or (sum(rate(http_server_requests_seconds_count[1m])) by (color) * 0)",
+                    "legendFormat": "{{color}} Error",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "title": "메모리 사용량 (Heap)",
+            "type": "gauge",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 18
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus_ds"
+            },
+            "targets": [
+                {
+                    "expr": "jvm_memory_used_bytes{area=\"heap\", job=\"donttaz-api\"}",
+                    "legendFormat": "{{instance}} ({{color}})",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "decbytes"
+                }
+            }
+        }
+    ],
+    "refresh": "5s",
+    "schemaVersion": 36,
+    "style": "dark",
+    "tags": [
+        "deployment",
+        "blue-green"
+    ],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "무중단 배포(Blue-Green) 실시간 모니터링",
+    "uid": "bg-deploy-dashboard"
+}

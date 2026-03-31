@@ -1,0 +1,26 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'donttaz-api'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['donttaz-api-blue:8080']
+        labels:
+          color: 'blue'
+      - targets: ['donttaz-api-green:8080']
+        labels:
+          color: 'green'
+
+  - job_name: 'donttaz-ai'
+    static_configs:
+      - targets: ['donttaz-ai-blue:8000']
+        labels:
+          color: 'blue'
+      - targets: ['donttaz-ai-green:8000']
+        labels:
+          color: 'green'

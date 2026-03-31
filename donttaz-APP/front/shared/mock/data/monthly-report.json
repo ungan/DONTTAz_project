@@ -1,0 +1,189 @@
+{
+  "status": "SUCCESS",
+  "message": "카테고리 분류 결과 조회 성공",
+  "data": {
+    "totalElements": 20,
+    "categorizedList": [
+      {
+        "transactionId": 5001,
+        "transactionDate": "2026-03-01T12:30:00",
+        "storeName": "스타벅스 강남점",
+        "amount": 15000,
+        "aiCategory": "식비/카페",
+        "confidenceScore": 0.97,
+        "isModified": false
+      },
+      {
+        "transactionId": 5002,
+        "transactionDate": "2026-03-02T08:20:00",
+        "storeName": "카카오택시",
+        "amount": 12000,
+        "aiCategory": "교통",
+        "confidenceScore": 0.95,
+        "isModified": false
+      },
+      {
+        "transactionId": 5003,
+        "transactionDate": "2026-03-03T19:00:00",
+        "storeName": "CGV 강남",
+        "amount": 15000,
+        "aiCategory": "문화/여가",
+        "confidenceScore": 0.92,
+        "isModified": false
+      },
+      {
+        "transactionId": 5004,
+        "transactionDate": "2026-03-04T19:30:00",
+        "storeName": "요기요_치킨",
+        "amount": 23000,
+        "aiCategory": "식비/카페",
+        "confidenceScore": 0.95,
+        "isModified": false
+      },
+      {
+        "transactionId": 5005,
+        "transactionDate": "2026-03-05T09:00:00",
+        "storeName": "SKT",
+        "amount": 55000,
+        "aiCategory": "통신/보험",
+        "confidenceScore": 0.98,
+        "isModified": false
+      },
+      {
+        "transactionId": 5006,
+        "transactionDate": "2026-03-06T13:00:00",
+        "storeName": "GS25 역삼점",
+        "amount": 8500,
+        "aiCategory": "식비/카페",
+        "confidenceScore": 0.88,
+        "isModified": false
+      },
+      {
+        "transactionId": 5007,
+        "transactionDate": "2026-03-07T18:00:00",
+        "storeName": "지하철",
+        "amount": 1400,
+        "aiCategory": "교통",
+        "confidenceScore": 0.99,
+        "isModified": false
+      },
+      {
+        "transactionId": 5008,
+        "transactionDate": "2026-03-08T20:00:00",
+        "storeName": "넷플릭스",
+        "amount": 17000,
+        "aiCategory": "문화/여가",
+        "confidenceScore": 0.96,
+        "isModified": false
+      },
+      {
+        "transactionId": 5009,
+        "transactionDate": "2026-03-10T12:00:00",
+        "storeName": "김밥천국",
+        "amount": 9000,
+        "aiCategory": "식비/카페",
+        "confidenceScore": 0.91,
+        "isModified": false
+      },
+      {
+        "transactionId": 5010,
+        "transactionDate": "2026-03-11T09:30:00",
+        "storeName": "버스",
+        "amount": 1400,
+        "aiCategory": "교통",
+        "confidenceScore": 0.99,
+        "isModified": false
+      },
+      {
+        "transactionId": 5011,
+        "transactionDate": "2026-03-12T15:00:00",
+        "storeName": "현대해상",
+        "amount": 80000,
+        "aiCategory": "통신/보험",
+        "confidenceScore": 0.94,
+        "isModified": false
+      },
+      {
+        "transactionId": 5012,
+        "transactionDate": "2026-03-13T19:00:00",
+        "storeName": "배달의민족",
+        "amount": 28000,
+        "aiCategory": "식비/카페",
+        "confidenceScore": 0.93,
+        "isModified": false
+      },
+      {
+        "transactionId": 5013,
+        "transactionDate": "2026-03-14T10:00:00",
+        "storeName": "올리브영",
+        "amount": 35000,
+        "aiCategory": "쇼핑",
+        "confidenceScore": 0.89,
+        "isModified": false
+      },
+      {
+        "transactionId": 5014,
+        "transactionDate": "2026-03-15T17:00:00",
+        "storeName": "카카오택시",
+        "amount": 9500,
+        "aiCategory": "교통",
+        "confidenceScore": 0.95,
+        "isModified": false
+      },
+      {
+        "transactionId": 5015,
+        "transactionDate": "2026-03-17T20:00:00",
+        "storeName": "교보문고",
+        "amount": 18000,
+        "aiCategory": "문화/여가",
+        "confidenceScore": 0.90,
+        "isModified": false
+      },
+      {
+        "transactionId": 5016,
+        "transactionDate": "2026-03-18T12:30:00",
+        "storeName": "맥도날드",
+        "amount": 11000,
+        "aiCategory": "식비/카페",
+        "confidenceScore": 0.96,
+        "isModified": false
+      },
+      {
+        "transactionId": 5017,
+        "transactionDate": "2026-03-19T09:00:00",
+        "storeName": "무신사",
+        "amount": 59000,
+        "aiCategory": "쇼핑",
+        "confidenceScore": 0.87,
+        "isModified": false
+      },
+      {
+        "transactionId": 5018,
+        "transactionDate": "2026-03-20T14:00:00",
+        "storeName": "카카오페이 송금",
+        "amount": 50000,
+        "aiCategory": "송금",
+        "confidenceScore": 0.99,
+        "isModified": false
+      },
+      {
+        "transactionId": 5019,
+        "transactionDate": "2026-03-22T19:30:00",
+        "storeName": "쿠팡이츠",
+        "amount": 22000,
+        "aiCategory": "식비/카페",
+        "confidenceScore": 0.94,
+        "isModified": false
+      },
+      {
+        "transactionId": 5020,
+        "transactionDate": "2026-03-25T11:00:00",
+        "storeName": "이마트",
+        "amount": 76000,
+        "aiCategory": "쇼핑",
+        "confidenceScore": 0.91,
+        "isModified": false
+      }
+    ]
+  }
+}

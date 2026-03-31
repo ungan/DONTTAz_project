@@ -1,0 +1,150 @@
+import React, { useEffect } from 'react';
+import { Text, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
+import Animated, {
+  useSharedValue,
+  useAnimatedProps,
+  withTiming,
+  Easing,
+  SharedValue,
+} from 'react-native-reanimated';
+import type { SpendingPlanCategoryPlan } from '@/entities/plan';
+import { styles } from './spending-plan-pie-chart.styles';
+
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+
+const SIZE = 220;
+const CX = SIZE / 2;
+const CY = SIZE / 2;
+const OUTER_R = 84;
+const INNER_R = 54;
+const LABEL_R = OUTER_R + 20;
+const MIN_LABEL_PERCENT = 5;
+
+function formatWon(amount: number): string {
+  return `${amount.toLocaleString('ko-KR')}원`;
+}
+
+function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
+  'worklet';
+  const rad = ((angleDeg - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function buildArcPath(startAngle: number, endAngle: number): string {
+  'worklet';
+  const clampedEnd = Math.min(endAngle, startAngle + 359.99);
+  const o1 = polarToCartesian(CX, CY, OUTER_R, startAngle);
+  const o2 = polarToCartesian(CX, CY, OUTER_R, clampedEnd);
+  const i1 = polarToCartesian(CX, CY, INNER_R, clampedEnd);
+  const i2 = polarToCartesian(CX, CY, INNER_R, startAngle);
+  const large = clampedEnd - startAngle > 180 ? 1 : 0;
+  return [
+    `M ${o1.x} ${o1.y}`,
+    `A ${OUTER_R} ${OUTER_R} 0 ${large} 1 ${o2.x} ${o2.y}`,
+    `L ${i1.x} ${i1.y}`,
+    `A ${INNER_R} ${INNER_R} 0 ${large} 0 ${i2.x} ${i2.y}`,
+    'Z',
+  ].join(' ');
+}
+
+interface SliceProps {
+  startAngle: number;
+  endAngle: number;
+  color: string;
+  progress: SharedValue<number>;
+}
+
+function AnimatedSlice({ startAngle, endAngle, color, progress }: SliceProps) {
+  const animatedProps = useAnimatedProps(() => {
+    const totalDrawn = 360 * progress.value;
+    if (totalDrawn <= startAngle) return { d: '' };
+    const currentEnd = Math.min(totalDrawn, endAngle);
+    if (currentEnd - startAngle < 0.01) return { d: '' };
+    return { d: buildArcPath(startAngle, currentEnd) };
+  });
+
+  return <AnimatedPath animatedProps={animatedProps} fill={color} />;
+}
+
+interface SpendingPlanPieChartProps {
+  categoryPlans: SpendingPlanCategoryPlan[];
+}
+
+export function SpendingPlanPieChart({ categoryPlans }: SpendingPlanPieChartProps) {
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = 0;
+    progress.value = withTiming(1, {
+      duration: 800,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [categoryPlans]);
+
+  let currentAngle = 0;
+  const slices = categoryPlans.map((item) => {
+    const angle = (item.percentage / 100) * 360;
+    const startAngle = currentAngle;
+    const endAngle = currentAngle + angle;
+    const midAngle = startAngle + angle / 2;
+    const labelPos = polarToCartesian(CX, CY, LABEL_R, midAngle);
+    currentAngle = endAngle;
+
+    return { ...item, startAngle, endAngle, labelPos };
+  });
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.headerTitle}>카테고리별 예산 배정</Text>
+
+      <View style={[styles.chartWrap, { width: SIZE, height: SIZE, alignSelf: 'center' }]}>
+        <Svg width={SIZE} height={SIZE}>
+          {slices.map((slice) => (
+            <AnimatedSlice
+              key={slice.categoryName}
+              startAngle={slice.startAngle}
+              endAngle={slice.endAngle}
+              color={slice.color}
+              progress={progress}
+            />
+          ))}
+        </Svg>
+        {slices
+          .filter((slice) => slice.percentage >= MIN_LABEL_PERCENT)
+          .map((slice) => (
+            <Text
+              key={`label-${slice.categoryName}`}
+              style={{
+                position: 'absolute',
+                left: slice.labelPos.x - 22,
+                top: slice.labelPos.y - 8,
+                width: 44,
+                textAlign: 'center',
+                fontSize: 11,
+                fontWeight: '500',
+                color: '#6B7280',
+              }}
+            >
+              {slice.percentage}%
+            </Text>
+          ))}
+      </View>
+
+      <View style={styles.legend}>
+        {categoryPlans.map((item) => (
+          <View key={item.categoryName} style={styles.legendRow}>
+            <View style={[styles.dot, { backgroundColor: item.color }]} />
+            <View style={styles.legendInfo}>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+                <Text style={styles.legendCategory}>{item.categoryName}</Text>
+                <Text style={[styles.legendMeta, { marginTop: 0, fontSize: 13 }]}>{item.percentage}%</Text>
+              </View>
+            </View>
+            <Text style={styles.legendAmount}>{formatWon(item.allocatedAmount)}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
