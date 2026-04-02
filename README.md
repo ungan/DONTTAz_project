@@ -117,7 +117,7 @@
         </td>
         <td width="33%" align="center">
             <img src="public/images/team/member2.png" width="140px" /> <br>
-            <b>김민상</b> <br>팀원 (Backend & Design) <br>
+            <b>김민상</b> <br>팀원 (Backend) <br>
         </td>
         <td width="33%" align="center">
             <img src="public/images/team/member3.png" width="140px" /> <br>
@@ -129,15 +129,15 @@
             <sub>
                 - 인프라 및 CI/CD/CT 파이프라인 구축 <br>
                 - Blue-Green 무중단 배포 시스템 설계 <br>
-                - 금고 자동 이체 스케줄러 구현 <br>
-                - AI 서버 연동 및 안정화 <br>
+                - 급여 이체 로직 구현 <br>
+                - 실시간 모니터링 대시보드 구축 <br>
             </sub>
         </td>
         <td width="280px">
             <sub>
-                - 위시리스트 금고 CRUD API 구현 <br>
-                - Discord/Mattermost 웹훅 연동 <br>
-                - RabbitMQ 메시지 큐 연동 <br>
+                - 기본 금고 및 위시리스트 금고 API 구현 <br>
+                - 금고 자동 이체 및 이자 스케줄러 구현 <br>
+                - Webhook / RabbitMQ 연동 <br>
                 - 모계좌 입출금 로직 설계 <br>
             </sub>
         </td>
@@ -172,8 +172,8 @@
             <sub>
                 - FCM 푸시 알림 시스템 구현 <br>
                 - 거래 내역 조회 및 동기화 <br>
-                - 대표 계좌 조회 API 구현 <br>
-                - 급여 이체 로직 구현 <br>
+                - 계좌 관련 API 구현 <br>
+                - 결제 로직 구현 <br>
             </sub>
         </td>
         <td width="280px">
@@ -207,12 +207,14 @@
 
 <img src="public/images/demo/account_open_1.gif" height="500"/> | <img src="public/images/demo/account_open_2.gif" height="500"/> |
 ---|---|
+개설 과정 1 | 개설 과정 2|
 
 ### 💰 위시리스트 금고
-
-<img src="public/images/demo/wish_create.gif" height="500"/> | <img src="public/images/demo/vault_deposit.gif" height="500"/> | <img src="public/images/demo/vault_withdraw.gif" height="500"/> |
----|---|---|
-금고 생성 | 금고 입금 (모계좌 이체) | 금고 출금 (이자 포함) |
+<img src="public/images/demo/wish_list.gif" height="500"/> | <img src="public/images/demo/wish_create.gif" height="500"/> |
+---|---|
+위시리스트 금고 조회 | 금고 생성 | 
+<img src="public/images/demo/vault_deposit.gif" height="500"/> | <img src="public/images/demo/vault_withdraw.gif" height="500"/> |
+금고 입금 (모계좌 이체) | 금고 출금 (이자 포함) |
 
 ### 🤖 AI 분석
 
@@ -220,11 +222,11 @@
 ---|---|
 AI 소비 분석 리포트 | AI 저축 플랜 추천 |
 
-### 🔔 알림 & 달성
+### 🔔 웹훅 알림
 
-<img src="public/images/demo/push_notification.gif" height="500"/> | <img src="public/images/demo/vault_complete.gif" height="500"/> |
----|---|
-실시간 푸시 알림 (FCM) | 금고 달성률 & 이자 지급 |
+<img src="public/images/demo/push_notification.gif" height="500"/> | <img src="public/images/demo/webhook_withdraw.gif" height="500"/> | <img src="public/images/demo/webhook_cancel.gif" height="500"/> |
+---|---|---|
+실시간 푸시 알림 (FCM) | 위시 금고 긴급 출금 시 웹훅 전송 (Discord) | 위시 금고 긴급 해지 시 웹훅 전송 (Mattermost) |
 
 ---
 
