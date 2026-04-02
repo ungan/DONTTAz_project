@@ -71,12 +71,12 @@
   <img src="public/images/intro.jpg" alt="Donttaz 서비스 소개" width="300" />
 </p>
 
-**돈땃쥐(Donttaz)**는 2030 세대를 위한 **AI 기반 스마트 금고 핀테크 서비스**입니다.
+**돈땃쥐(Donttaz)**는 올바른 소비습관을 형성하고 싶은 사람들을 위한 **AI 기반 스마트 금고 핀테크 서비스**입니다.
 
 단순히 돈을 "아끼게" 하는 것이 아니라, **쓸 돈은 쓰면서 모을 돈은 체계적으로 모을 수 있도록** 도와줍니다.
 사용자는 목적별 가상 금고(위시)를 자유롭게 생성하고, 금융망 API를 통해 안전하게 자금을 입출금하며, AI가 소비 패턴을 분석하여 맞춤형 금융 조언을 제공합니다.
 
-> 💡 **은행의 '세이프박스' + 토스 '저금통' + AI 코멘트**를 하나로 합친 차세대 저축 플랫폼
+> 💡 **은행의 '세이프박스' + 토스 '저금통' + AI 코멘트 + AI 기반 소비 플랜**을 하나로 합친 차세대 저축 플랫폼
 
 ---
 
@@ -98,9 +98,9 @@
 | 기존 저축 앱 | 돈땃쥐 |
 |---|---|
 | "이번 달 카페 지출이 초과했습니다" | "오사카 여행 금고에 5만원 추가하면 목표의 80%!" |
-| 단일 저축 목표 | **무제한 목적별 금고** 생성 |
+| 단일 저축 목표 | **목적별 금고** 생성 |
 | 사후 알림 | **AI 선제 분석** + 실시간 푸시 |
-| 수동 이체 | 금융망 API 통한 **자동 모계좌 관리** |
+| 수동 이체 | AI 기반 **잉여 금액 자동 봉인** |
 
 ---
 
@@ -113,34 +113,40 @@
     <tr>
         <td width="33%" align="center">
             <img src="public/images/team/member1.png" width="140px" /> <br>
-            <b>박형주</b> <br>팀장 (Infra & DevOps) <br>
+            <b>박형주</b> <br>팀장 (Backend & DevOps) <br>
         </td>
         <td width="33%" align="center">
             <img src="public/images/team/member2.png" width="140px" /> <br>
-            <b>김민상</b> <br>팀원 (Backend) <br>
+            <b>김민상</b> <br>팀원 (Backend & Design) <br>
         </td>
         <td width="33%" align="center">
             <img src="public/images/team/member3.png" width="140px" /> <br>
-            <b>김회인</b> <br>팀원 (Backend & AI) <br>
+            <b>김회인</b> <br>팀원 (Frontend & Backend) <br>
         </td>
     </tr>
     <tr>
         <td width="280px">
             <sub>
-                - 담당 영역 1 <br>
-                - 담당 영역 2 <br>
+                - 인프라 및 CI/CD/CT 파이프라인 구축 <br>
+                - Blue-Green 무중단 배포 시스템 설계 <br>
+                - 금고 자동 이체 스케줄러 구현 <br>
+                - AI 서버 연동 및 안정화 <br>
             </sub>
         </td>
         <td width="280px">
             <sub>
-                - 담당 영역 1 <br>
-                - 담당 영역 2 <br>
+                - 위시리스트 금고 CRUD API 구현 <br>
+                - Discord/Mattermost 웹훅 연동 <br>
+                - RabbitMQ 메시지 큐 연동 <br>
+                - 모계좌 입출금 로직 설계 <br>
             </sub>
         </td>
         <td width="280px">
             <sub>
-                - 담당 영역 1 <br>
-                - 담당 영역 2 <br>
+                - AI 소비 플랜/리포트 FE+BE 연동 <br>
+                - 생존 번다운 차트 구현 <br>
+                - PortOne 결제 인증 연동 <br>
+                - 월간 소비 리포트 화면 구현 <br>
             </sub>
         </td>
     </tr>
@@ -150,11 +156,11 @@
     <tr>
         <td width="33%" align="center">
             <img src="public/images/team/member4.png" width="140px" /> <br>
-            <b>이용호</b> <br>팀원 (Frontend) <br>
+            <b>이용호</b> <br>팀원 (Backend) <br>
         </td>
         <td width="33%" align="center">
             <img src="public/images/team/member5.png" width="140px" /> <br>
-            <b>전연수</b> <br>팀원 (Frontend) <br>
+            <b>전연수</b> <br>팀원 (AI) <br>
         </td>
         <td width="33%" align="center">
             <img src="public/images/team/member6.png" width="140px" /> <br>
@@ -164,20 +170,26 @@
     <tr>
         <td width="280px">
             <sub>
-                - 담당 영역 1 <br>
-                - 담당 영역 2 <br>
+                - FCM 푸시 알림 시스템 구현 <br>
+                - 거래 내역 조회 및 동기화 <br>
+                - 대표 계좌 조회 API 구현 <br>
+                - 급여 이체 로직 구현 <br>
             </sub>
         </td>
         <td width="280px">
             <sub>
-                - 담당 영역 1 <br>
-                - 담당 영역 2 <br>
+                - AI 소비 분석 서비스 설계/고도화 <br>
+                - NLP 카테고리 자동 분류 모델 <br>
+                - LLM 프롬프트 엔지니어링 <br>
+                - 번다운 차트 예측 로직 구현 <br>
             </sub>
         </td>
         <td width="280px">
             <sub>
-                - 담당 영역 1 <br>
-                - 담당 영역 2 <br>
+                - 가상금고/위시금고 FE UI 전체 <br>
+                - 계좌 개설 및 이체 화면 구현 <br>
+                - 웹훅 수치심 메시지 UI 연동 <br>
+                - 홈/회원가입/핀 입력 UI 구현 <br>
             </sub>
         </td>
     </tr>
@@ -191,47 +203,28 @@
 
 <a name="features"></a>
 
-<div align="center">
+### 🏦 계좌 개설
 
-<table>
-  <tbody align="center">
-    <tr> <th style="text-align: center"> 🏦 계좌 개설 (1) </th> <th style="text-align: center"> 🏦 계좌 개설 (2) </th> </tr>
-    <tr>
-        <td width="50%"> <img width="100%" src="public/images/demo/account_open_1.gif"/> </td>
-        <td width="50%"> <img width="100%" src="public/images/demo/account_open_2.gif"/> </td>
-    </tr>
-  </tbody>
-  <tbody align="center">
-    <tr> <th style="text-align: center"> 💰 위시리스트 금고 생성 (무제한) </th> <th style="text-align: center"> 💸 금고 입금 (모계좌 이체) </th> </tr>
-    <tr>
-        <td width="50%"> <img width="100%" src="public/images/demo/wish_create.gif"/> </td>
-        <td width="50%"> <img width="100%" src="public/images/demo/vault_deposit.gif"/> </td>
-    </tr>
-  </tbody>
-  <tbody align="center">
-    <tr> <th style="text-align: center"> 💸 금고 출금 (이자 포함) </th> <th style="text-align: center"> 🤖 AI 소비 분석 리포트 </th> </tr>
-    <tr>
-        <td width="50%"> <img width="100%" src="public/images/demo/vault_withdraw.gif"/> </td>
-        <td width="50%"> <img width="100%" src="public/images/demo/ai_report.gif"/> </td>
-    </tr>
-  </tbody>
-  <tbody align="center">
-    <tr> <th style="text-align: center"> 📊 AI 저축 플랜 추천 </th> <th style="text-align: center"> 🔔 실시간 푸시 알림 (FCM) </th> </tr>
-    <tr>
-        <td width="50%"> <img width="100%" src="public/images/demo/ai_plan.gif"/> </td>
-        <td width="50%"> <img width="100%" src="public/images/demo/push_notification.gif"/> </td>
-    </tr>
-  </tbody>
-  <tbody align="center">
-    <tr> <th style="text-align: center"> 📈 금고 달성률 & 이자 지급 </th> <th style="text-align: center"> </th> </tr>
-    <tr>
-        <td width="50%"> <img width="100%" src="public/images/demo/vault_complete.gif"/> </td>
-        <td width="50%"> </td>
-    </tr>
-  </tbody>
-</table>
-</div>
-<br>
+<img src="public/images/demo/account_open_1.gif" height="500"/> | <img src="public/images/demo/account_open_2.gif" height="500"/> |
+---|---|
+
+### 💰 위시리스트 금고
+
+<img src="public/images/demo/wish_create.gif" height="500"/> | <img src="public/images/demo/vault_deposit.gif" height="500"/> | <img src="public/images/demo/vault_withdraw.gif" height="500"/> |
+---|---|---|
+금고 생성 | 금고 입금 (모계좌 이체) | 금고 출금 (이자 포함) |
+
+### 🤖 AI 분석
+
+<img src="public/images/demo/ai_report.gif" height="500"/> | <img src="public/images/demo/ai_plan.gif" height="500"/> |
+---|---|
+AI 소비 분석 리포트 | AI 저축 플랜 추천 |
+
+### 🔔 알림 & 달성
+
+<img src="public/images/demo/push_notification.gif" height="500"/> | <img src="public/images/demo/vault_complete.gif" height="500"/> |
+---|---|
+실시간 푸시 알림 (FCM) | 금고 달성률 & 이자 지급 |
 
 ---
 
