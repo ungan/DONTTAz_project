@@ -639,6 +639,15 @@ donttaz-infra/
 </div>
 <br>
 
+<h3>📅 Jira 타임라인</h3>
+<details align="left">
+  <summary><strong>자세히</strong></summary>
+  <div align="center">
+
+  <img src="public/images/jira_timeline.png" alt="Jira 타임라인" width="100%" />
+  </div>
+</details>
+
 <h3>🗄️ ERD</h3>
 <details align="left">
   <summary><strong>자세히</strong></summary>
