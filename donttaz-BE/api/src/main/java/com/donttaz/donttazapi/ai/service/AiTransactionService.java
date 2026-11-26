@@ -2,6 +2,7 @@ package com.donttaz.donttazapi.ai.service;
 
 import com.donttaz.donttazapi.account.domain.Account;
 import com.donttaz.donttazapi.account.domain.Transaction;
+import com.donttaz.donttazapi.account.dto.response.DailyTransactionAmount;
 import com.donttaz.donttazapi.account.repository.AccountRepository;
 import com.donttaz.donttazapi.account.repository.TransactionRepository;
 import com.donttaz.donttazapi.account.service.TransactionSyncService;
@@ -40,8 +41,10 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -61,6 +64,11 @@ public class AiTransactionService {
 
     private static final int TEMPORARY_MONTHLY_INCOME_FALLBACK = 3_000_000;
     private static final String UNCATEGORIZED = "미분류";
+    // 거래 유형은 저장 경로마다 다르다: 동기화(TransactionSyncService)는 'DEPOSIT'/'WITHDRAWAL'로 정규화하고,
+    // 이체(AccountTransferService)는 은행 원본 코드 '1'(입금)/'2'(출금)로 저장한다.
+    // 입금 판정은 이 기준 하나로 한다. TransactionRepository.sumSpendingByDay 의 조건과 같은 기준이다.
+    private static final Set<String> DEPOSIT_TX_TYPES = Set.of("DEPOSIT", "1");
+    private static final Set<String> WITHDRAWAL_TX_TYPES = Set.of("WITHDRAWAL", "2");
 
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
@@ -88,17 +96,19 @@ public class AiTransactionService {
         int totalDays = ym.lengthOfMonth();
         int totalBudget = plan.getTotalBudget();
 
-        List<Transaction> transactions = transactionRepository.searchWithAiMetadata(
-                userId,
-                start.atStartOfDay(),
-                end.plusDays(1).atStartOfDay(),
-                Pageable.unpaged()
-        ).getContent();
-
-        Map<LocalDate, Integer> dailySpentMap = transactions.stream()
-                .collect(Collectors.groupingBy(
-                        tx -> tx.getTransactionAt().toLocalDate(),
-                        Collectors.summingInt(tx -> tx.getAmount().intValue())
+        // 개선(2026-11-26): 일별 합계만 필요하므로 DB에서 날짜별로 집계한다.
+        //   전량 적재(unpaged)는 한 달 거래를 전부 엔티티로 올렸고, 500건 페이징은 적재량은 묶었지만
+        //   페이지마다 OFFSET 조회와 count 쿼리가 붙어 오히려 느렸다. 집계는 쿼리 1번에 최대 31행.
+        // 수정(2026-11-26): 예전 코드는 입금까지 지출로 더해 월급날 남은 예산이 급감했다. 이제 입금은 뺀다.
+        Map<LocalDate, Integer> dailySpentMap = transactionRepository.sumSpendingByDay(
+                        userId,
+                        start.atStartOfDay(),
+                        end.plusDays(1).atStartOfDay()
+                )
+                .stream()
+                .collect(Collectors.toMap(
+                        DailyTransactionAmount::day,
+                        row -> row.totalAmount().intValue()
                 ));
 
         List<AiBurndownChartResponse.BurndownChartItem> chartData = new ArrayList<>();
@@ -586,7 +596,7 @@ public class AiTransactionService {
             List<Transaction> transactions
     ) {
         Map<String, Integer> actualSpendingMap = transactions.stream()
-                .filter(transaction -> !"DEPOSIT".equalsIgnoreCase(transaction.getTxType()))
+                .filter(transaction -> !isDeposit(transaction))
                 .collect(Collectors.groupingBy(
                         transaction -> transactionAiMetadataRepository.findByTransactionId(transaction.getId())
                                 .map(TransactionAiMetadata::getAiCategory)
@@ -795,7 +805,7 @@ public class AiTransactionService {
         String transactionDate = transaction.getTransactionAt() != null
                 ? transaction.getTransactionAt().toLocalDate().toString()
                 : LocalDate.now().toString();
-        String txType = transaction.getTxType() != null ? transaction.getTxType() : "WITHDRAWAL";
+        String txType = normalizeTxType(transaction);
 
         return new AiPlanAnalysisRequest.AiTransactionItem(
                 transaction.getId() != null ? transaction.getId().toString() : null,
@@ -883,7 +893,7 @@ public class AiTransactionService {
         String transactionDate = transaction.getTransactionAt() != null
                 ? transaction.getTransactionAt().toLocalDate().toString()
                 : LocalDate.now().toString();
-        String txType = transaction.getTxType() != null ? transaction.getTxType() : "WITHDRAWAL";
+        String txType = normalizeTxType(transaction);
 
         return new AiSpendingReportGenerateRequest.AiTransactionItem(
                 transaction.getId() != null ? transaction.getId().toString() : null,
@@ -920,13 +930,34 @@ public class AiTransactionService {
         if (payment != null) {
             return false;
         }
-        if ("DEPOSIT".equalsIgnoreCase(transaction.getTxType())) {
+        if (isDeposit(transaction)) {
             return true;
         }
         if (category == null || category.isBlank() || UNCATEGORIZED.equals(category)) {
             return true;
         }
         return "금융/보험".equals(category);
+    }
+
+    private static boolean isDeposit(Transaction transaction) {
+        String txType = transaction.getTxType();
+        return txType != null && DEPOSIT_TX_TYPES.contains(txType.toUpperCase(Locale.ROOT));
+    }
+
+    // AI 서버에는 저장 경로와 상관없이 'DEPOSIT'/'WITHDRAWAL'로 보낸다. 그 밖의 값은 그대로 둔다.
+    private static String normalizeTxType(Transaction transaction) {
+        String txType = transaction.getTxType();
+        if (txType == null) {
+            return "WITHDRAWAL";
+        }
+        String upper = txType.toUpperCase(Locale.ROOT);
+        if (DEPOSIT_TX_TYPES.contains(upper)) {
+            return "DEPOSIT";
+        }
+        if (WITHDRAWAL_TX_TYPES.contains(upper)) {
+            return "WITHDRAWAL";
+        }
+        return txType;
     }
 
     private void analyzeAndSaveAiMetadata(List<Transaction> transactions) {

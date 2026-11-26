@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 
 import com.donttaz.donttazapi.account.domain.Account;
 import com.donttaz.donttazapi.account.domain.Transaction;
+import com.donttaz.donttazapi.account.dto.response.DailyTransactionAmount;
 import com.donttaz.donttazapi.account.repository.AccountRepository;
 import com.donttaz.donttazapi.account.repository.TransactionRepository;
 import com.donttaz.donttazapi.account.service.TransactionSyncService;
@@ -107,19 +108,17 @@ class AiTransactionServiceTest {
 
         // Given
         SpendingPlan plan = createTestSpendingPlan(userId, yearMonth, totalBudget);
-        Transaction tx1 = Transaction.builder()
-                .amount(20000L)
-                .transactionAt(LocalDateTime.of(2026, 4, 1, 10, 0))
-                .build();
-        Transaction tx2 = Transaction.builder()
-                .amount(10000L)
-                .transactionAt(LocalDateTime.of(2026, 4, 2, 15, 0))
-                .build();
 
         given(currentUserProvider.getCurrentUserId()).willReturn(userId);
         given(spendingPlanRepository.findByUserIdAndTargetYearMonth(userId, yearMonth)).willReturn(Optional.of(plan));
-        given(transactionRepository.searchWithAiMetadata(eq(userId), any(), any(), any()))
-                .willReturn(new PageImpl<>(List.of(tx1, tx2)));
+        given(transactionRepository.sumSpendingByDay(
+                userId,
+                LocalDateTime.of(2026, 4, 1, 0, 0),
+                LocalDateTime.of(2026, 5, 1, 0, 0)))
+                .willReturn(List.of(
+                        new DailyTransactionAmount(LocalDate.of(2026, 4, 1), 20000L),
+                        new DailyTransactionAmount(LocalDate.of(2026, 4, 2), 10000L)
+                ));
 
         // When
         AiBurndownChartResponse response = aiTransactionService.getBurndownChart(yearMonth);
@@ -130,7 +129,11 @@ class AiTransactionServiceTest {
         assertThat(response.chartData().get(0).actualRemaining()).isEqualTo(290000);
         assertThat(response.chartData().get(1).actualRemaining()).isEqualTo(280000);
         verify(spendingPlanRepository).findByUserIdAndTargetYearMonth(userId, yearMonth);
-        verify(transactionRepository).searchWithAiMetadata(eq(userId), any(), any(), any());
+        verify(transactionRepository).sumSpendingByDay(
+                userId,
+                LocalDateTime.of(2026, 4, 1, 0, 0),
+                LocalDateTime.of(2026, 5, 1, 0, 0));
+        verify(transactionRepository, never()).searchWithAiMetadata(anyLong(), any(), any(), any());
     }
 
     @Test
@@ -143,8 +146,8 @@ class AiTransactionServiceTest {
         given(currentUserProvider.getCurrentUserId()).willReturn(userId);
         given(spendingPlanRepository.findByUserIdAndTargetYearMonth(userId, yearMonth)).willReturn(Optional.empty());
         given(environment.acceptsProfiles(any(Profiles.class))).willReturn(true);
-        given(transactionRepository.searchWithAiMetadata(eq(userId), any(), any(), any()))
-                .willReturn(new PageImpl<>(List.of()));
+        given(transactionRepository.sumSpendingByDay(eq(userId), any(), any()))
+                .willReturn(List.of());
 
         // When
         AiBurndownChartResponse response = aiTransactionService.getBurndownChart(yearMonth);
@@ -172,7 +175,7 @@ class AiTransactionServiceTest {
 
         // Then
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
-        verify(transactionRepository, never()).searchWithAiMetadata(anyLong(), any(), any(), any());
+        verify(transactionRepository, never()).sumSpendingByDay(anyLong(), any(), any());
     }
 
     @Test

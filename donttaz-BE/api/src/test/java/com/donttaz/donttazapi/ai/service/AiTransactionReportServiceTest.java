@@ -1,9 +1,11 @@
 package com.donttaz.donttazapi.ai.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.donttaz.donttazapi.account.domain.Transaction;
@@ -181,6 +183,107 @@ class AiTransactionReportServiceTest {
         assertThat(captor.getValue().plan()).isNull();
         assertThat(captor.getValue().paydayDay()).isEqualTo(15);
         assertThat(captor.getValue().cardTransactions()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("이체 경로의 입금('1')도 입금으로 보고 계좌 쪽으로 분류하며, AI에는 DEPOSIT/WITHDRAWAL로 보낸다.")
+    void getSpendingReport_TransferCodedTypes_AreNormalized() {
+        // Given
+        Long userId = 1L;
+        String yearMonth = "2026-03";
+        Transaction transferIn = createTransaction(31L, 500000L, "1", "Transfer In", LocalDateTime.of(2026, 3, 10, 9, 0));
+        Transaction transferOut = createTransaction(32L, 40000L, "2", "Food Store", LocalDateTime.of(2026, 3, 11, 12, 0));
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(userId);
+        given(spendingPlanRepository.findByUserIdAndTargetYearMonth(userId, yearMonth)).willReturn(Optional.empty());
+        given(userRepository.findById(userId)).willReturn(Optional.of(User.builder().salaryDay(25).build()));
+        given(transactionRepository.searchWithAiMetadata(eq(userId), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of(transferIn, transferOut)));
+        given(transactionAiMetadataRepository.findAllByTransactionIdIn(List.of(31L, 32L)))
+                .willReturn(List.of(
+                        metadataForTransaction(transferIn, "Food"),
+                        metadataForTransaction(transferOut, "Food")
+                ));
+        given(paymentRepository.findAllByUserIdAndWithdrawalTransactionIdIn(eq(userId), any()))
+                .willReturn(List.of());
+        given(aiServiceClient.calculateSpendingReport(any(AiSpendingReportGenerateRequest.class)))
+                .willReturn(new AiSpendingReportGenerateResponse(
+                        "SUCCESS",
+                        "ok",
+                        new AiSpendingReportGenerateResponse.ReportData(
+                                yearMonth,
+                                0,
+                                120000,
+                                40000,
+                                33.3,
+                                "fallback",
+                                "overall",
+                                List.of(new AiSpendingReportGenerateResponse.CategoryReportItem("Food", 0, 40000, 100.0, null, "unplanned")),
+                                List.of()
+                        )
+                ));
+
+        // When
+        aiTransactionService.getSpendingReport(yearMonth);
+
+        // Then
+        ArgumentCaptor<AiSpendingReportGenerateRequest> captor =
+                ArgumentCaptor.forClass(AiSpendingReportGenerateRequest.class);
+        verify(aiServiceClient).calculateSpendingReport(captor.capture());
+        assertThat(captor.getValue().accountTransactions())
+                .extracting(AiSpendingReportGenerateRequest.AiTransactionItem::id,
+                        AiSpendingReportGenerateRequest.AiTransactionItem::type)
+                .containsExactly(tuple("31", "DEPOSIT"));
+        assertThat(captor.getValue().cardTransactions())
+                .extracting(AiSpendingReportGenerateRequest.AiTransactionItem::id,
+                        AiSpendingReportGenerateRequest.AiTransactionItem::type)
+                .containsExactly(tuple("32", "WITHDRAWAL"));
+    }
+
+    @Test
+    @DisplayName("AI가 실패하면 fallback 리포트는 입금('DEPOSIT', '1')을 지출에서 빼고 계산한다.")
+    void getSpendingReport_AiFails_FallbackExcludesAllDepositCodes() {
+        // Given
+        Long userId = 1L;
+        String yearMonth = "2026-03";
+        SpendingPlan plan = SpendingPlan.builder()
+                .userId(userId)
+                .targetYearMonth(yearMonth)
+                .monthlyIncome(3_000_000)
+                .totalBudget(150000)
+                .surplusAmount(10000)
+                .sealedAmount(20000)
+                .build();
+        plan.addCategoryPlan(CategorySpendingPlan.builder().categoryName("Food").allocatedAmount(100000).build());
+
+        Transaction salary = createTransaction(41L, 3_000_000L, "DEPOSIT", "Salary", LocalDateTime.of(2026, 3, 25, 9, 0));
+        Transaction transferIn = createTransaction(42L, 50000L, "1", "Transfer In", LocalDateTime.of(2026, 3, 12, 9, 0));
+        Transaction food = createTransaction(43L, 40000L, "WITHDRAWAL", "Food Store", LocalDateTime.of(2026, 3, 13, 12, 0));
+        TransactionAiMetadata foodMetadata = metadataForTransaction(food, "Food");
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(userId);
+        given(spendingPlanRepository.findByUserIdAndTargetYearMonth(userId, yearMonth)).willReturn(Optional.of(plan));
+        given(userRepository.findById(userId)).willReturn(Optional.of(User.builder().salaryDay(25).build()));
+        given(transactionRepository.searchWithAiMetadata(eq(userId), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of(salary, transferIn, food)));
+        given(transactionAiMetadataRepository.findAllByTransactionIdIn(List.of(41L, 42L, 43L)))
+                .willReturn(List.of(foodMetadata));
+        given(paymentRepository.findAllByUserIdAndWithdrawalTransactionIdIn(eq(userId), any()))
+                .willReturn(List.of());
+        given(aiServiceClient.calculateSpendingReport(any(AiSpendingReportGenerateRequest.class)))
+                .willThrow(new RuntimeException("AI server down"));
+        given(transactionAiMetadataRepository.findByTransactionId(43L)).willReturn(Optional.of(foodMetadata));
+
+        // When
+        AiSpendingReportResponse response = aiTransactionService.getSpendingReport(yearMonth);
+
+        // Then
+        assertThat(response.totalSpent()).isEqualTo(40000);
+        assertThat(response.categoryReports())
+                .extracting(AiSpendingReportResponse.CategoryReportItem::categoryName)
+                .containsExactly("Food");
+        verify(transactionAiMetadataRepository, never()).findByTransactionId(41L);
+        verify(transactionAiMetadataRepository, never()).findByTransactionId(42L);
     }
 
     private TransactionAiMetadata metadataForTransaction(Transaction transaction, String category) {
